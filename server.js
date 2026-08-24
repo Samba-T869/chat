@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import socketIo from 'socket.io';
+import { Server } from 'socket.io';
 import { Pool } from 'pg';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -8,7 +8,7 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = Server(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
