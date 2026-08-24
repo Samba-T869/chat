@@ -1,9 +1,10 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const { Pool } = require('pg');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import http from 'http';
+import socketIo from 'socket.io';
+import { Pool } from 'pg';
+import cors from 'cors';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
