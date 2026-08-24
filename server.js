@@ -1,4 +1,4 @@
-const { Client } = require('pg');
+import { Client } from 'pg';
 
 // Railway automatically provides DATABASE_URL in your environment variables
 const client = new Client({
