@@ -1,75 +1,87 @@
-const socket = io();
+const socket = io({
+    transports: ['websocket', 'polling'],
+    withCredentials: true
+});
 
 const chatBox = document.getElementById('chat-box');
 const messagesDiv = document.getElementById('messages');
-const usernameInput = document.getElementById('username');
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 const typingIndicator = document.getElementById('typing-indicator');
 const userCount = document.getElementById('user-count');
+const logoutBtn = document.getElementById('logout-btn');
 
 let currentUsername = '';
 let isTyping = false;
 let typingTimeout = null;
 
-// Load previous messages on connection
-socket.on('previous messages', (messages) => {
-    messages.forEach(msg => displayMessage(msg, false));
-    scrollToBottom();
-});
-
-// Receive new message
-socket.on('receive message', (data) => {
-    displayMessage(data, false);
-    scrollToBottom();
-    if (data.username !== currentUsername) {
-        // Play notification sound if needed
-    }
-});
-
-// Display typing indicator
-socket.on('user typing', (username) => {
-    if (username !== currentUsername) {
-        typingIndicator.textContent = `${username} is typing...`;
-    }
-});
-
-socket.on('stop typing', () => {
-    typingIndicator.textContent = '';
-});
-
-// Error handling
-socket.on('error', (error) => {
-    alert(error);
-});
-
-// Username validation
-usernameInput.addEventListener('change', () => {
-    const name = usernameInput.value.trim();
-    if (name.length > 0) {
-        currentUsername = name;
+// Check authentication
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/check-auth', {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+            window.location.href = '/login.html';
+            return;
+        }
+        
+        currentUsername = data.username;
+        document.getElementById('username-display').textContent = currentUsername;
         messageInput.disabled = false;
         sendBtn.disabled = false;
-        messageInput.placeholder = `Type a message, ${name}...`;
-        socket.emit('user joined', name);
-    } else {
-        messageInput.disabled = true;
-        sendBtn.disabled = true;
-        messageInput.placeholder = 'Enter your name first';
+        
+        initializeSocket();
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/login.html';
     }
-});
+}
 
-// Send message
+function initializeSocket() {
+    socket.on('connect', () => {
+        console.log('Socket connected');
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+    });
+
+    socket.on('previous messages', (messages) => {
+        messages.forEach(msg => displayMessage(msg, false));
+        scrollToBottom();
+    });
+
+    socket.on('receive message', (data) => {
+        displayMessage(data, false);
+        scrollToBottom();
+    });
+
+    socket.on('user typing', (username) => {
+        if (username !== currentUsername) {
+            typingIndicator.textContent = `${username} is typing...`;
+        }
+    });
+
+    socket.on('stop typing', () => {
+        typingIndicator.textContent = '';
+    });
+
+    socket.on('error', (error) => {
+        alert(error);
+    });
+}
+
 function sendMessage() {
     const message = messageInput.value.trim();
-    if (!message || !currentUsername) return;
+    if (!message) return;
 
     socket.emit('send message', {
-        username: currentUsername,
         message: message
     });
 
-    // Display own message immediately
     const data = {
         username: currentUsername,
         message: message,
@@ -79,14 +91,12 @@ function sendMessage() {
     messageInput.value = '';
     scrollToBottom();
     
-    // Stop typing indicator
     if (isTyping) {
         socket.emit('stop typing');
         isTyping = false;
     }
 }
 
-// Display message in UI
 function displayMessage(data, isOwn) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isOwn ? 'user' : 'other'}`;
@@ -106,11 +116,10 @@ function displayMessage(data, isOwn) {
     messagesDiv.appendChild(messageDiv);
 }
 
-// Typing indicator
 messageInput.addEventListener('input', () => {
     if (messageInput.value.length > 0 && !isTyping) {
         isTyping = true;
-        socket.emit('typing', currentUsername);
+        socket.emit('typing');
     } else if (messageInput.value.length === 0 && isTyping) {
         isTyping = false;
         socket.emit('stop typing');
@@ -125,7 +134,6 @@ messageInput.addEventListener('input', () => {
     }, 2000);
 });
 
-// Send on Enter key
 messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -135,27 +143,20 @@ messageInput.addEventListener('keypress', (e) => {
 
 sendBtn.addEventListener('click', sendMessage);
 
-// Scroll to bottom
 function scrollToBottom() {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Load previous messages from API on page load
-async function loadPreviousMessages() {
+logoutBtn.addEventListener('click', async () => {
     try {
-        const response = await fetch('/api/messages');
-        const messages = await response.json();
-        messages.forEach(msg => displayMessage(msg, false));
-        scrollToBottom();
+        await fetch('/api/logout', { 
+            method: 'POST',
+            credentials: 'include'
+        });
+        window.location.href = '/login.html';
     } catch (error) {
-        console.error('Error loading messages:', error);
+        console.error('Logout failed:', error);
     }
-}
-
-// Initialize
-loadPreviousMessages();
-
-// Update user count (optional)
-socket.on('user count', (count) => {
-    userCount.textContent = `Users: ${count}`;
 });
+
+checkAuth();
