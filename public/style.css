@@ -13,6 +13,58 @@ body {
     align-items: center;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.username-display {
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.2);
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+.logout-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 5px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+}
+
+.logout-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+/* Update chat-header styles */
+.chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Update input-area styles - remove username input */
+.username-input {
+    display: none;
+}
+
+.message-input {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
 .container {
     background: white;
     border-radius: 15px;
@@ -23,15 +75,6 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
-
-.chat-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .chat-header h1 {
@@ -108,10 +151,6 @@ body {
     padding: 20px;
     background: white;
     border-top: 1px solid #e0e0e0;
-}
-
-.username-input {
-    margin-bottom: 10px;
 }
 
 #username {

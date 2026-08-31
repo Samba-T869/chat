@@ -9,8 +9,14 @@
 <body>
     <div class="container">
         <div class="chat-header">
-            <h1>💬 Real-time Chat</h1>
-            <div id="user-count">Users: 0</div>
+            <div>
+                <h1>💬 Real-time Chat</h1>
+                <div id="user-count">Users: 0</div>
+            </div>
+            <div class="header-right">
+                <span id="username-display" class="username-display"></span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
         </div>
         
         <div class="chat-box" id="chat-box">
@@ -19,9 +25,6 @@
         </div>
         
         <div class="input-area">
-            <div class="username-input">
-                <input type="text" id="username" placeholder="Your name" maxlength="30">
-            </div>
             <div class="message-input">
                 <input type="text" id="message-input" placeholder="Type a message..." disabled>
                 <button id="send-btn" disabled>Send</button>
