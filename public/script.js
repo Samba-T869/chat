@@ -1,7 +1,4 @@
-const socket = io({
-    transports: ['websocket', 'polling'],
-    withCredentials: true
-});
+let socket = null;
 
 const chatBox = document.getElementById('chat-box');
 const messagesDiv = document.getElementById('messages');
@@ -32,8 +29,12 @@ async function checkAuth() {
         document.getElementById('username-display').textContent = currentUsername;
         messageInput.disabled = false;
         sendBtn.disabled = false;
-        
+
+        // Load stored messages from PostgreSQL
+        await loadMessages();
+
         initializeSocket();
+
     } catch (error) {
         console.error('Auth check failed:', error);
         window.location.href = '/login.html';
@@ -41,12 +42,17 @@ async function checkAuth() {
 }
 
 function initializeSocket() {
+    socket = io({
+        transports: ['websocket', 'polling'],
+        withCredentials: true
+    });
+
     socket.on('connect', () => {
-        console.log('Socket connected');
+        console.log('🍀Socket connected', socket.id);
     });
 
     socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
+        console.error('📌Socket connection error:', error);
     });
 
     socket.on('previous messages', (messages) => {
@@ -74,23 +80,52 @@ function initializeSocket() {
     });
 }
 
+async function loadMessages() {
+    try {
+        const response = await fetch('/api/messages', {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to load messages: ${response.status}`);
+        }
+
+        const messages = await response.json();
+
+        messagesDiv.innerHTML = '';
+
+        messages.forEach(msg => {
+            displayMessage(
+                msg,
+                msg.username === currentUsername
+            );
+        });
+
+        scrollToBottom();
+
+        console.log('Messages loaded:', messages.length);
+    } catch (error) {
+        console.error('Failed to fetch messages:', error);
+    }
+}
+
 function sendMessage() {
     const message = messageInput.value.trim();
+
     if (!message) return;
+
+    if (!socket || !socket.connected) {
+        console.error('Socket is not connected');
+        return;
+    }
 
     socket.emit('send message', {
         message: message
     });
 
-    const data = {
-        username: currentUsername,
-        message: message,
-        timestamp: new Date().toISOString()
-    };
-    displayMessage(data, true);
     messageInput.value = '';
-    scrollToBottom();
-    
+
     if (isTyping) {
         socket.emit('stop typing');
         isTyping = false;

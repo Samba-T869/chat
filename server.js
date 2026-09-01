@@ -53,7 +53,7 @@ const sessionStore = new PgSession({
 });
 
 // Session middleware with Railway-compatible config
-app.use(session({
+const sessionMiddleware = session({
     store: sessionStore,
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
     resave: false,
@@ -61,10 +61,15 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+        maxAge: 1000 * 60 * 60 * 24,
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
-}));
+});
+
+app.use(sessionMiddleware);
+
+// Make Express session available to Socket.IO
+io.engine.use(sessionMiddleware);
 
 // Initialize database tables
 const initDatabase = async () => {
@@ -154,6 +159,8 @@ app.post('/api/register', async (req, res) => {
             message: 'User registered successfully',
             user: result.rows[0]
         });
+        console.log(`User registered ${username} successfully`);
+
     } catch (err) {
         console.error('Registration error:', err);
         res.status(500).json({ error: 'Registration failed' });
@@ -200,6 +207,8 @@ app.post('/api/login', async (req, res) => {
                 email: user.email
             }
         });
+
+        console.log(`User ${username} logged in successfully`);
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ error: 'Login failed' });
