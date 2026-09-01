@@ -29,6 +29,17 @@ const io = new Server(server, {
 
 const onlineUsers = new Map();
 
+function getOnlineUsersList() {
+    const users = [];
+    for (const [username, data] of onlineUsers) {
+        users.push({
+            username: username,
+            status: data.status || 'online'
+        });
+    }
+    return users;
+}
+
 // Middleware
 app.use(cors({
     origin: process.env.CLIENT_URL || "*",
