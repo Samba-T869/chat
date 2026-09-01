@@ -32,6 +32,7 @@ async function checkAuth() {
         }
         
         currentUsername = data.username;
+        document.getElementById('online-count').textContent = '0 Online';
         document.getElementById('username-display').textContent = currentUsername;
         messageInput.disabled = false;
         sendBtn.disabled = false;
@@ -105,22 +106,34 @@ async function fetchOnlineUsers() {
     }
 }
 
+// Replace the updateUserList function with this:
 function updateUserList(users) {
-    if (!userListDiv) return;
-    
-    let html = '<h3>Online Users</h3>';
-    if (users.length === 0) {
-        onlineCount.innerHTML = 0;
-    } else {
-        online = users.length;
+    // Update online count
+    const onlineCountElement = document.getElementById('online-count');
+    if (onlineCountElement) {
+        const online = users.filter(u => u.status === 'online').length;
+        onlineCountElement.textContent = `${online} Online`;
+    }
 
+    // If there's a user list div, display users
+    if (userListDiv) {
+        if (users.length === 0) {
+            userListDiv.innerHTML = '<div class="no-users">No users online</div>';
+            return;
+        }
+
+        let html = '<h3>Online Users</h3>';
         users.forEach(user => {
             const isCurrentUser = user.username === currentUsername;
-            status = user.status;
-            name = user.username + isCurrentUser ? ' (you)' : '';
+            html += `
+                <div class="user-item ${isCurrentUser ? 'current-user' : ''}">
+                    <span class="user-status online"></span>
+                    ${user.username} ${isCurrentUser ? '(you)' : ''}
+                </div>
+            `;
         });
+        userListDiv.innerHTML = html;
     }
-    onlineCount.innerHTML = online;
 }
 
 async function loadMessages() {
