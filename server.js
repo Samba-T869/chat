@@ -27,6 +27,8 @@ const io = new Server(server, {
     pingTimeout: 60000,
 });
 
+const onlineUsers = new Map();
+
 // Middleware
 app.use(cors({
     origin: process.env.CLIENT_URL || "*",
@@ -269,6 +271,12 @@ app.post('/api/messages', requireAuth, async (req, res) => {
     }
 });
 
+// Add this route after your other API routes
+app.get('/api/online-users', requireAuth, (req, res) => {
+    const users = getOnlineUsersList();
+    res.json(users);
+});
+
 // Socket.IO with session support
 io.use((socket, next) => {
     const session = socket.request.session;
@@ -283,6 +291,16 @@ io.use((socket, next) => {
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.username);
+
+     // Add user to online list
+    onlineUsers.set(socket.username, {
+        userId: socket.userId,
+        status: 'online',
+        socketId: socket.id
+    });
+
+    // Broadcast updated user list to all clients
+    io.emit('online users', getOnlineUsersList());
 
     pool.query('SELECT * FROM messages ORDER BY timestamp DESC LIMIT 50')
         .then(result => {
@@ -317,6 +335,12 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.username);
+
+        // Remove user from online list
+        onlineUsers.delete(socket.username);
+        
+        // Broadcast updated user list
+        io.emit('online users', getOnlineUsersList());
     });
 });
 

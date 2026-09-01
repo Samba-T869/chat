@@ -7,6 +7,11 @@ const sendBtn = document.getElementById('send-btn');
 const typingIndicator = document.getElementById('typing-indicator');
 const userCount = document.getElementById('user-count');
 const logoutBtn = document.getElementById('logout-btn');
+const userListDiv = document.createElement('div');
+userListDiv.id = 'user-list';
+userListDiv.className = 'user-list';
+// Insert user list after chat header or in sidebar
+document.querySelector('.chat-header').after(userListDiv);
 
 let currentUsername = '';
 let isTyping = false;
@@ -34,6 +39,7 @@ async function checkAuth() {
         await loadMessages();
 
         initializeSocket();
+        await fetchOnlineUsers();
 
     } catch (error) {
         console.error('Auth check failed:', error);
@@ -53,6 +59,10 @@ function initializeSocket() {
 
     socket.on('connect_error', (error) => {
         console.error('📌Socket connection error:', error);
+    });
+
+    socket.on('online users', (users) => {
+        updateUserList(users);
     });
 
     socket.on('previous messages', (messages) => {
@@ -78,6 +88,40 @@ function initializeSocket() {
     socket.on('error', (error) => {
         alert(error);
     });
+}
+
+async function fetchOnlineUsers() {
+    try {
+        const response = await fetch('/api/online-users', {
+            credentials: 'include'
+        });
+        if (response.ok) {
+            const users = await response.json();
+            updateUserList(users);
+        }
+    } catch (error) {
+        console.error('Failed to fetch online users:', error);
+    }
+}
+
+function updateUserList(users) {
+    if (!userListDiv) return;
+    
+    let html = '<h3>Online Users</h3>';
+    if (users.length === 0) {
+        html += '<div class="no-users">No users online</div>';
+    } else {
+        users.forEach(user => {
+            const isCurrentUser = user.username === currentUsername;
+            html += `
+                <div class="user-item ${isCurrentUser ? 'current-user' : ''}">
+                    <span class="user-status ${user.status}"></span>
+                    <span class="username">${user.username}${isCurrentUser ? ' (you)' : ''}</span>
+                </div>
+            `;
+        });
+    }
+    userListDiv.innerHTML = html;
 }
 
 async function loadMessages() {
@@ -134,7 +178,8 @@ function sendMessage() {
 
 function displayMessage(data, isOwn) {
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isOwn ? 'user' : 'other'}`;
+    // Use 'sent' for own messages, 'received' for others
+    messageDiv.className = `message ${isOwn ? 'sent' : 'received'}`;
     
     const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
     const timeStr = timestamp.toLocaleTimeString('en-US', { 
