@@ -75,7 +75,7 @@ const sessionMiddleware = session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax'
     }
 });
 
@@ -212,13 +212,20 @@ app.post('/api/login', async (req, res) => {
         req.session.userId = user.id;
         req.session.username = user.username;
 
-        res.json({
-            message: 'Login successful',
-            user: {
-                id: user.id,
-                username: user.username,
-                email: user.email
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ error: 'Login failed to initialize session' });
             }
+            
+            res.json({
+                message: 'Login successful',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email
+                }
+            });
         });
 
         console.log(`User ${username} logged in successfully`);
