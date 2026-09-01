@@ -6,16 +6,17 @@ const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
 const typingIndicator = document.getElementById('typing-indicator');
 const userCount = document.getElementById('user-count');
+const onlineCount = document.getElementById('online-count');
 const logoutBtn = document.getElementById('logout-btn');
-const userListDiv = document.createElement('div');
-userListDiv.id = 'user-list';
-userListDiv.className = 'user-list';
-// Insert user list after chat header or in sidebar
-document.querySelector('.chat-header').after(userListDiv);
+const userListDiv = document.getElementById('users');
 
 let currentUsername = '';
+let name = "";
+let status = "";
 let isTyping = false;
 let typingTimeout = null;
+let users = 0;
+let online = 0;
 
 // Check authentication
 async function checkAuth() {
@@ -109,19 +110,17 @@ function updateUserList(users) {
     
     let html = '<h3>Online Users</h3>';
     if (users.length === 0) {
-        html += '<div class="no-users">No users online</div>';
+        onlineCount.innerHTML = 0;
     } else {
+        online = users.length;
+
         users.forEach(user => {
             const isCurrentUser = user.username === currentUsername;
-            html += `
-                <div class="user-item ${isCurrentUser ? 'current-user' : ''}">
-                    <span class="user-status ${user.status}"></span>
-                    <span class="username">${user.username}${isCurrentUser ? ' (you)' : ''}</span>
-                </div>
-            `;
+            status = user.status;
+            name = user.username + isCurrentUser ? ' (you)' : '';
         });
     }
-    userListDiv.innerHTML = html;
+    onlineCount.innerHTML = online;
 }
 
 async function loadMessages() {
