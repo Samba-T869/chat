@@ -73,7 +73,8 @@ function initializeSocket() {
     });
 
     socket.on('receive message', (data) => {
-        displayMessage(data, false);
+        const isOwn = data.username === currentUsername;
+        displayMessage(data, isOwn);
         scrollToBottom();
     });
 
