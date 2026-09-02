@@ -125,6 +125,7 @@
 <body>
     <div class="users-page">
         <div class="users-header">
+            <a href="index.html" class="back-button" title="Go back">←</a>
             <div>
                 <h1>👥 All Users</h1>
                 <div class="stats">
@@ -132,7 +133,6 @@
                     <span id="online-count">0 Online</span>
                 </div>
             </div>
-            <a href="index.html" class="back-button">← Back to Chat</a>
         </div>
         
         <div class="users-list" id="users-list">
@@ -157,9 +157,11 @@
                     return;
                 }
                 
+                currentUsername = data.username || '';
+
                 // Initialize socket and load users
+                await loadAllRegisteredUsers();
                 initializeSocket();
-                await loadUsers();
                 
             } catch (error) {
                 console.error('Auth check failed:', error);
@@ -170,6 +172,7 @@
         let socket = null;
         let currentUsername = '';
         let onlineUsers = [];
+        let allRegisteredUsers = [];
 
         function initializeSocket() {
             socket = io({
@@ -183,7 +186,7 @@
 
             socket.on('online users', (users) => {
                 onlineUsers = users;
-                displayUsers();
+                renderUserList();
             });
 
             socket.on('connect_error', (error) => {
@@ -200,15 +203,17 @@
                 const authData = await authResponse.json();
                 currentUsername = authData.username || '';
 
-                // Get online users
-                const response = await fetch('/api/online-users', {
+                // Get online users to update status
+                const onlineResponse = await fetch('/api/online-users', {
                     credentials: 'include'
                 });
                 
-                if (response.ok) {
-                    onlineUsers = await response.json();
-                    displayUsers();
+                if (onlineResponse.ok) {
+                    onlineUsers = await onlineResponse.json();
                 }
+
+                // Load all registered users
+                await loadAllRegisteredUsers();
             } catch (error) {
                 console.error('Failed to load users:', error);
             }
@@ -216,61 +221,57 @@
 
         async function loadAllRegisteredUsers() {
             try {
-                // Since your API doesn't have a route to get all users,
-                // we'll get them from messages and online users
-                const messagesResponse = await fetch('/api/messages', {
+                const response = await fetch('/api/users', {
                     credentials: 'include'
                 });
                 
-                if (messagesResponse.ok) {
-                    const messages = await messagesResponse.json();
-                    // Extract unique usernames from messages
-                    const allUsernames = [...new Set(messages.map(msg => msg.username))];
-                    
-                    // Combine with online users
-                    const onlineUsernames = onlineUsers.map(u => u.username);
-                    const allUsers = [...new Set([...allUsernames, ...onlineUsernames])];
-                    
-                    // Create user objects
-                    const userList = allUsers.map(username => ({
-                        username: username,
-                        status: onlineUsernames.includes(username) ? 'online' : 'offline'
-                    }));
-                    
-                    displayUsers(userList);
+                if (response.ok) {
+                    allRegisteredUsers = await response.json();
+                    renderUserList();
                 }
             } catch (error) {
                 console.error('Failed to load registered users:', error);
             }
         }
 
-        function displayUsers(userList) {
+        function renderUserList() {
+            const onlineUsernames = onlineUsers.map(u => u.username);
+            
+            // Map registered users with real-time online status
+            const mergedList = allRegisteredUsers.map(user => ({
+                username: user.username,
+                email: user.email || '',
+                status: onlineUsernames.includes(user.username) ? 'online' : 'offline',
+                created_at: user.created_at
+            }));
+            
+            displayUsers(mergedList);
+        }
+
+        function displayUsers(userList = []) {
             const usersDiv = document.getElementById('users');
             const userCountSpan = document.getElementById('user-count');
             const onlineCountSpan = document.getElementById('online-count');
             
             if (!usersDiv) return;
 
-            // Use provided list or online users
-            const usersToDisplay = userList || onlineUsers;
-            
             // Update counts
             if (userCountSpan) {
-                userCountSpan.textContent = `${usersToDisplay.length} Total Users`;
+                userCountSpan.textContent = `${userList.length} Total Users`;
             }
-            
+
             if (onlineCountSpan) {
-                const onlineCount = usersToDisplay.filter(u => u.status === 'online').length;
+                const onlineCount = userList.filter(u => u.status === 'online').length;
                 onlineCountSpan.textContent = `${onlineCount} Online`;
             }
 
-            if (usersToDisplay.length === 0) {
+            if (userList.length === 0) {
                 usersDiv.innerHTML = '<div class="no-users">No users found</div>';
                 return;
             }
 
             // Sort: online users first, then alphabetical
-            const sortedUsers = [...usersToDisplay].sort((a, b) => {
+            const sortedUsers = [...userList].sort((a, b) => {
                 if (a.status === 'online' && b.status !== 'online') return -1;
                 if (a.status !== 'online' && b.status === 'online') return 1;
                 return a.username.localeCompare(b.username);
@@ -285,6 +286,7 @@
                         <span class="user-name">
                             ${user.username}
                             ${isCurrentUser ? '<span class="you-badge">(you)</span>' : ''}
+                           
                         </span>
                         <span class="user-status-text" style="font-size:0.8rem;color:#999;">
                             ${user.status || 'offline'}
@@ -293,9 +295,10 @@
                 `;
             });
 
+            //${user.email ? `<span class="user-email">(${user.email})</span>` : ''}
             usersDiv.innerHTML = html;
         }
-
+        
         // Start the app
         checkAuth();
 
@@ -306,7 +309,7 @@
                     .then(res => res.json())
                     .then(users => {
                         onlineUsers = users;
-                        displayUsers();
+                        renderUserList();
                     })
                     .catch(err => console.error('Failed to refresh users:', err));
             }

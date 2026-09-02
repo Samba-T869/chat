@@ -51,10 +51,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // PostgreSQL connection with Railway config
 const pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || '',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '45Ngalula',
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Session store
@@ -285,6 +288,19 @@ app.post('/api/messages', requireAuth, async (req, res) => {
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error('Error saving message:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Get all registered users
+app.get('/api/users', requireAuth, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, username, email, created_at FROM users ORDER BY username'
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching users:', err);
         res.status(500).json({ error: 'Database error' });
     }
 });
