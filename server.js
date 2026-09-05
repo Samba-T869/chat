@@ -26,7 +26,7 @@ app.set('trust proxy', 1);
 const io = new Server(server, {
     cors: {
         origin: process.env.CLIENT_URL || process.env.NODE_ENV === 'production' 
-            ? 'https://yourdomain.com' 
+            ? 'https://chat-production-4a8c.up.railway.app' 
             : 'http://localhost:3000',
         methods: ["GET", "POST"],
         credentials: true
@@ -40,7 +40,7 @@ const io = new Server(server, {
 const pool = new Pool({
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'neveralone',
+    database: process.env.DB_NAME || 'express_db',
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || '',
     connectionString: process.env.DATABASE_URL,
