@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>neverAlone | Subscribe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background:#eaeded; padding-top:60px; }
+        .navbar { background:#131a22; padding:0 20px; color:#fff; position:fixed; top:0; left:0; right:0; z-index:1000; }
+        .nav-container { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px; }
+        .nav-logo { font-size:24px; font-weight:700; display:flex; align-items:center; gap:8px; cursor:pointer; }
+        .nav-logo i { color:#ff9900; }
+        .nav-menu { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .nav-menu a { color:#ccc; text-decoration:none; font-size:14px; padding:6px 8px; transition:0.2s; }
+        .nav-menu a:hover { color:#fff; border-bottom:2px solid #ff9900; }
+        .nav-menu a i { margin-right:4px; }
+        .nav-user { display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:32px; height:32px; border-radius:50%; overflow:hidden; border:2px solid #ff9900; flex-shrink:0; }
+        .user-avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-badge { color:#ccc; font-size:14px; }
+        .sub-badge { background:#ff9900; color:#131a22; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; display:none; }
+        .subscribe-page { max-width:900px; margin:30px auto; padding:0 20px; }
+        .subscribe-container { background:#fff; border-radius:8px; padding:32px; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+        .subscribe-header { text-align:center; margin-bottom:30px; }
+        .subscribe-header .back-link { display:inline-block; color:#007185; text-decoration:none; font-weight:500; margin-bottom:12px; }
+        .subscribe-header .back-link:hover { text-decoration:underline; }
+        .subscribe-header h1 { font-weight:400; font-size:28px; }
+        .subscribe-header h1 i { color:#ff9900; }
+        .subscribe-header p { color:#666; }
+        .subscribe-plans { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin-bottom:30px; }
+        .plan-card { border:1px solid #e7e9ec; border-radius:8px; padding:24px; text-align:center; cursor:pointer; transition:0.2s; position:relative; }
+        .plan-card:hover { border-color:#ff9900; box-shadow:0 2px 8px rgba(255,153,0,0.1); }
+        .plan-card.selected { border-color:#ff9900; background:#fff9f0; }
+        .plan-card.popular { border-color:#ff9900; }
+        .popular-badge { background:#ff9900; color:#131a22; padding:2px 16px; border-radius:20px; font-size:12px; font-weight:600; position:absolute; top:-10px; left:50%; transform:translateX(-50%); }
+        .plan-card h2 { font-weight:500; font-size:20px; }
+        .plan-card .price { font-size:32px; font-weight:700; color:#131a22; margin:8px 0 4px; }
+        .plan-card .price-note { color:#666; font-size:14px; }
+        .plan-features { list-style:none; padding:0; text-align:left; margin:16px 0; }
+        .plan-features li { padding:4px 0; font-size:14px; color:#555; }
+        .plan-features li i { color:#28a745; margin-right:8px; }
+        .payment-section { border-top:1px solid #e7e9ec; padding-top:24px; }
+        .payment-section h3 { font-weight:400; font-size:18px; margin-bottom:16px; }
+        .payment-section h3 i { color:#ff9900; margin-right:8px; }
+        .form-group { margin-bottom:16px; }
+        .form-group label { display:block; font-weight:500; font-size:14px; margin-bottom:4px; }
+        .input-with-icon { display:flex; align-items:center; border:1px solid #d5d9dd; border-radius:4px; background:#fff; }
+        .input-with-icon i { padding:0 12px; color:#888; }
+        .input-with-icon input { border:none; padding:10px 0; font-size:14px; width:100%; outline:none; background:transparent; }
+        .input-with-icon input:focus { border-color:#ff9900; box-shadow:0 0 0 3px rgba(255,153,0,0.2); }
+        .form-group small { color:#666; font-size:13px; display:block; margin-top:4px; }
+        .btn-primary { background:#ff9900; color:#131a22; padding:12px 28px; border:none; border-radius:4px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:0.2s; width:100%; justify-content:center; font-size:16px; }
+        .btn-primary:hover { background:#e68a00; }
+        .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+        .secure-badge { text-align:center; margin-top:20px; color:#666; font-size:14px; }
+        .secure-badge i { color:#28a745; margin-right:8px; }
+        .flash-message { padding:12px 16px; border-radius:4px; margin-bottom:16px; display:none; }
+        .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+        .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+        .flash-info { background:#d1ecf1; color:#0c5460; border:1px solid #bee5eb; }
+        .flash-message.show { display:block; }
+        .current-subscription { background:#f7f8fa; padding:12px 16px; border-radius:4px; margin-bottom:16px; }
+        .current-subscription .badge { display:inline-block; padding:2px 12px; border-radius:12px; font-size:12px; font-weight:600; }
+        .current-subscription .badge.active { background:#28a745; color:#fff; }
+        .current-subscription .badge.inactive { background:#dc3545; color:#fff; }
+        .footer { background:#131a22; color:#ccc; padding:40px 20px 20px; margin-top:40px; }
+        .footer-container { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:30px; }
+        .footer-section h3, .footer-section h4 { color:#fff; margin-bottom:12px; }
+        .footer-section h3 i { color:#ff9900; }
+        .footer-section a { display:block; color:#ccc; text-decoration:none; padding:4px 0; font-size:14px; }
+        .footer-section a:hover { text-decoration:underline; }
+        .footer-bottom { text-align:center; padding-top:20px; border-top:1px solid #3a4553; margin-top:20px; font-size:14px; }
+        @media(max-width:768px){ .nav-menu { display:none; } .subscribe-plans { grid-template-columns:1fr; } }
+        .loading-spinner { text-align:center; padding:20px; }
+        .loading-spinner i { animation:spin 1s linear infinite; }
+        @keyframes spin { 100%{ transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo" onclick="window.location.href='homepage.html'"><i class="fas fa-leaf"></i><span>neverAlone</span></div>
+            <div class="nav-menu">
+                <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                <a href="market.html"><i class="fas fa-store"></i> Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i> Blog</a>
+                <a href="mydashboard.html"><i class="fas fa-dashboard"></i> Dashboard</a>
+                <a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+            <div class="nav-user">
+                <div class="user-avatar">
+                    <img id="userAvatar" src="" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=ff9900&color=fff&size=32'">
+                </div>
+                <span class="user-badge" id="usernameDisplay">@User</span>
+                <span class="sub-badge" id="subBadge"><i class="fas fa-crown"></i> Pro</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="subscribe-page">
+        <div class="subscribe-container">
+            <div class="subscribe-header">
+                <a href="homepage.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+                <h1><i class="fas fa-crown"></i> Subscribe to neverAlone Pro</h1>
+                <p>Unlock premium features and start selling your products today</p>
+            </div>
+
+            <div id="flashMessage" class="flash-message"></div>
+
+            <div id="currentSubContainer"></div>
+
+            <form id="subscribeForm">
+                <div class="subscribe-plans">
+                    <div class="plan-card selected" data-plan="daily" onclick="selectPlan('daily')">
+                        <h2>24 Hours</h2>
+                        <p class="price">2,000 Tsh</p>
+                        <p class="price-note">24 hours access</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Post unlimited products</li>
+                            <li><i class="fas fa-check"></i> Premium support</li>
+                            <li><i class="fas fa-check"></i> Analytics dashboard</li>
+                        </ul>
+                    </div>
+                    <div class="plan-card" data-plan="monthly" onclick="selectPlan('monthly')">
+                        <h2>Monthly</h2>
+                        <p class="price">20,000 Tsh</p>
+                        <p class="price-note">per month</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Post 2+ products</li>
+                            <li><i class="fas fa-check"></i> Premium support</li>
+                            <li><i class="fas fa-check"></i> Analytics dashboard</li>
+                        </ul>
+                    </div>
+                    <div class="plan-card popular" data-plan="yearly" onclick="selectPlan('yearly')">
+                        <span class="popular-badge">Best Value</span>
+                        <h2>Yearly</h2>
+                        <p class="price">100,000 Tsh</p>
+                        <p class="price-note">per year (2 months free)</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Everything in Monthly</li>
+                            <li><i class="fas fa-check"></i> 2 months free</li>
+                            <li><i class="fas fa-check"></i> Featured listings</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="payment-section">
+                    <h3><i class="fas fa-mobile-alt"></i> Payment Details</h3>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span style="color:red;">*</span></label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="phone" name="phone" placeholder="0712345678" required>
+                        </div>
+                        <small>Enter your mobile money number (Airtel Money, M-Pesa, Tigo Pesa, Halopesa)</small>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" id="subscribeBtn">
+                        <i class="fas fa-lock"></i> Pay Now via Palmpesa
+                    </button>
+                    
+                    <div style="margin-top:12px;text-align:center;font-size:13px;color:#888;">
+                        <i class="fas fa-info-circle"></i> You will receive a payment prompt on your phone. Confirm to complete payment.
+                    </div>
+                </div>
+            </form>
+
+            <div class="secure-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>Secure payment via Palmpesa | Bank: CRDB Account: 0152779295100</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3><i class="fas fa-leaf"></i> neverAlone</h3>
+                <p>Connecting communities through commerce and conversation.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="homepage.html"><i class="fas fa-home"></i>Home</a>
+                <a href="market.html"><i class="fas fa-store"></i>Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i>Public Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i>Blog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <a href="https://wa.me/255614047802" target="_blank"><i class="fab fa-whatsapp"></i>WhatsApp</a>
+                <a href="tel:255618882762" target="_blank"><i class="fas fa-phone"></i>+255618882762</a>
+                <a href="tel:255656078254" target="_blank"><i class="fas fa-phone"></i>+255656078254</a>
+                <a href="mailto:sambahustler@gmail.com" target="_blank"><i class="fas fa-envelope"></i>Email Us</a>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <a href="subscribe.html"><i class="fas fa-tag"></i>Pricing</a>
+                <a href="policy.html"><i class="fas fa-file-contract"></i>Terms & Privacy</a>
+                <a href="mailto:support@neveralone.com"><i class="fas fa-envelope"></i>support@neveralone.com</a>
+            </div>
+        </div>
+        <div class="footer-bottom"><p>&copy; 2026 neverAlone. All rights reserved.</p></div>
+    </footer>
+
+    <script>
+        let currentUser = null;
+        let selectedPlan = 'daily';
+        let isSubscribed = false;
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                currentUser = data;
+                document.getElementById('usernameDisplay').textContent = '@' + data.username;
+                await loadUserProfile();
+                await checkSubscriptionStatus();
+                return data;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user.profile_pic) {
+                        document.getElementById('userAvatar').src = '/uploads/profiles/' + user.profile_pic;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+            }
+        }
+
+        // Check subscription status
+        async function checkSubscriptionStatus() {
+            try {
+                const response = await fetch('/api/subscription/status', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    isSubscribed = data.active;
+                    
+                    if (isSubscribed) {
+                        document.getElementById('subBadge').style.display = 'inline';
+                        document.getElementById('currentSubContainer').innerHTML = `
+                            <div class="current-subscription">
+                                <strong>Current Plan:</strong> 
+                                <span class="badge active">${data.plan.charAt(0).toUpperCase() + data.plan.slice(1)}</span>
+                                <span style="margin-left:12px;color:#666;">Expires: ${new Date(data.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                <span style="margin-left:12px;color:#666;">(${data.time_left_days || 0} days remaining)</span>
+                            </div>
+                        `;
+                        document.getElementById('subscribeBtn').textContent = 'Already Subscribed';
+                        document.getElementById('subscribeBtn').disabled = true;
+                    } else {
+                        document.getElementById('subBadge').style.display = 'none';
+                        document.getElementById('currentSubContainer').innerHTML = '';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check subscription:', error);
+            }
+        }
+
+        // Select plan
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.plan === plan);
+            });
+        }
+
+        // Submit subscription
+        document.getElementById('subscribeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (isSubscribed) {
+                showFlash('You already have an active subscription!', 'info');
+                return;
+            }
+            
+            const phone = document.getElementById('phone').value.trim();
+            if (!phone || phone.length < 10) {
+                showFlash('Please enter a valid phone number', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('subscribeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const response = await fetch('/api/subscription/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: selectedPlan, phone }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showFlash('Payment initiated! Please check your phone to confirm.', 'success');
+                    
+                    // Simulate webhook callback (in production, this would be handled by Palmpesa)
+                    setTimeout(async () => {
+                        try {
+                            const webhookResponse = await fetch('/api/payment/webhook', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    reference: data.payment_reference,
+                                    status: 'completed',
+                                    transaction_id: 'TX-' + Date.now()
+                                })
+                            });
+                            if (webhookResponse.ok) {
+                                showFlash('Payment confirmed! Your subscription is now active.', 'success');
+                                await checkSubscriptionStatus();
+                                btn.innerHTML = '<i class="fas fa-check"></i> Subscribed!';
+                                btn.disabled = true;
+                            }
+                        } catch (webhookError) {
+                            console.error('Webhook simulation failed:', webhookError);
+                        }
+                    }, 5000);
+                    
+                } else {
+                    showFlash(data.error || 'Failed to create subscription', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now via Palmpesa';
+                }
+            } catch (error) {
+                console.error('Subscription failed:', error);
+                showFlash('An error occurred. Please try again.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now via Palmpesa';
+            }
+        });
+
+        // Show flash message
+        function showFlash(message, type) {
+            const el = document.getElementById('flashMessage');
+            el.textContent = message;
+            el.className = `flash-message flash-${type} show`;
+            setTimeout(() => {
+                el.classList.remove('show');
+            }, 8000);
+        }
+
+        // Logout
+        document.getElementById('logoutLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        });
+
+        // Initialize page
+        checkAuth();
+    </script>
+</body>
+</html>

@@ -1,12 +1,12 @@
 let socket = null;
 
 const chatBox = document.getElementById('chat-box');
-const messagesDiv = document.getElementById('messages');
-const messageInput = document.getElementById('message-input');
-const sendBtn = document.getElementById('send-btn');
-const typingIndicator = document.getElementById('typing-indicator');
+const messagesDiv = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const typingIndicator = document.getElementById('typingIndicator');
 const userCount = document.getElementById('user-count');
-const onlineCount = document.getElementById('online-count');
+const onlineCount = document.getElementById('onlineCount');
 const logoutBtn = document.getElementById('logout-btn');
 const userListDiv = document.getElementById('users');
 

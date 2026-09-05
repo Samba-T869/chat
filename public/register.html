@@ -3,63 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Fujo Chat</title>
-    <link rel="stylesheet" href="auth.css">
+    <title>neverAlone | Create Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin:0; background:#eaeded; font-family:'Amazon Ember',Arial,sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+        .container { width:100%; max-width:440px; padding:20px; }
+        .card { background:#fff; padding:32px 28px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+        .card h1 { font-weight:400; font-size:28px; text-align:center; margin-bottom:24px; }
+        .card h2 { font-size:14px; font-weight:600; margin-bottom:4px; }
+        .form-group { margin-bottom:16px; }
+        .form-group input { width:100%; padding:10px 12px; border:1px solid #d5d9dd; border-radius:4px; font-size:14px; box-sizing:border-box; }
+        .form-group input:focus { border-color:#ff9900; outline:none; box-shadow:0 0 0 3px rgba(255,153,0,0.2); }
+        .file-label { display:inline-block; background:#f0f2f2; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:14px; }
+        .form-group input[type="file"] { display:none; }
+        .show-hide { display:flex; align-items:center; gap:8px; margin:12px 0; font-size:14px; }
+        .show-hide input { width:auto; }
+        .btn-register { width:100%; padding:12px; background:#ff9900; border:none; border-radius:4px; font-size:16px; font-weight:600; cursor:pointer; transition:0.2s; }
+        .btn-register:hover { background:#e68a00; }
+        .btn-register:disabled { opacity:0.6; cursor:not-allowed; }
+        .check { text-align:center; margin-top:16px; font-size:14px; }
+        .check a { color:#007185; text-decoration:none; }
+        .check a:hover { text-decoration:underline; }
+        .top-links { text-align:right; margin-bottom:12px; }
+        .top-links a { color:#007185; text-decoration:none; font-size:14px; margin-left:12px; }
+        .top-links a:hover { text-decoration:underline; }
+        .top-links a.active { font-weight:600; }
+        .flash-message { padding:10px 16px; border-radius:4px; margin-bottom:16px; display:none; }
+        .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+        .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+        .flash-message.show { display:block; }
+        .success-message { text-align:center; padding:20px; }
+        .success-message i { font-size:48px; color:#28a745; }
+        .success-message h2 { color:#28a745; }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <h1>💬 Fujo Chat</h1>
-            <h2>Register</h2>
-            <form id="register-form">
+    <div class="container">
+        <div class="top-links">
+            <a href="login.html">Login</a>
+            <a href="register.html" class="active">Register</a>
+        </div>
+        <div class="card">
+            <h1>CREATE ACCOUNT.</h1>
+
+            <div id="errorContainer">
+                <div id="errorMessage" class="flash-message flash-error"><i class="fas fa-exclamation-circle"></i> <span id="errorText"></span></div>
+                <div id="successMessage" class="flash-message flash-success"><i class="fas fa-check-circle"></i> <span id="successText"></span></div>
+            </div>
+
+            <form id="registerForm" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" required minlength="3" maxlength="30">
+                    <h2>Username.*</h2>
+                    <input type="text" id="username" name="username" placeholder="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" required>
+                    <h2>Email address.*</h2>
+                    <input type="email" id="email" name="email" placeholder="youremail@gmail.com" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password (min 6 characters)</label>
-                    <input type="password" id="password" required minlength="6">
+                    <h2>Add profile picture (optional).</h2>
+                    <input type="file" accept="image/*" id="profilePic" name="profile_pic">
+                    <label for="profilePic" class="file-label"><i class="fas fa-upload"></i> Choose profile picture</label>
+                    <small style="display:block;color:#666;font-size:12px;margin-top:4px;">Supported: JPEG, PNG, GIF, WEBP (Max 5MB)</small>
                 </div>
-                <button type="submit" class="auth-btn">Register</button>
-                <div id="error-message" class="error-message"></div>
+                <div class="form-group">
+                    <h2>Password.*</h2>
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                    <small style="display:block;color:#666;font-size:12px;margin-top:4px;">Password must be at least 6 characters</small>
+                </div>
+                <div class="form-group">
+                    <h2>Confirm password.*</h2>
+                    <input type="password" id="confirm" name="confirm" placeholder="Confirm password" required>
+                </div>
+                <div class="show-hide">
+                    <input type="checkbox" id="showPassword">
+                    <label for="showPassword">Show Password</label>
+                </div>
+                <button type="submit" class="btn-register" id="registerBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+                <div class="check">
+                    <label>Already have an account? <a href="login.html">Login</a></label>
+                </div>
             </form>
-            <p class="auth-link">
-                Already have an account? <a href="login.html">Login</a>
-            </p>
         </div>
     </div>
+
     <script>
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
+        // Show/hide password
+        document.getElementById('showPassword').addEventListener('change', function() {
+            const password = document.getElementById('password');
+            const confirm = document.getElementById('confirm');
+            const type = this.checked ? 'text' : 'password';
+            password.type = type;
+            confirm.type = type;
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
+            
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('error-message');
-            errorMessage.textContent = '';
+            const confirm = document.getElementById('confirm').value;
+            const profilePic = document.getElementById('profilePic').files[0];
+            
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const successMessage = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            const registerBtn = document.getElementById('registerBtn');
+            
+            // Hide previous messages
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+            
+            // Basic validation
+            if (!username || !email || !password || !confirm) {
+                errorText.textContent = 'All fields are required';
+                errorMessage.classList.add('show');
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorText.textContent = 'Password must be at least 6 characters';
+                errorMessage.classList.add('show');
+                return;
+            }
+            
+            if (password !== confirm) {
+                errorText.textContent = 'Passwords do not match';
+                errorMessage.classList.add('show');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+                errorText.textContent = 'Username must be 3-30 characters (letters, numbers, underscore)';
+                errorMessage.classList.add('show');
+                return;
+            }
+            
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errorText.textContent = 'Invalid email address';
+                errorMessage.classList.add('show');
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
 
             try {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('confirm', confirm);
+                if (profilePic) {
+                    formData.append('profile_pic', profilePic);
+                }
+
                 const response = await fetch('/api/register', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password }),
+                    body: formData,
                     credentials: 'include'
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    window.location.href = '/';
+                    successText.textContent = 'Account created successfully! Redirecting...';
+                    successMessage.classList.add('show');
+                    setTimeout(() => {
+                        window.location.href = '/homepage.html';
+                    }, 1500);
                 } else {
-                    errorMessage.textContent = data.error || 'Registration failed';
+                    errorText.textContent = data.error || 'Registration failed';
+                    errorMessage.classList.add('show');
                 }
             } catch (error) {
-                errorMessage.textContent = 'An error occurred';
+                errorText.textContent = 'An error occurred. Please try again.';
+                errorMessage.classList.add('show');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
             }
         });
+
+        // Check if already logged in
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.authenticated) {
+                    window.location.href = '/homepage.html';
+                }
+            } catch (error) {
+                // Not authenticated, stay on register page
+            }
+        }
+        checkAuth();
     </script>
 </body>
 </html>

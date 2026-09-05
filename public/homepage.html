@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>neverAlone | Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background:#eaeded; }
+        .navbar { background:#131a22; padding:0 20px; color:#fff; position:fixed; top:0; left:0; right:0; z-index:1000; }
+        .nav-container { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px; }
+        .nav-logo { font-size:24px; font-weight:700; display:flex; align-items:center; gap:8px; cursor:pointer; }
+        .nav-logo i { color:#ff9900; }
+        .nav-menu { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .nav-menu a { color:#ccc; text-decoration:none; font-size:14px; padding:6px 8px; transition:0.2s; }
+        .nav-menu a:hover, .nav-menu a.active { color:#fff; border-bottom:2px solid #ff9900; }
+        .nav-menu a i { margin-right:4px; }
+        .nav-user { display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:32px; height:32px; border-radius:50%; overflow:hidden; border:2px solid #ff9900; flex-shrink:0; }
+        .user-avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-badge { color:#ccc; font-size:14px; }
+        .sub-badge { background:#ff9900; color:#131a22; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+        .hero { background: linear-gradient(135deg, #232f3e 0%, #131a22 100%); color:#fff; padding:80px 20px 60px; text-align:center; margin-top:60px; }
+        .hero h1 { font-size:42px; font-weight:300; margin-bottom:12px; }
+        .hero p { font-size:18px; color:#ccc; max-width:600px; margin:0 auto 24px; }
+        .hero-buttons { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+        .btn-primary { background:#ff9900; color:#131a22; padding:12px 28px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:0.2s; border:none; cursor:pointer; }
+        .btn-primary:hover { background:#e68a00; }
+        .btn-secondary { background:transparent; color:#fff; padding:12px 28px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px; border:1px solid #fff; transition:0.2s; }
+        .btn-secondary:hover { background:rgba(255,255,255,0.1); }
+        .section-header { max-width:1400px; margin:30px auto 16px; padding:0 20px; display:flex; justify-content:space-between; align-items:center; }
+        .section-header h2 { font-weight:400; font-size:22px; }
+        .section-header h2 i { color:#ff9900; margin-right:8px; }
+        .view-all { color:#007185; text-decoration:none; font-weight:500; }
+        .view-all:hover { text-decoration:underline; }
+        .product-grid { max-width:1400px; margin:0 auto 40px; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:20px; }
+        .product-card { background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition:0.2s; cursor:pointer; }
+        .product-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.1); transform:translateY(-2px); }
+        .product-image { position:relative; height:200px; overflow:hidden; background:#f0f2f2; }
+        .product-image img { width:100%; height:100%; object-fit:cover; }
+        .product-category { position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.7); color:#fff; padding:2px 12px; border-radius:12px; font-size:12px; }
+        .product-info { padding:16px; }
+        .product-info h3 { font-size:16px; font-weight:600; margin-bottom:4px; }
+        .product-seller { color:#555; font-size:13px; margin-bottom:6px; }
+        .product-seller i { color:#ff9900; }
+        .product-description { color:#666; font-size:13px; margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .product-bottom { display:flex; justify-content:space-between; align-items:center; }
+        .product-price { font-weight:700; color:#b12704; font-size:18px; }
+        .btn-see-more { background:#ffd814; color:#131a22; padding:6px 16px; border-radius:20px; text-decoration:none; font-size:13px; font-weight:600; transition:0.2s; border:none; cursor:pointer; }
+        .btn-see-more:hover { background:#f7ca00; }
+        .blog-grid { max-width:1400px; margin:0 auto 40px; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; }
+        .blog-card { background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.05); cursor:pointer; }
+        .blog-image { height:160px; overflow:hidden; background:#f0f2f2; }
+        .blog-image img { width:100%; height:100%; object-fit:cover; }
+        .blog-content { padding:16px; }
+        .blog-category { background:#f0f2f2; padding:2px 12px; border-radius:12px; font-size:12px; display:inline-block; }
+        .blog-content h3 { font-size:18px; margin:8px 0; }
+        .blog-meta { color:#555; font-size:13px; margin-bottom:6px; }
+        .blog-excerpt { color:#666; font-size:14px; margin-bottom:8px; }
+        .blog-price { font-weight:600; color:#b12704; }
+        .btn-read-more { color:#007185; text-decoration:none; font-weight:500; font-size:14px; }
+        .btn-read-more:hover { text-decoration:underline; }
+        .cta-section { background:#fff; padding:50px 20px; margin:20px auto; max-width:1400px; border-radius:8px; }
+        .cta-content { max-width:1000px; margin:0 auto; text-align:center; }
+        .cta-content h2 { font-weight:400; font-size:28px; }
+        .cta-content h2 i { color:#ff9900; }
+        .cta-plans { display:flex; gap:30px; justify-content:center; margin-top:30px; flex-wrap:wrap; }
+        .plan-card { background:#f7f8fa; border-radius:8px; padding:30px; flex:1; max-width:320px; min-width:240px; border:1px solid #e7e9ec; }
+        .plan-card.popular { border-color:#ff9900; position:relative; }
+        .popular-badge { background:#ff9900; color:#131a22; padding:4px 16px; border-radius:20px; font-size:12px; font-weight:600; position:absolute; top:-12px; left:50%; transform:translateX(-50%); }
+        .plan-card h3 { font-size:20px; font-weight:500; margin-bottom:8px; }
+        .plan-card .price { font-size:28px; font-weight:700; color:#131a22; }
+        .plan-card ul { list-style:none; padding:0; text-align:left; margin:16px 0; }
+        .plan-card ul li { padding:4px 0; font-size:14px; color:#555; }
+        .plan-card ul li i { color:#28a745; margin-right:8px; width:18px; }
+        .empty-state { text-align:center; padding:60px 20px; color:#666; grid-column:1/-1; }
+        .empty-state i { font-size:48px; color:#ccc; margin-bottom:16px; }
+        .footer { background:#131a22; color:#ccc; padding:40px 20px 20px; margin-top:40px; }
+        .footer-container { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:30px; }
+        .footer-section h3, .footer-section h4 { color:#fff; margin-bottom:12px; }
+        .footer-section h3 i { color:#ff9900; }
+        .footer-section a { display:block; color:#ccc; text-decoration:none; padding:4px 0; font-size:14px; }
+        .footer-section a:hover { text-decoration:underline; }
+        .footer-bottom { text-align:center; padding-top:20px; border-top:1px solid #3a4553; margin-top:20px; font-size:14px; }
+        .flash-message { padding:12px 16px; border-radius:4px; margin-bottom:16px; max-width:1400px; margin:10px auto; display:none; }
+        .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+        .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+        .flash-message.show { display:block; }
+        @media(max-width:768px){ .nav-menu { display:none; } .hero h1 { font-size:28px; } }
+        .loading-spinner { display:flex; justify-content:center; align-items:center; padding:40px; }
+        .loading-spinner i { font-size:32px; color:#ff9900; animation:spin 1s linear infinite; }
+        @keyframes spin { 100%{ transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo" onclick="window.location.href='homepage.html'"><i class="fas fa-leaf"></i><span>neverAlone</span></div>
+            <div class="nav-menu" id="navMenu">
+                <a href="homepage.html" class="active"><i class="fas fa-home"></i> Home</a>
+                <a href="market.html"><i class="fas fa-store"></i> Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i> Blog</a>
+                <a href="mydashboard.html" id="dashboardLink" style="display:none;"><i class="fas fa-dashboard"></i> Dashboard</a>
+                <a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+            <div class="nav-user" id="navUser">
+                <div class="user-avatar">
+                    <img id="userAvatar" src="" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=ff9900&color=fff&size=32'">
+                </div>
+                <span class="user-badge" id="usernameDisplay">@User</span>
+                <span class="sub-badge" id="subBadge" style="display:none;"><i class="fas fa-crown"></i> Pro</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div id="flashMessage" class="flash-message"></div>
+
+    <!-- Hero -->
+    <section class="hero" id="heroSection">
+        <div class="hero-content">
+            <h1 id="welcomeMessage">Welcome back!</h1>
+            <p>Discover amazing products, connect with others, and grow your business</p>
+            <div class="hero-buttons">
+                <a href="market.html" class="btn-primary"><i class="fas fa-shopping-bag"></i> Browse Marketplace</a>
+                <a href="subscribe.html" class="btn-secondary" id="subscribeBtn"><i class="fas fa-rocket"></i> Subscribe Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="featured-section">
+        <div class="section-header">
+            <h2><i class="fas fa-star"></i> Featured Products</h2>
+            <a href="market.html" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="product-grid" id="productsGrid">
+            <div class="loading-spinner"><i class="fas fa-circle-notch"></i></div>
+        </div>
+    </section>
+
+    <!-- Blog Posts -->
+    <section class="blog-section">
+        <div class="section-header">
+            <h2><i class="fas fa-newspaper"></i> Latest Posts</h2>
+            <a href="tusepe.html" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="blog-grid" id="blogGrid">
+            <div class="loading-spinner"><i class="fas fa-circle-notch"></i></div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section" id="ctaSection">
+        <div class="cta-content">
+            <h2><i class="fas fa-crown"></i> Unlock Full Potential</h2>
+            <p>Subscribe to neverAlone Pro and start selling your products today!</p>
+            <div class="cta-plans">
+                <div class="plan-card">
+                    <h3>Monthly</h3>
+                    <p class="price">20,000 Tsh</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Post unlimited products</li>
+                        <li><i class="fas fa-check"></i> Premium support</li>
+                        <li><i class="fas fa-check"></i> Analytics dashboard</li>
+                    </ul>
+                    <a href="subscribe.html" class="btn-primary">Subscribe Now</a>
+                </div>
+                <div class="plan-card popular">
+                    <span class="popular-badge">Best Value</span>
+                    <h3>Yearly</h3>
+                    <p class="price">100,000 Tsh</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Everything in Monthly</li>
+                        <li><i class="fas fa-check"></i> 2 months free</li>
+                        <li><i class="fas fa-check"></i> Featured listings</li>
+                        <li><i class="fas fa-check"></i> Priority support</li>
+                    </ul>
+                    <a href="subscribe.html" class="btn-primary">Subscribe Now</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3><i class="fas fa-leaf"></i> neverAlone</h3>
+                <p>Connecting communities through commerce and conversation.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="homepage.html"><i class="fas fa-home"></i>Home</a>
+                <a href="market.html"><i class="fas fa-store"></i>Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i>Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i>Blog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <a href="https://wa.me/255614047802" target="_blank"><i class="fab fa-whatsapp"></i>WhatsApp</a>
+                <a href="tel:255618882762" target="_blank"><i class="fas fa-phone"></i>+255618882762</a>
+                <a href="tel:255656078254" target="_blank"><i class="fas fa-phone"></i>+255656078254</a>
+                <a href="mailto:sambahustler@gmail.com" target="_blank"><i class="fas fa-envelope"></i>Email Us</a>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <a href="subscribe.html"><i class="fas fa-tag"></i>Pricing</a>
+                <a href="policy.html"><i class="fas fa-file-contract"></i>Terms & Privacy</a>
+                <a href="mailto:support@neveralone.com"><i class="fas fa-envelope"></i>support@neveralone.com</a>
+            </div>
+        </div>
+        <div class="footer-bottom"><p>&copy; 2026 neverAlone. All rights reserved.</p></div>
+    </footer>
+
+    <script>
+        let currentUser = null;
+        let isSubscribed = false;
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                currentUser = data;
+                return data;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('usernameDisplay').textContent = '@' + user.username;
+                    if (user.profile_pic) {
+                        document.getElementById('userAvatar').src = '/uploads/profiles/' + user.profile_pic;
+                    }
+                    document.getElementById('welcomeMessage').textContent = 'Welcome back, ' + user.username + '!';
+                    return user;
+                }
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+            }
+        }
+
+        // Check subscription status
+        async function checkSubscription() {
+            try {
+                const response = await fetch('/api/subscription/status', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    isSubscribed = data.active;
+                    
+                    if (isSubscribed) {
+                        document.getElementById('subBadge').style.display = 'inline';
+                        document.getElementById('dashboardLink').style.display = 'inline';
+                        document.getElementById('subscribeBtn').style.display = 'none';
+                        document.getElementById('ctaSection').style.display = 'none';
+                    } else {
+                        document.getElementById('subBadge').style.display = 'none';
+                        document.getElementById('dashboardLink').style.display = 'none';
+                        document.getElementById('subscribeBtn').style.display = 'inline-flex';
+                        document.getElementById('ctaSection').style.display = 'block';
+                    }
+                    return data;
+                }
+            } catch (error) {
+                console.error('Failed to check subscription:', error);
+            }
+        }
+
+        // Load featured products
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products?limit=8');
+                if (response.ok) {
+                    const data = await response.json();
+                    const grid = document.getElementById('productsGrid');
+                    
+                    if (data.products && data.products.length > 0) {
+                        grid.innerHTML = data.products.map(product => `
+                            <div class="product-card" onclick="window.location.href='myshop.html?id=${product.id}'">
+                                <div class="product-image">
+                                    ${product.media_path ? 
+                                        `<img src="/uploads/products/${product.media_path}" alt="${product.title}">` :
+                                        `<img src="https://picsum.photos/seed/${product.id}/400/300" alt="${product.title}">`
+                                    }
+                                    <span class="product-category">${product.category}</span>
+                                </div>
+                                <div class="product-info">
+                                    <h3>${product.title}</h3>
+                                    <p class="product-seller"><i class="fas fa-user"></i> ${product.username}</p>
+                                    <p class="product-description">${product.description ? product.description.substring(0, 100) + (product.description.length > 100 ? '...' : '') : ''}</p>
+                                    <div class="product-bottom">
+                                        <span class="product-price">${Number(product.price).toLocaleString()} Tsh</span>
+                                        <button class="btn-see-more">See More</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        grid.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-store"></i>
+                                <p>No products available yet. Be the first to post!</p>
+                                <a href="mydashboard.html" class="btn-primary" style="display:inline-block;margin-top:12px;">
+                                    <i class="fas fa-plus-circle"></i> Add Product
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load products:', error);
+                document.getElementById('productsGrid').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load products. Please refresh the page.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load blog posts
+        async function loadBlogPosts() {
+            try {
+                const response = await fetch('/api/blog');
+                if (response.ok) {
+                    const posts = await response.json();
+                    const grid = document.getElementById('blogGrid');
+                    
+                    if (posts && posts.length > 0) {
+                        const latestPosts = posts.slice(0, 6);
+                        grid.innerHTML = latestPosts.map(post => `
+                            <div class="blog-card" onclick="window.location.href='tusepe.html#post-${post.id}'">
+                                <div class="blog-image">
+                                    ${post.media_path ? 
+                                        `<img src="/uploads/blog/${post.media_path}" alt="${post.title}">` :
+                                        `<img src="https://picsum.photos/seed/blog${post.id}/400/300" alt="${post.title}">`
+                                    }
+                                </div>
+                                <div class="blog-content">
+                                    <span class="blog-category">${post.category}</span>
+                                    <h3>${post.title}</h3>
+                                    <p class="blog-meta"><i class="fas fa-user"></i> ${post.username} | <i class="fas fa-calendar"></i> ${new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                    <p class="blog-excerpt">${post.content.substring(0, 120) + (post.content.length > 120 ? '...' : '')}</p>
+                                    ${post.price > 0 ? `<p class="blog-price"><i class="fas fa-tag"></i> ${Number(post.price).toLocaleString()} Tsh</p>` : ''}
+                                    <a href="tusepe.html#post-${post.id}" class="btn-read-more">Read More <i class="fas fa-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        grid.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-blog"></i>
+                                <p>No blog posts yet. Share something with the community!</p>
+                                <a href="tusepe.html" class="btn-primary" style="display:inline-block;margin-top:12px;">
+                                    <i class="fas fa-pen"></i> Write a Post
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load blog posts:', error);
+                document.getElementById('blogGrid').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load blog posts. Please refresh the page.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        });
+
+        // Initialize page
+        async function initPage() {
+            await checkAuth();
+            await loadUserProfile();
+            await checkSubscription();
+            await loadProducts();
+            await loadBlogPosts();
+        }
+
+        initPage();
+    </script>
+</body>
+</html>

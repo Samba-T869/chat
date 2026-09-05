@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>neverAlone | Terms of Service & Privacy Policy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background:#f5f6f8; color:#1a1a2e; line-height:1.7; padding-top:60px; }
+        .navbar { background:#131a22; padding:0 20px; color:#fff; position:fixed; top:0; left:0; right:0; z-index:1000; }
+        .nav-container { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px; }
+        .nav-logo { font-size:24px; font-weight:700; display:flex; align-items:center; gap:8px; cursor:pointer; }
+        .nav-logo i { color:#ff9900; }
+        .nav-menu { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .nav-menu a { color:#ccc; text-decoration:none; font-size:14px; padding:6px 8px; transition:0.2s; }
+        .nav-menu a:hover { color:#fff; border-bottom:2px solid #ff9900; }
+        .nav-menu a i { margin-right:4px; }
+        .nav-user { display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:32px; height:32px; border-radius:50%; overflow:hidden; border:2px solid #ff9900; flex-shrink:0; }
+        .user-avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-badge { color:#ccc; font-size:14px; }
+        .sub-badge { background:#ff9900; color:#131a22; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; display:none; }
+        .container { max-width:900px; margin:40px auto; padding:0 20px; }
+        .header { text-align:center; padding:40px 0; background:linear-gradient(135deg,#131a22,#232f3e); color:#fff; border-radius:12px 12px 0 0; }
+        .header h1 { font-weight:600; font-size:32px; }
+        .header h1 i { color:#ff9900; margin-right:12px; }
+        .header p { color:#ccc; margin-top:8px; }
+        .content { background:#fff; padding:40px; border-radius:0 0 12px 12px; box-shadow:0 4px 20px rgba(0,0,0,0.06); }
+        .section { margin-bottom:32px; }
+        .section h2 { font-size:22px; font-weight:600; color:#131a22; border-bottom:2px solid #ff9900; padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+        .section h2 i { color:#ff9900; font-size:20px; }
+        .section h3 { font-size:17px; font-weight:600; margin:16px 0 8px; color:#232f3e; }
+        .section p { margin-bottom:10px; color:#444; }
+        .section ul { list-style:none; padding-left:20px; margin-bottom:12px; }
+        .section ul li { padding:6px 0; border-bottom:1px solid #f0f0f0; display:flex; align-items:flex-start; gap:10px; }
+        .section ul li:before { content:"▸"; color:#ff9900; font-weight:bold; }
+        .section ul li strong { color:#131a22; }
+        .highlight-box { background:#f7f8fa; padding:16px 20px; border-radius:8px; border-left:4px solid #ff9900; margin:12px 0; }
+        .footer { text-align:center; margin-top:30px; color:#888; font-size:14px; }
+        .footer a { color:#007185; text-decoration:none; }
+        .footer a:hover { text-decoration:underline; }
+        .btn-back { display:inline-block; padding:10px 24px; background:#ff9900; color:#131a22; text-decoration:none; border-radius:6px; font-weight:600; margin-bottom:20px; transition:0.2s; border:none; cursor:pointer; }
+        .btn-back:hover { background:#e68a00; }
+        .badge { display:inline-block; background:#ff9900; color:#131a22; font-size:11px; padding:2px 10px; border-radius:12px; font-weight:600; margin-left:8px; }
+        @media(max-width:600px){ .content { padding:20px; } .header h1 { font-size:24px; } .nav-menu { display:none; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo" onclick="window.location.href='homepage.html'"><i class="fas fa-leaf"></i><span>neverAlone</span></div>
+            <div class="nav-menu">
+                <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                <a href="market.html"><i class="fas fa-store"></i> Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i> Blog</a>
+                <a href="mydashboard.html"><i class="fas fa-dashboard"></i> Dashboard</a>
+                <a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+            <div class="nav-user">
+                <div class="user-avatar">
+                    <img id="userAvatar" src="" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=ff9900&color=fff&size=32'">
+                </div>
+                <span class="user-badge" id="usernameDisplay">@User</span>
+                <span class="sub-badge" id="subBadge"><i class="fas fa-crown"></i> Pro</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i> Go Back</button>
+        
+        <div class="header">
+            <h1><i class="fas fa-file-contract"></i> Terms of Service & Privacy Policy</h1>
+            <p>Last Updated: <span id="lastUpdated"></span></p>
+        </div>
+        
+        <div class="content">
+            <!-- Terms of Service -->
+            <div class="section">
+                <h2><i class="fas fa-gavel"></i> Terms of Service</h2>
+                
+                <div class="highlight-box">
+                    <p><strong>Effective Date:</strong> <span id="effectiveDate"></span></p>
+                    <p>By using neverAlone, you agree to these terms. If you do not agree, please do not use our platform.</p>
+                </div>
+                
+                <h3>1. Acceptable Use</h3>
+                <p>You agree to use neverAlone only for lawful purposes and in a way that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the platform.</p>
+                <ul>
+                    <li><strong>Prohibited Content:</strong> No illegal, harmful, threatening, abusive, harassing, defamatory, or obscene content.</li>
+                    <li><strong>No Spam:</strong> Do not post unsolicited promotional content or spam.</li>
+                    <li><strong>No Impersonation:</strong> Do not impersonate other users or entities.</li>
+                    <li><strong>Respect Others:</strong> Treat all users with respect and courtesy.</li>
+                    <li><strong>No Malicious Activity:</strong> Do not upload viruses, malware, or harmful code.</li>
+                </ul>
+                
+                <h3>2. Intellectual Property</h3>
+                <ul>
+                    <li><strong>Ownership:</strong> neverAlone owns all rights to the platform, including design, code, and branding.</li>
+                    <li><strong>User Content:</strong> You retain ownership of content you post, but grant neverAlone a license to display and share it on the platform.</li>
+                    <li><strong>Copyright:</strong> Respect copyright laws. Do not post content you do not own or have permission to use.</li>
+                    <li><strong>Trademarks:</strong> neverAlone and its logos are registered trademarks.</li>
+                </ul>
+                
+                <h3>3. Account Termination</h3>
+                <ul>
+                    <li><strong>Violation:</strong> We reserve the right to suspend or terminate accounts that violate these terms.</li>
+                    <li><strong>Fraud:</strong> Accounts involved in fraudulent activities will be terminated immediately.</li>
+                    <li><strong>Inactivity:</strong> Accounts inactive for more than 12 months may be archived.</li>
+                    <li><strong>Refund Policy:</strong> Subscription fees are non-refundable except as required by law.</li>
+                </ul>
+                
+                <h3>4. Limitation of Liability</h3>
+                <ul>
+                    <li><strong>As-Is:</strong> The platform is provided "as-is" without warranties of any kind.</li>
+                    <li><strong>No Liability:</strong> neverAlone is not liable for any damages arising from use of the platform.</li>
+                    <li><strong>Third-Party:</strong> We are not responsible for content posted by users or third-party links.</li>
+                </ul>
+                
+                <h3>5. Payment Terms</h3>
+                <ul>
+                    <li><strong>Subscriptions:</strong> Plans include Daily (2,000 Tsh), Monthly (20,000 Tsh), and Yearly (100,000 Tsh).</li>
+                    <li><strong>Refunds:</strong> No refunds for partial subscription periods.</li>
+                    <li><strong>Cancellations:</strong> Cancel anytime; no refund for remaining period.</li>
+                    <li><strong>Billing:</strong> Payments are processed securely via Palmpesa.</li>
+                    <li><strong>Bank Account:</strong> All payments are directed to CRDB Bank Account: <strong>0152779295100</strong>.</li>
+                </ul>
+            </div>
+            
+            <!-- Privacy Policy -->
+            <div class="section">
+                <h2><i class="fas fa-shield-alt"></i> Privacy Policy</h2>
+                
+                <div class="highlight-box">
+                    <p>We are committed to protecting your privacy. This policy explains how we collect, use, and protect your personal information.</p>
+                </div>
+                
+                <h3>1. Data Collection</h3>
+                <ul>
+                    <li><strong>Account Data:</strong> We collect username, email, and profile information.</li>
+                    <li><strong>Transaction Data:</strong> Payment history and subscription details.</li>
+                    <li><strong>Usage Data:</strong> How you use the platform, including posts and messages.</li>
+                    <li><strong>Device Data:</strong> IP address, browser type, and device information.</li>
+                </ul>
+                
+                <h3>2. Usage & Storage</h3>
+                <ul>
+                    <li><strong>Purpose:</strong> We use data to provide services, improve the platform, and ensure security.</li>
+                    <li><strong>Storage:</strong> Data is stored on secure servers with industry-standard protection.</li>
+                    <li><strong>Retention:</strong> Data is retained as long as your account is active or as required by law.</li>
+                    <li><strong>Analytics:</strong> We use analytics to improve user experience and features.</li>
+                </ul>
+                
+                <h3>3. Third-Party Sharing</h3>
+                <ul>
+                    <li><strong>Service Providers:</strong> We share data with trusted partners (payment processors, hosting).</li>
+                    <li><strong>Legal Compliance:</strong> We may share data to comply with legal obligations.</li>
+                    <li><strong>No Selling:</strong> We do not sell your personal data to third parties.</li>
+                    <li><strong>Anonymized:</strong> Aggregated, anonymized data may be used for research.</li>
+                </ul>
+                
+                <h3>4. User Rights</h3>
+                <ul>
+                    <li><strong>Access:</strong> You can access your personal data anytime.</li>
+                    <li><strong>Correction:</strong> You can update or correct your information.</li>
+                    <li><strong>Deletion:</strong> You can request account deletion (data will be permanently removed).</li>
+                    <li><strong>Opt-Out:</strong> You can opt out of marketing communications.</li>
+                </ul>
+                
+                <h3>5. Legal Compliance</h3>
+                <ul>
+                    <li><strong>Data Protection:</strong> We comply with applicable data protection laws.</li>
+                    <li><strong>Security:</strong> We implement measures to protect against unauthorized access.</li>
+                    <li><strong>Breach Notification:</strong> We notify users of any data breaches as required by law.</li>
+                    <li><strong>Children:</strong> We do not knowingly collect data from minors under 18.</li>
+                </ul>
+            </div>
+            
+            <!-- Contact -->
+            <div class="section">
+                <h2><i class="fas fa-envelope"></i> Contact Us</h2>
+                <div class="highlight-box">
+                    <p>For questions about these terms or privacy policy, contact us at:</p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:support@neveralone.com">support@neveralone.com</a></p>
+                    <p><i class="fas fa-phone"></i> <a href="tel:255618882762">+255 618 882 762</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; <span id="currentYear"></span> neverAlone. All rights reserved.</p>
+            <p><a href="homepage.html"><i class="fas fa-home"></i> Return to Homepage</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Set current date
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        document.getElementById('effectiveDate').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    document.getElementById('usernameDisplay').textContent = '@' + data.username;
+                    // Load user profile
+                    const profileResponse = await fetch('/api/user/profile', {
+                        credentials: 'include'
+                    });
+                    if (profileResponse.ok) {
+                        const user = await profileResponse.json();
+                        if (user.profile_pic) {
+                            document.getElementById('userAvatar').src = '/uploads/profiles/' + user.profile_pic;
+                        }
+                    }
+                    // Check subscription
+                    const subResponse = await fetch('/api/subscription/status', {
+                        credentials: 'include'
+                    });
+                    if (subResponse.ok) {
+                        const subData = await subResponse.json();
+                        if (subData.active) {
+                            document.getElementById('subBadge').style.display = 'inline';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        });
+
+        checkAuth();
+    </script>
+</body>
+</html>

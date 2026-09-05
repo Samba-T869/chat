@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>neverAlone | Product Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background:#eaeded; padding-top:60px; }
+        .navbar { background:#131a22; padding:0 20px; color:#fff; position:fixed; top:0; left:0; right:0; z-index:1000; }
+        .nav-container { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px; }
+        .nav-logo { font-size:24px; font-weight:700; display:flex; align-items:center; gap:8px; cursor:pointer; }
+        .nav-logo i { color:#ff9900; }
+        .nav-menu { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .nav-menu a { color:#ccc; text-decoration:none; font-size:14px; padding:6px 8px; transition:0.2s; }
+        .nav-menu a:hover { color:#fff; border-bottom:2px solid #ff9900; }
+        .nav-menu a i { margin-right:4px; }
+        .nav-user { display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:32px; height:32px; border-radius:50%; overflow:hidden; border:2px solid #ff9900; flex-shrink:0; }
+        .user-avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-badge { color:#ccc; font-size:14px; }
+        .sub-badge { background:#ff9900; color:#131a22; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; display:none; }
+        .product-detail { max-width:1000px; margin:30px auto; padding:0 20px; display:grid; grid-template-columns:1fr 1fr; gap:30px; }
+        .product-image-large { background:#fff; border-radius:8px; overflow:hidden; }
+        .product-image-large img { width:100%; height:auto; max-height:500px; object-fit:contain; }
+        .product-info-detail { background:#fff; border-radius:8px; padding:24px; }
+        .product-info-detail h1 { font-size:24px; font-weight:600; }
+        .product-info-detail .price { font-size:28px; font-weight:700; color:#b12704; margin:8px 0; }
+        .product-info-detail .category { color:#666; }
+        .product-info-detail .seller { margin:8px 0; }
+        .product-info-detail .description { margin:16px 0; line-height:1.6; color:#333; }
+        .btn-back { display:inline-block; padding:8px 16px; background:#f0f2f2; border-radius:4px; text-decoration:none; color:#333; margin-bottom:16px; border:none; cursor:pointer; }
+        .btn-back:hover { background:#e0e0e0; }
+        .btn-contact { background:#ff9900; color:#131a22; padding:10px 24px; border:none; border-radius:4px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+        .btn-contact:hover { background:#e68a00; }
+        .comment-section { background:#fff; border-radius:8px; padding:24px; margin-top:24px; grid-column:1/-1; }
+        .comment-section h3 { margin-bottom:16px; }
+        .comment-form { display:flex; gap:8px; margin-bottom:16px; }
+        .comment-form input { flex:1; padding:10px 12px; border:1px solid #d5d9dd; border-radius:4px; font-size:14px; }
+        .comment-form button { background:#ff9900; border:none; border-radius:4px; padding:10px 20px; color:#131a22; font-weight:600; cursor:pointer; }
+        .comment-item { padding:12px 0; border-bottom:1px solid #f0f2f2; }
+        .comment-author { font-weight:600; }
+        .comment-time { color:#888; font-size:12px; float:right; }
+        .comment-text { margin-top:4px; color:#333; }
+        .flash-message { padding:12px 16px; border-radius:4px; margin-bottom:16px; display:none; grid-column:1/-1; }
+        .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+        .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+        .flash-message.show { display:block; }
+        .footer { background:#131a22; color:#ccc; padding:40px 20px 20px; margin-top:40px; }
+        .footer-container { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:30px; }
+        .footer-section h3, .footer-section h4 { color:#fff; margin-bottom:12px; }
+        .footer-section h3 i { color:#ff9900; }
+        .footer-section a { display:block; color:#ccc; text-decoration:none; padding:4px 0; font-size:14px; }
+        .footer-section a:hover { text-decoration:underline; }
+        .footer-bottom { text-align:center; padding-top:20px; border-top:1px solid #3a4553; margin-top:20px; font-size:14px; }
+        @media(max-width:768px){ .nav-menu { display:none; } .product-detail { grid-template-columns:1fr; } }
+        .loading-spinner { text-align:center; padding:60px; grid-column:1/-1; }
+        .loading-spinner i { font-size:32px; color:#ff9900; animation:spin 1s linear infinite; }
+        @keyframes spin { 100%{ transform:rotate(360deg); } }
+        .not-found { text-align:center; padding:60px; grid-column:1/-1; color:#666; }
+        .not-found i { font-size:48px; color:#ccc; margin-bottom:16px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo" onclick="window.location.href='homepage.html'"><i class="fas fa-leaf"></i><span>neverAlone</span></div>
+            <div class="nav-menu">
+                <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                <a href="market.html"><i class="fas fa-store"></i> Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i> Blog</a>
+                <a href="mydashboard.html" id="dashboardLink" style="display:none;"><i class="fas fa-dashboard"></i> Dashboard</a>
+                <a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+            <div class="nav-user">
+                <div class="user-avatar">
+                    <img id="userAvatar" src="" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=ff9900&color=fff&size=32'">
+                </div>
+                <span class="user-badge" id="usernameDisplay">@User</span>
+                <span class="sub-badge" id="subBadge"><i class="fas fa-crown"></i> Pro</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="product-detail" id="productDetail">
+        <div style="grid-column:1/-1;">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i> Back</button>
+        </div>
+        
+        <div id="flashMessage" class="flash-message"></div>
+        
+        <div class="loading-spinner" id="loadingSpinner">
+            <i class="fas fa-circle-notch"></i>
+            <p style="margin-top:12px;color:#888;">Loading product...</p>
+        </div>
+        
+        <div id="productContent" style="display:none;grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:30px;">
+            <div class="product-image-large" id="productImageContainer">
+                <img id="productImage" src="" alt="Product">
+            </div>
+            
+            <div class="product-info-detail" id="productInfo">
+                <div class="category" id="productCategory"><i class="fas fa-tag"></i> Category</div>
+                <h1 id="productTitle">Product Title</h1>
+                <div class="price" id="productPrice">0 Tsh</div>
+                <div class="seller" id="productSeller">
+                    <i class="fas fa-user"></i> Seller: <span id="sellerName"></span>
+                    <img id="sellerAvatar" src="" alt="" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-left:8px;" onerror="this.style.display='none'">
+                </div>
+                <div class="description" id="productDescription">
+                    <h4>Description</h4>
+                    <p id="productDescText"></p>
+                </div>
+                <div id="productActions"></div>
+            </div>
+            
+            <!-- Comments -->
+            <div class="comment-section" id="commentSection">
+                <h3><i class="fas fa-comments"></i> Comments</h3>
+                <form id="commentForm" class="comment-form">
+                    <input type="text" id="commentInput" placeholder="Write a comment..." required>
+                    <button type="submit"><i class="fas fa-paper-plane"></i> Post</button>
+                </form>
+                <div id="commentsList">
+                    <p style="color:#888;">Loading comments...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3><i class="fas fa-leaf"></i> neverAlone</h3>
+                <p>Connecting communities through commerce and conversation.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="homepage.html"><i class="fas fa-home"></i>Home</a>
+                <a href="market.html"><i class="fas fa-store"></i>Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i>Public Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i>Blog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <a href="https://wa.me/255614047802" target="_blank"><i class="fab fa-whatsapp"></i>WhatsApp</a>
+                <a href="tel:255618882762" target="_blank"><i class="fas fa-phone"></i>+255618882762</a>
+                <a href="tel:255656078254" target="_blank"><i class="fas fa-phone"></i>+255656078254</a>
+                <a href="mailto:sambahustler@gmail.com" target="_blank"><i class="fas fa-envelope"></i>Email Us</a>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <a href="subscribe.html"><i class="fas fa-tag"></i>Pricing</a>
+                <a href="policy.html"><i class="fas fa-file-contract"></i>Terms & Privacy</a>
+                <a href="mailto:support@neveralone.com"><i class="fas fa-envelope"></i>support@neveralone.com</a>
+            </div>
+        </div>
+        <div class="footer-bottom"><p>&copy; 2026 neverAlone. All rights reserved.</p></div>
+    </footer>
+
+    <script>
+        let currentUser = null;
+        let productId = null;
+        let productData = null;
+
+        // Get product ID from URL
+        function getProductId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                currentUser = data;
+                document.getElementById('usernameDisplay').textContent = '@' + data.username;
+                await loadUserProfile();
+                await checkSubscription();
+                return data;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user.profile_pic) {
+                        document.getElementById('userAvatar').src = '/uploads/profiles/' + user.profile_pic;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+            }
+        }
+
+        // Check subscription
+        async function checkSubscription() {
+            try {
+                const response = await fetch('/api/subscription/status', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.active) {
+                        document.getElementById('subBadge').style.display = 'inline';
+                        document.getElementById('dashboardLink').style.display = 'inline';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check subscription:', error);
+            }
+        }
+
+        // Load product
+        async function loadProduct() {
+            productId = getProductId();
+            if (!productId) {
+                showNotFound('Product ID not specified');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/products/${productId}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showNotFound('Product not found');
+                    } else {
+                        throw new Error('Failed to load product');
+                    }
+                    return;
+                }
+
+                productData = await response.json();
+                displayProduct(productData);
+                await loadComments();
+                
+            } catch (error) {
+                console.error('Failed to load product:', error);
+                showNotFound('Failed to load product');
+            }
+        }
+
+        // Display product
+        function displayProduct(product) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('productContent').style.display = 'grid';
+            
+            // Image
+            const img = document.getElementById('productImage');
+            if (product.media_path) {
+                img.src = '/uploads/products/' + product.media_path;
+            } else {
+                img.src = 'https://picsum.photos/seed/' + product.id + '/600/400';
+            }
+            img.alt = product.title;
+            
+            // Info
+            document.getElementById('productCategory').textContent = '📌 ' + (product.category || 'Uncategorized');
+            document.getElementById('productTitle').textContent = product.title;
+            document.getElementById('productPrice').textContent = Number(product.price).toLocaleString() + ' Tsh';
+            document.getElementById('sellerName').textContent = product.username;
+            
+            if (product.profile_pic) {
+                document.getElementById('sellerAvatar').src = '/uploads/profiles/' + product.profile_pic;
+                document.getElementById('sellerAvatar').style.display = 'inline';
+            }
+            
+            document.getElementById('productDescText').textContent = product.description || 'No description available.';
+            
+            // Actions
+            const actionsDiv = document.getElementById('productActions');
+            const isOwner = product.username === currentUser.username;
+            
+            if (isOwner) {
+                actionsDiv.innerHTML = `
+                    <div style="margin-top:16px;color:#666;background:#f7f8fa;padding:12px;border-radius:4px;">
+                        <i class="fas fa-info-circle"></i> This is your product listing
+                        <div style="margin-top:8px;">
+                            <a href="mydashboard.html" class="btn-contact" style="background:#f0f2f2;color:#333;">
+                                <i class="fas fa-edit"></i> Manage Product
+                            </a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                actionsDiv.innerHTML = `
+                    <a href="chat.html?user=${encodeURIComponent(product.username)}" class="btn-contact">
+                        <i class="fas fa-envelope"></i> Contact Seller
+                    </a>
+                `;
+            }
+        }
+
+        // Load comments
+        async function loadComments() {
+            try {
+                const response = await fetch(`/api/products/${productId}/comments`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const comments = await response.json();
+                    const container = document.getElementById('commentsList');
+                    
+                    if (comments && comments.length > 0) {
+                        container.innerHTML = comments.map(comment => `
+                            <div class="comment-item">
+                                <span class="comment-author">
+                                    <i class="fas fa-user"></i> ${escapeHtml(comment.username)}
+                                </span>
+                                <span class="comment-time">${new Date(comment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                <div class="comment-text">${escapeHtml(comment.comment)}</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p style="color:#888;padding:8px 0;">No comments yet. Be the first!</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load comments:', error);
+                document.getElementById('commentsList').innerHTML = '<p style="color:#888;">Failed to load comments.</p>';
+            }
+        }
+
+        // Add comment
+        document.getElementById('commentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const input = document.getElementById('commentInput');
+            const comment = input.value.trim();
+            
+            if (!comment || !productId) return;
+            
+            try {
+                const response = await fetch(`/api/products/${productId}/comment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comment }),
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    input.value = '';
+                    await loadComments();
+                    showFlash('Comment posted!', 'success');
+                } else {
+                    const data = await response.json();
+                    showFlash(data.error || 'Failed to post comment', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to post comment:', error);
+                showFlash('An error occurred. Please try again.', 'error');
+            }
+        });
+
+        // Show not found
+        function showNotFound(message) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('productContent').style.display = 'none';
+            document.querySelector('.product-detail').innerHTML += `
+                <div class="not-found">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>${message}</h2>
+                    <p style="margin-top:8px;">The product you're looking for doesn't exist or has been removed.</p>
+                    <a href="market.html" class="btn-contact" style="margin-top:16px;display:inline-block;">
+                        <i class="fas fa-arrow-left"></i> Back to Marketplace
+                    </a>
+                </div>
+            `;
+        }
+
+        // Show flash message
+        function showFlash(message, type) {
+            const el = document.getElementById('flashMessage');
+            el.textContent = message;
+            el.className = `flash-message flash-${type} show`;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => { el.style.display = 'none'; }, 300);
+            }, 5000);
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Logout
+        document.getElementById('logoutLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        });
+
+        // Initialize page
+        async function initPage() {
+            await checkAuth();
+            await loadProduct();
+        }
+
+        initPage();
+    </script>
+</body>
+</html>
