@@ -25,9 +25,9 @@ app.set('trust proxy', 1);
 // ============== SOCKET.IO SETUP ==============
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || process.env.NODE_ENV === 'production' 
+        origin: process.env.CLIENT_URL || ( process.env.NODE_ENV === 'production' 
             ? 'https://chat-production-4a8c.up.railway.app' 
-            : 'http://localhost:3000',
+            : 'http://localhost:3000' ),
         methods: ["GET", "POST"],
         credentials: true
     },
@@ -59,17 +59,19 @@ const sessionStore = new PgSession({
     pruneSessionInterval: 60,
 });
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const sessionMiddleware = session({
     store: sessionStore,
     secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        sameSite: 'lax',
-        domain: process.env.COOKIE_DOMAIN || undefined,
+        sameSite: isProduction ? 'none' : 'lax'
     },
     name: 'neveralone.sid',
 });
@@ -114,14 +116,13 @@ const upload = multer({
 
 // ============== MIDDLEWARE ==============
 app.use(cors({
-    origin: process.env.CLIENT_URL || process.env.NODE_ENV === 'production' 
-        ? 'https://chat-production-4a8c.up.railway.app' 
-        : 'http://localhost:3000',
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ============== DATABASE INIT ==============
 async function initDatabase() {
@@ -267,6 +268,14 @@ async function initDatabase() {
     }
 }
 
+pool.query('SELECT current_database() AS database_name')
+  .then(result => {
+    console.log(`🗄️ Database connected: ${result.rows[0].database_name}`);
+  })
+  .catch(err => {
+    console.error('❌ Could not determine database name:', err.message);
+  });
+
 // ============== HELPER FUNCTIONS ==============
 const requireAuth = (req, res, next) => {
     if (!req.session || !req.session.userId) {
@@ -354,6 +363,18 @@ app.post('/api/register', upload.single('profile_pic'), async (req, res) => {
         req.session.userId = result.rows[0].id;
         req.session.username = result.rows[0].username;
 
+        await new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) {
+                    console.error('❌ Registration session save error:', err);
+                    reject(err);
+                } else {
+                    console.log('✅ Registration session saved:', req.sessionID);
+                    resolve();
+                }
+            });
+        });
+
         await logActivity(result.rows[0].id, username, 'register', 'User registered', getClientIP(req));
 
         res.status(201).json({
@@ -400,6 +421,23 @@ app.post('/api/login', async (req, res) => {
         req.session.username = user.username;
         req.session.isAdmin = user.is_admin;
 
+        await new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) {
+                    console.error('❌ Session save error:', err);
+                    reject(err);
+                } else {
+                    console.log('✅ Login session saved:', {
+                        userId: req.session.userId,
+                        username: req.session.username,
+                        isAdmin: req.session.isAdmin,
+                        sessionID: req.sessionID
+                    });
+                    resolve();
+                }
+            });
+        });
+
         await logActivity(user.id, user.username, 'login', 'User logged in', getClientIP(req));
 
         res.json({
@@ -429,16 +467,26 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/check-auth', (req, res) => {
-    if (req.session && req.session.userId) {
-        res.json({ 
-            authenticated: true, 
+    console.log('🔐 AUTH CHECK:', {
+        sessionID: req.sessionID,
+        userId: req.session?.userId,
+        username: req.session?.username,
+        isAdmin: req.session?.isAdmin,
+        hasSession: !!req.session
+    });
+
+    if (req.session?.userId) {
+        return res.json({
+            authenticated: true,
             userId: req.session.userId,
             username: req.session.username,
             isAdmin: req.session.isAdmin || false
         });
-    } else {
-        res.json({ authenticated: false });
     }
+
+    return res.json({
+        authenticated: false
+    });
 });
 
 // ============== USER ROUTES ==============
@@ -1176,7 +1224,14 @@ app.get('*', (req, res) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
         return res.status(404).json({ error: 'Not found' });
     }
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+
+    // Check if requested file exists in public directory
+    const filePath = path.join(__dirname, 'public', req.path);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        return res.sendFile(filePath);
+    }
+
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // ============== START SERVER ==============

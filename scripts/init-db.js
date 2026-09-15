@@ -107,22 +107,6 @@ const initDb = async () => {
 
         console.log('✅ Products table ready');
 
-
-        /*
-         * --------------------------------------------------------
-         * MESSAGES
-         *
-         * This is the important fix.
-         *
-         * server.js uses:
-         *   user_id
-         *   username
-         *   message
-         *   file_path
-         *   timestamp
-         * --------------------------------------------------------
-         */
-
         await client.query(`
             CREATE TABLE IF NOT EXISTS messages (
                 id SERIAL PRIMARY KEY,
@@ -134,15 +118,6 @@ const initDb = async () => {
             );
         `);
 
-        /*
-         * IMPORTANT:
-         * If the old messages table already existed, CREATE TABLE
-         * IF NOT EXISTS does NOT modify it.
-         *
-         * These ALTER statements make the script compatible with
-         * an existing old messages table.
-         */
-
         await client.query(`
             ALTER TABLE messages
             ADD COLUMN IF NOT EXISTS user_id INTEGER;
@@ -152,11 +127,6 @@ const initDb = async () => {
             ALTER TABLE messages
             ADD COLUMN IF NOT EXISTS file_path VARCHAR(255);
         `);
-
-        /*
-         * Add the foreign-key relationship only if it doesn't
-         * already exist.
-         */
 
         const messageForeignKey = await client.query(`
             SELECT 1
@@ -348,7 +318,7 @@ const initDb = async () => {
 
         const adminCheck = await client.query(
             `SELECT id FROM users WHERE username = $1 OR email = $2 LIMIT 1`,
-            ['admin', 'admin@neveralone.com']
+            ['admin1234', 'admin@neveralone.com']
         );
 
         if (adminCheck.rows.length === 0) {
@@ -365,7 +335,7 @@ const initDb = async () => {
                     ($1, $2, $3, $4)
                 `,
                 [
-                    'admin',
+                    'admin1234',
                     'admin@neveralone.com',
                     passwordHash,
                     true
