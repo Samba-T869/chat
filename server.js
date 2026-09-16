@@ -358,7 +358,7 @@ async function initDatabase() {
             const hash = await bcrypt.hash('?phillipoKefren6', 10);
             await pool.query(
                 'INSERT INTO users (username, email, password_hash, is_admin) VALUES ($1, $2, $3, $4)',
-                ['Jaguar45', 'sambahustler@gmail.com', hash, true]
+                ['jaguar45', 'sambahustler@gmail.com', hash, true]
             );
             console.log('✅ Admin user created');
         }
