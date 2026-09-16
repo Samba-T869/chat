@@ -315,7 +315,7 @@
                 btn.innerHTML = '<i class="fas fa-check"></i> Subscribed!';
             } else {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now via PalmPesa';
+                btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
             }
         }
 
@@ -358,7 +358,7 @@
             if (status === 'failed') {
                 stopPaymentPolling();
                 setPayButtonState('idle');
-                showFlash('The PalmPesa payment was not completed. You can try again.', 'error');
+                showFlash('The Payment was not completed. You can try again.', 'error');
                 return true;
             }
 
@@ -374,7 +374,7 @@
                 stopPaymentPolling();
                 setPayButtonState('idle');
                 showFlash(
-                    'We are still waiting for PalmPesa confirmation. If you completed the payment, refresh this page shortly.',
+                    'We are still waiting for confirmation. If you completed the payment, refresh this page shortly.',
                     'info'
                 );
                 return;
@@ -498,7 +498,7 @@
                     startPaymentPolling(subscriptionId);
                 } else {
                     showFlash(
-                        data.error || 'Failed to create PalmPesa payment request.',
+                        data.error || 'Failed to create Payment request.',
                         'error'
                     );
                     setPayButtonState('idle');

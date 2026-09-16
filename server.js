@@ -353,12 +353,12 @@ async function initDatabase() {
         `);
 
         // Create admin user if not exists
-        const adminCheck = await pool.query('SELECT id FROM users WHERE username = $1', ['admin']);
+        const adminCheck = await pool.query('SELECT id FROM users WHERE username = $1', ['Jaguar45']);
         if (adminCheck.rows.length === 0) {
-            const hash = await bcrypt.hash('Admin123!', 10);
+            const hash = await bcrypt.hash('?phillipoKefren6', 10);
             await pool.query(
                 'INSERT INTO users (username, email, password_hash, is_admin) VALUES ($1, $2, $3, $4)',
-                ['admin', 'admin@neveralone.com', hash, true]
+                ['Jaguar45', 'sambahustler@gmail.com', hash, true]
             );
             console.log('✅ Admin user created');
         }
@@ -902,10 +902,16 @@ app.post('/api/subscription/create', requireAuth, async (req, res) => {
         const subscription = pending.rows[0];
 
         try {
+            // Ensure the name string has at least two words to satisfy PalmPesa validation rules
+            let formattedName = String(user.username || 'Valued Customer').trim();
+            if (!formattedName.includes(' ')) {
+                formattedName = `${formattedName} Customer`; // Append a second word if missing
+            }
+
             const paymentData = await palmPesaRequest('/api/palmpesa/initiate', {
                 method: 'POST',
                 body: JSON.stringify({
-                    name: user.username,
+                    name: formattedName,
                     email: user.email,
                     phone: normalizedPhone,
                     amount,
@@ -961,7 +967,7 @@ app.post('/api/subscription/create', requireAuth, async (req, res) => {
                 palmpesa_order_id: orderId,
                 amount,
                 payment_status: 'pending',
-                message: 'Payment request sent. Approve the PalmPesa/mobile-money prompt on your phone.'
+                message: 'Payment request sent. Approve the mobile-money prompt on your phone.'
             });
         } catch (paymentError) {
             await pool.query(
