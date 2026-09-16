@@ -24,8 +24,10 @@
         .sub-badge { background:#ff9900; color:#131a22; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; display:none; }
         .subscribe-page { max-width:900px; margin:30px auto; padding:0 20px; }
         .subscribe-container { background:#fff; border-radius:8px; padding:32px; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
-        .subscribe-header { text-align:center; margin-bottom:30px; }
-        .subscribe-header .back-link { display:inline-block; color:#007185; text-decoration:none; font-weight:500; margin-bottom:12px; }
+        .header { display: flex; flex-direction: row; justify-content: space-between; margin-bottom:30px; }
+        .subscribe-header { text-align:center; margin-left:24px; }
+        .back-link { display:inline-block; color:#007185; }
+        .back-link a { text-decoration:none; font-weight:500; font-size: 2.2rem; }
         .subscribe-header .back-link:hover { text-decoration:underline; }
         .subscribe-header h1 { font-weight:400; font-size:28px; }
         .subscribe-header h1 i { color:#ff9900; }
@@ -103,10 +105,15 @@
 
     <div class="subscribe-page">
         <div class="subscribe-container">
-            <div class="subscribe-header">
-                <a href="homepage.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+            <div class="header">
+                <div class="subscribe-header">
                 <h1><i class="fas fa-crown"></i> Subscribe to neverAlone Pro</h1>
                 <p>Unlock premium features and start selling your products today</p>
+                </div>
+
+                <div class="back-link">
+                    <a href="homepage.html">&times;</a>
+                </div>
             </div>
 
             <div id="flashMessage" class="flash-message"></div>
@@ -162,7 +169,7 @@
                     </div>
                     
                     <button type="submit" class="btn-primary" id="subscribeBtn">
-                        <i class="fas fa-lock"></i> Pay Now via Palmpesa
+                        <i class="fas fa-lock"></i> Pay Now
                     </button>
                     
                     <div style="margin-top:12px;text-align:center;font-size:13px;color:#888;">
@@ -170,11 +177,6 @@
                     </div>
                 </div>
             </form>
-
-            <div class="secure-badge">
-                <i class="fas fa-shield-alt"></i>
-                <span>Secure payment via Palmpesa | Bank: CRDB Account: 0152779295100</span>
-            </div>
         </div>
     </div>
 

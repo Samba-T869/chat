@@ -43,8 +43,7 @@
         .footer { text-align:center; margin-top:30px; color:#888; font-size:14px; }
         .footer a { color:#007185; text-decoration:none; }
         .footer a:hover { text-decoration:underline; }
-        .btn-back { display:inline-block; padding:10px 24px; background:#ff9900; color:#131a22; text-decoration:none; border-radius:6px; font-weight:600; margin-bottom:20px; transition:0.2s; border:none; cursor:pointer; }
-        .btn-back:hover { background:#e68a00; }
+        .btn-back { display:inline-block; color:#ff9900; text-decoration:none; font-weight:600; margin-bottom:20px; transition:0.2s; border:none; cursor:pointer; font-size: 2.2rem;}
         .badge { display:inline-block; background:#ff9900; color:#131a22; font-size:11px; padding:2px 10px; border-radius:12px; font-weight:600; margin-left:8px; }
         @media(max-width:600px){ .content { padding:20px; } .header h1 { font-size:24px; } .nav-menu { display:none; } }
     </style>
@@ -72,11 +71,10 @@
     </nav>
 
     <div class="container">
-        <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i> Go Back</button>
+        <button class="btn-back" onclick="history.back()">&times;</button>
         
         <div class="header">
             <h1><i class="fas fa-file-contract"></i> Terms of Service & Privacy Policy</h1>
-            <p>Last Updated: <span id="lastUpdated"></span></p>
         </div>
         
         <div class="content">
@@ -127,8 +125,7 @@
                     <li><strong>Subscriptions:</strong> Plans include Daily (2,000 Tsh), Monthly (20,000 Tsh), and Yearly (100,000 Tsh).</li>
                     <li><strong>Refunds:</strong> No refunds for partial subscription periods.</li>
                     <li><strong>Cancellations:</strong> Cancel anytime; no refund for remaining period.</li>
-                    <li><strong>Billing:</strong> Payments are processed securely via Palmpesa.</li>
-                    <li><strong>Bank Account:</strong> All payments are directed to CRDB Bank Account: <strong>0152779295100</strong>.</li>
+                    <li><strong>Billing:</strong> Payments are processed securely via Palmpesa or any other integration applicable.</li>
                 </ul>
             </div>
             
@@ -193,8 +190,7 @@
         </div>
         
         <div class="footer">
-            <p>&copy; <span id="currentYear"></span> neverAlone. All rights reserved.</p>
-            <p><a href="homepage.html"><i class="fas fa-home"></i> Return to Homepage</a></p>
+            <p>&copy; <span id="currentYear"></span> neverAlone. All rights reserved. Last Updated: <span id="lastUpdated"></span></p>
         </div>
     </div>
 

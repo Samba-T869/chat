@@ -12,6 +12,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import { S3Client } from '@aws-sdk/client-s3';
+import multerS3 from 'multer-s3';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,23 +82,13 @@ app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
 
 // ============== FILE UPLOAD SETUP ==============
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        let uploadPath = 'public/uploads/';
-        if (file.fieldname === 'profile_pic') uploadPath += 'profiles/';
-        else if (file.fieldname === 'product_image') uploadPath += 'products/';
-        else if (file.fieldname === 'image' || file.fieldname === 'file') uploadPath += 'blog/';
-        else uploadPath += 'misc/';
-        
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-        cb(null, uploadPath);
+const s3 = new S3Client({
+    region: 'auto',
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, unique + path.extname(file.originalname));
-    }
 });
 
 const fileFilter = (req, file, cb) => {
@@ -109,7 +101,22 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-    storage: storage,
+    storage: multerS3({
+        s3: s3,
+        bucket: process.env.R2_BUCKET_NAME,
+        metadata: (req, file, cb) => {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: (req, file, cb) => {
+            let folder = 'misc/';
+            if (file.fieldname === 'profile_pic') folder = 'profiles/';
+            else if (file.fieldname === 'product_image') folder = 'products/';
+            else if (file.fieldname === 'image' || file.fieldname === 'file') folder = 'blog/';
+
+            const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, folder + unique + path.extname(file.originalname));
+        }
+    }),
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: fileFilter,
 });
@@ -820,7 +827,10 @@ app.delete('/api/products/:id', requireAuth, async (req, res) => {
 app.get('/api/messages', requireAuth, async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT * FROM messages ORDER BY timestamp DESC LIMIT 100'
+            `SELECT m.*, u.profile_pic 
+             FROM messages m 
+             LEFT JOIN users u ON m.user_id = u.id 
+             ORDER BY m.timestamp DESC LIMIT 50`
         );
         res.json(result.rows.reverse());
     } catch (err) {
@@ -1181,7 +1191,12 @@ io.on('connection', (socket) => {
     io.emit('online users', Array.from(onlineUsers.keys()).map(u => ({ username: u, status: 'online' })));
 
     // Send recent messages
-    pool.query('SELECT * FROM messages ORDER BY timestamp DESC LIMIT 50')
+    pool.query(`
+    SELECT m.*, u.profile_pic 
+    FROM messages m 
+    LEFT JOIN users u ON m.user_id = u.id 
+    ORDER BY m.timestamp DESC LIMIT 50
+    `)
         .then(result => {
             socket.emit('previous messages', result.rows.reverse());
         })
@@ -1193,7 +1208,10 @@ io.on('connection', (socket) => {
 
         try {
             const result = await pool.query(
-                'INSERT INTO messages (user_id, username, message) VALUES ($1, $2, $3) RETURNING *',
+                `INSERT INTO messages (user_id, username, message) 
+             VALUES ($1, $2, $3) 
+             RETURNING *, 
+                (SELECT profile_pic FROM users WHERE id = $1) AS profile_pic`,
                 [socket.userId, socket.username, message]
             );
             io.emit('receive message', result.rows[0]);
