@@ -24,10 +24,12 @@
         .check { text-align:center; margin-top:16px; font-size:14px; }
         .check a { color:#007185; text-decoration:none; }
         .check a:hover { text-decoration:underline; }
-        .top-links { text-align:right; margin-bottom:12px; }
-        .top-links a { color:#007185; text-decoration:none; font-size:14px; margin-left:12px; }
-        .top-links a:hover { text-decoration:underline; }
-        .top-links a.active { font-weight:600; }
+        .links { display:flex; margin-bottom:16px; justify-content: space-between; padding: 2px;}
+        .links a { color:#007185; text-decoration:none; font-size:14px; margin-left:12px; }
+        .links a:hover { text-decoration:underline; }
+        .links .login { font-size: 1rem; background-color: #d5d9dd; width: 50%; padding: 10px; border-radius: 6px 0 0 6px;}
+        .links .register { background-color: #ff9900; width: 50%; padding: 10px; color: #fff; border-radius: 0 6px 6px 0;}
+        .links a.active { font-weight:600; }
         .flash-message { padding:10px 16px; border-radius:4px; margin-bottom:16px; display:none; }
         .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
         .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
@@ -39,12 +41,12 @@
 </head>
 <body>
     <div class="container">
-        <div class="top-links">
-            <a href="login.html">Login</a>
-            <a href="register.html" class="active">Register</a>
-        </div>
+        <h1>CREATE ACCOUNT.</h1>
         <div class="card">
-            <h1>CREATE ACCOUNT.</h1>
+            <div class="links">
+                <a class="login" href="login.html">Login</a>
+                <a class="register" href="register.html" class="active">Register</a>
+            </div>
 
             <div id="errorContainer">
                 <div id="errorMessage" class="flash-message flash-error"><i class="fas fa-exclamation-circle"></i> <span id="errorText"></span></div>

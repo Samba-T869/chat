@@ -20,6 +20,89 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
+// ============== PALMPESA PRODUCTION CONFIG ==============
+const PALMPESA_BASE_URL = process.env.PALMPESA_BASE_URL || 'https://palmpesa.drmlelwa.co.tz';
+const PALMPESA_API_TOKEN = process.env.PALMPESA_API_TOKEN;
+const PALMPESA_DEFAULT_ADDRESS = process.env.PALMPESA_DEFAULT_ADDRESS || 'Tanzania';
+const PALMPESA_DEFAULT_POSTCODE = process.env.PALMPESA_DEFAULT_POSTCODE;
+
+const requirePalmPesaConfig = () => {
+    if (!PALMPESA_API_TOKEN) {
+        throw new Error('PALMPESA_API_TOKEN is not configured');
+    }
+    if (!PALMPESA_DEFAULT_POSTCODE) {
+        throw new Error('PALMPESA_DEFAULT_POSTCODE is not configured');
+    }
+    if (!process.env.PALMPESA_CALLBACK_URL) {
+        throw new Error('PALMPESA_CALLBACK_URL is not configured');
+    }
+};
+
+const palmPesaHeaders = () => ({
+    'Authorization': `Bearer ${PALMPESA_API_TOKEN}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+});
+
+const palmPesaRequest = async (endpoint, options = {}) => {
+    const response = await fetch(`${PALMPESA_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+            ...palmPesaHeaders(),
+            ...(options.headers || {})
+        }
+    });
+
+    const raw = await response.text();
+    let data = {};
+    try {
+        data = raw ? JSON.parse(raw) : {};
+    } catch {
+        data = { raw };
+    }
+
+    if (!response.ok) {
+        throw new Error(`PalmPesa ${response.status}: ${data?.message || data?.error || raw || 'Request failed'}`);
+    }
+
+    return data;
+};
+
+const normalizeTanzaniaPhone = (phone) => {
+    let value = String(phone || '').trim().replace(/\s+/g, '').replace(/-/g, '');
+
+    if (value.startsWith('+255')) value = value.substring(1);
+    else if (value.startsWith('255')) value = value;
+    else if (value.startsWith('0')) value = `255${value.substring(1)}`;
+    else throw new Error('Invalid Tanzania phone number');
+
+    if (!/^255[67]\d{8}$/.test(value)) {
+        throw new Error('Invalid Tanzania mobile number');
+    }
+
+    return value;
+};
+
+const extractPalmPesaStatus = (data) => {
+    const item = data?.data?.[0] || data?.data || {};
+    const status = String(
+        data?.payment_status ||
+        data?.status ||
+        item?.payment_status ||
+        item?.status ||
+        ''
+    ).toUpperCase();
+
+    return {
+        status,
+        orderId: data?.order_id || item?.order_id || null,
+        transactionId: data?.transid || item?.transid || null,
+        reference: data?.reference || item?.reference || null,
+        channel: data?.channel || item?.channel || null,
+        amount: data?.amount || item?.amount || null
+    };
+};
+
 const app = express();
 const server = http.createServer(app);
 app.set('trust proxy', 1);
@@ -157,10 +240,14 @@ async function initDatabase() {
                 amount DECIMAL(10,2) NOT NULL,
                 payment_method VARCHAR(50) DEFAULT 'palmpesa',
                 payment_reference VARCHAR(100),
+                palmpesa_order_id VARCHAR(100),
+                palmpesa_transaction_id VARCHAR(100),
+                palmpesa_reference VARCHAR(100),
                 status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed')),
-                starts_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                starts_at TIMESTAMP,
+                expires_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
 
@@ -246,6 +333,14 @@ async function initDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+
+        // Upgrade older subscription tables without destroying existing data.
+        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS palmpesa_order_id VARCHAR(100)`);
+        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS palmpesa_transaction_id VARCHAR(100)`);
+        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS palmpesa_reference VARCHAR(100)`);
+        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`);
+        await pool.query(`ALTER TABLE subscriptions ALTER COLUMN starts_at DROP NOT NULL`);
+        await pool.query(`ALTER TABLE subscriptions ALTER COLUMN expires_at DROP NOT NULL`);
 
         // Indexes
         await pool.query(`
@@ -570,97 +665,414 @@ app.put('/api/user/profile', requireAuth, upload.single('profile_pic'), async (r
 });
 
 // ============== SUBSCRIPTION ROUTES ==============
+const subscriptionPrices = { daily: 2000, monthly: 20000, yearly: 100000 };
+const subscriptionDurations = { daily: 1, monthly: 30, yearly: 365 };
+
+const emitSubscriptionUpdate = async (subscriptionId) => {
+    const result = await pool.query(
+        `SELECT s.*, u.username
+         FROM subscriptions s
+         LEFT JOIN users u ON u.id = s.user_id
+         WHERE s.id = $1`,
+        [subscriptionId]
+    );
+
+    if (result.rows.length > 0) {
+        const sub = result.rows[0];
+        io.to(`user:${sub.user_id}`).emit('subscription update', {
+            subscription_id: sub.id,
+            status: sub.status,
+            plan: sub.plan,
+            amount: Number(sub.amount),
+            payment_reference: sub.payment_reference,
+            palmpesa_order_id: sub.palmpesa_order_id,
+            palmpesa_transaction_id: sub.palmpesa_transaction_id,
+            starts_at: sub.starts_at,
+            expires_at: sub.expires_at
+        });
+    }
+};
+
+const verifyPalmPesaOrder = async (orderId) => {
+    const data = await palmPesaRequest('/api/order-status', {
+        method: 'POST',
+        body: JSON.stringify({ order_id: orderId })
+    });
+
+    return extractPalmPesaStatus(data);
+};
+
+const completeSubscriptionPayment = async ({
+    subscriptionId,
+    orderId,
+    transactionId = null,
+    palmReference = null,
+    channel = null
+}) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        const subResult = await client.query(
+            `SELECT *
+             FROM subscriptions
+             WHERE id = $1
+             FOR UPDATE`,
+            [subscriptionId]
+        );
+
+        if (subResult.rows.length === 0) {
+            throw new Error('Subscription not found');
+        }
+
+        const sub = subResult.rows[0];
+
+        // Idempotency: a webhook/poll may arrive more than once.
+        if (sub.status === 'completed') {
+            await client.query('COMMIT');
+            return sub;
+        }
+
+        const startsAt = new Date();
+        const expiresAt = new Date(startsAt);
+        expiresAt.setDate(expiresAt.getDate() + subscriptionDurations[sub.plan]);
+
+        const update = await client.query(
+            `UPDATE subscriptions
+             SET status = 'completed',
+                 starts_at = $1,
+                 expires_at = $2,
+                 palmpesa_order_id = COALESCE($3, palmpesa_order_id),
+                 palmpesa_transaction_id = COALESCE($4, palmpesa_transaction_id),
+                 palmpesa_reference = COALESCE($5, palmpesa_reference),
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $6
+             RETURNING *`,
+            [
+                startsAt,
+                expiresAt,
+                orderId,
+                transactionId,
+                palmReference,
+                subscriptionId
+            ]
+        );
+
+        await client.query('COMMIT');
+
+        const completed = update.rows[0];
+
+        await logActivity(
+            completed.user_id,
+            'system',
+            'subscription_completed',
+            `Plan: ${completed.plan}, Amount: ${completed.amount} TSh, PalmPesa order: ${orderId}, TX: ${transactionId || 'N/A'}, Channel: ${channel || 'N/A'}`,
+            'palmpesa-webhook'
+        );
+
+        await emitSubscriptionUpdate(completed.id);
+        return completed;
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+    } finally {
+        client.release();
+    }
+};
+
+const failSubscriptionPayment = async ({ subscriptionId, orderId, transactionId = null, palmReference = null }) => {
+    const result = await pool.query(
+        `UPDATE subscriptions
+         SET status = 'failed',
+             palmpesa_order_id = COALESCE($1, palmpesa_order_id),
+             palmpesa_transaction_id = COALESCE($2, palmpesa_transaction_id),
+             palmpesa_reference = COALESCE($3, palmpesa_reference),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $4
+           AND status = 'pending'
+         RETURNING *`,
+        [orderId, transactionId, palmReference, subscriptionId]
+    );
+
+    if (result.rows.length > 0) {
+        await emitSubscriptionUpdate(subscriptionId);
+    }
+
+    return result.rows[0] || null;
+};
+
 app.get('/api/subscription/status', requireAuth, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT * FROM subscriptions 
-             WHERE user_id = $1 AND status = 'completed' 
-             AND expires_at > NOW() 
-             ORDER BY expires_at DESC LIMIT 1`,
+            `SELECT * FROM subscriptions
+             WHERE user_id = $1
+             ORDER BY created_at DESC
+             LIMIT 1`,
             [req.session.userId]
         );
-        
-        if (result.rows.length > 0) {
-            const sub = result.rows[0];
+
+        if (result.rows.length === 0) {
+            return res.json({ active: false, payment_status: null });
+        }
+
+        const sub = result.rows[0];
+
+        if (sub.status === 'completed' && sub.expires_at && new Date(sub.expires_at) > new Date()) {
             const timeLeft = Math.max(0, new Date(sub.expires_at) - new Date());
-            res.json({
+
+            return res.json({
                 active: true,
                 plan: sub.plan,
                 expires_at: sub.expires_at,
                 time_left_ms: timeLeft,
-                time_left_days: Math.ceil(timeLeft / (1000 * 60 * 60 * 24))
+                time_left_days: Math.ceil(timeLeft / (1000 * 60 * 60 * 24)),
+                payment_status: 'completed',
+                payment_reference: sub.payment_reference,
+                palmpesa_order_id: sub.palmpesa_order_id,
+                palmpesa_transaction_id: sub.palmpesa_transaction_id
             });
-        } else {
-            res.json({ active: false });
         }
+
+        res.json({
+            active: false,
+            plan: sub.plan,
+            payment_status: sub.status,
+            payment_reference: sub.payment_reference,
+            palmpesa_order_id: sub.palmpesa_order_id,
+            palmpesa_transaction_id: sub.palmpesa_transaction_id
+        });
     } catch (err) {
+        console.error('Subscription status error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
 app.post('/api/subscription/create', requireAuth, async (req, res) => {
-    const { plan, phone } = req.body;
+    const { plan, phone, address, postcode } = req.body;
 
-    if (!['daily', 'monthly', 'yearly'].includes(plan)) {
+    if (!Object.prototype.hasOwnProperty.call(subscriptionPrices, plan)) {
         return res.status(400).json({ error: 'Invalid plan' });
     }
 
-    if (!phone || !/^[0-9]{10,15}$/.test(phone)) {
-        return res.status(400).json({ error: 'Valid phone number required' });
-    }
-
-    const prices = { daily: 2000, monthly: 20000, yearly: 100000 };
-    const durations = { daily: 1, monthly: 30, yearly: 365 };
-
     try {
-        // Check for active subscription
+        requirePalmPesaConfig();
+
+        const normalizedPhone = normalizeTanzaniaPhone(phone);
+
         const active = await pool.query(
-            'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
-            [req.session.userId, 'completed']
+            `SELECT id
+             FROM subscriptions
+             WHERE user_id = $1
+               AND status = 'completed'
+               AND expires_at > NOW()
+             LIMIT 1`,
+            [req.session.userId]
         );
+
         if (active.rows.length > 0) {
             return res.status(400).json({ error: 'You already have an active subscription' });
         }
 
-        const amount = prices[plan];
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + durations[plan]);
-
-        // Generate payment reference
-        const ref = 'PAY-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
-
-        // In production, integrate with Palmpesa API here
-        // For now, we'll simulate a pending payment
-        const result = await pool.query(
-            `INSERT INTO subscriptions (user_id, plan, amount, payment_method, payment_reference, status, expires_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [req.session.userId, plan, amount, 'palmpesa', ref, 'pending', expiresAt]
+        const userResult = await pool.query(
+            'SELECT id, username, email FROM users WHERE id = $1',
+            [req.session.userId]
         );
 
-        await logActivity(req.session.userId, req.session.username, 'subscription_created', 
-            `Plan: ${plan}, Amount: ${amount} Tsh`, getClientIP(req));
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
-        res.json({
-            success: true,
-            subscription: result.rows[0],
-            payment_reference: ref,
-            amount: amount,
-            message: 'Payment initiated. Please confirm on your phone.'
-        });
+        const user = userResult.rows[0];
+        const amount = subscriptionPrices[plan];
+
+        // Unique merchant reference. It is safe to retry status checks using this ID.
+        const paymentReference = `SUB-${req.session.userId}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+
+        // IMPORTANT: expiry is NULL until PalmPesa confirms payment.
+        // This prevents a pending payment from consuming subscription time.
+        const pending = await pool.query(
+            `INSERT INTO subscriptions
+                (user_id, plan, amount, payment_method, payment_reference, status, starts_at, expires_at)
+             VALUES ($1, $2, $3, 'palmpesa', $4, 'pending', NULL, NULL)
+             RETURNING *`,
+            [req.session.userId, plan, amount, paymentReference]
+        );
+
+        const subscription = pending.rows[0];
+
+        try {
+            const paymentData = await palmPesaRequest('/api/palmpesa/initiate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: user.username,
+                    email: user.email,
+                    phone: normalizedPhone,
+                    amount,
+                    transaction_id: paymentReference,
+                    address: address || PALMPESA_DEFAULT_ADDRESS,
+                    postcode: postcode || PALMPESA_DEFAULT_POSTCODE,
+                    callback_url: process.env.PALMPESA_CALLBACK_URL
+                })
+            });
+
+            const orderId =
+                paymentData?.order_id ||
+                paymentData?.response?.order_id ||
+                paymentData?.data?.order_id;
+
+            const transactionId =
+                paymentData?.response?.transid ||
+                paymentData?.data?.transid ||
+                null;
+
+            const palmReference =
+                paymentData?.response?.reference ||
+                paymentData?.data?.reference ||
+                null;
+
+            if (!orderId) {
+                throw new Error('PalmPesa did not return an order_id');
+            }
+
+            const updated = await pool.query(
+                `UPDATE subscriptions
+                 SET palmpesa_order_id = $1,
+                     palmpesa_transaction_id = COALESCE($2, palmpesa_transaction_id),
+                     palmpesa_reference = COALESCE($3, palmpesa_reference),
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $4
+                 RETURNING *`,
+                [orderId, transactionId, palmReference, subscription.id]
+            );
+
+            await logActivity(
+                req.session.userId,
+                req.session.username,
+                'subscription_payment_initiated',
+                `Plan: ${plan}, Amount: ${amount} TSh, PalmPesa order: ${orderId}`,
+                getClientIP(req)
+            );
+
+            res.status(201).json({
+                success: true,
+                subscription: updated.rows[0],
+                payment_reference: paymentReference,
+                palmpesa_order_id: orderId,
+                amount,
+                payment_status: 'pending',
+                message: 'Payment request sent. Approve the PalmPesa/mobile-money prompt on your phone.'
+            });
+        } catch (paymentError) {
+            await pool.query(
+                `UPDATE subscriptions
+                 SET status = 'failed', updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $1 AND status = 'pending'`,
+                [subscription.id]
+            );
+
+            throw paymentError;
+        }
     } catch (err) {
-        console.error('Subscription error:', err);
-        res.status(500).json({ error: 'Failed to create subscription' });
+        console.error('Subscription payment initiation error:', err);
+        res.status(502).json({
+            error: 'Could not initiate PalmPesa payment',
+            details: process.env.NODE_ENV === 'production' ? undefined : err.message
+        });
     }
 });
 
-// Palmpesa webhook (simulated)
+// PalmPesa asynchronous webhook.
+// The callback is NOT trusted by itself: after receiving it, the server verifies
+// the order against PalmPesa's order-status endpoint before activating the subscription.
 app.post('/api/payment/webhook', async (req, res) => {
-    const { reference, status, transaction_id } = req.body;
-
     try {
+        const callback = req.body || {};
+        const callbackOrderId =
+            callback?.order_id ||
+            callback?.data?.[0]?.order_id ||
+            callback?.data?.order_id;
+
+        const callbackStatus = String(
+            callback?.payment_status ||
+            callback?.status ||
+            callback?.data?.[0]?.payment_status ||
+            ''
+        ).toUpperCase();
+
+        if (!callbackOrderId) {
+            return res.status(400).json({ error: 'Missing PalmPesa order_id' });
+        }
+
+        const subResult = await pool.query(
+            `SELECT id, user_id, status
+             FROM subscriptions
+             WHERE palmpesa_order_id = $1
+                OR payment_reference = $2
+             ORDER BY created_at DESC
+             LIMIT 1`,
+            [callbackOrderId, callbackOrderId]
+        );
+
+        if (subResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Subscription not found' });
+        }
+
+        const sub = subResult.rows[0];
+
+        // Verify with PalmPesa instead of activating from an unverified callback.
+        const verified = await verifyPalmPesaOrder(callbackOrderId);
+
+        if (verified.status === 'COMPLETED') {
+            await completeSubscriptionPayment({
+                subscriptionId: sub.id,
+                orderId: verified.orderId || callbackOrderId,
+                transactionId: verified.transactionId || null,
+                palmReference: verified.reference || null,
+                channel: verified.channel || null
+            });
+
+            return res.status(200).json({ success: true, status: 'completed' });
+        }
+
+        if (verified.status === 'FAILED') {
+            await failSubscriptionPayment({
+                subscriptionId: sub.id,
+                orderId: verified.orderId || callbackOrderId,
+                transactionId: verified.transactionId || null,
+                palmReference: verified.reference || null
+            });
+
+            return res.status(200).json({ success: true, status: 'failed' });
+        }
+
+        // PENDING or unknown: leave it pending and let the client/status endpoint poll.
+        console.log('PalmPesa webhook received while payment is still pending:', {
+            orderId: callbackOrderId,
+            callbackStatus,
+            verifiedStatus: verified.status
+        });
+
+        return res.status(200).json({ success: true, status: 'pending' });
+    } catch (err) {
+        console.error('PalmPesa webhook error:', err);
+        // Return non-2xx so the provider can retry if its webhook system supports retries.
+        res.status(500).json({ error: 'Webhook processing failed' });
+    }
+});
+
+// Status endpoint for frontend fallback polling.
+// It also verifies pending orders directly against PalmPesa, so activation does
+// not depend solely on webhook delivery.
+app.get('/api/subscription/payment-status/:subscriptionId', requireAuth, async (req, res) => {
+    try {
+        requirePalmPesaConfig();
+
         const result = await pool.query(
-            'SELECT id, user_id FROM subscriptions WHERE payment_reference = $1',
-            [reference]
+            `SELECT *
+             FROM subscriptions
+             WHERE id = $1 AND user_id = $2`,
+            [req.params.subscriptionId, req.session.userId]
         );
 
         if (result.rows.length === 0) {
@@ -668,22 +1080,53 @@ app.post('/api/payment/webhook', async (req, res) => {
         }
 
         const sub = result.rows[0];
-        const newStatus = status === 'completed' ? 'completed' : 'failed';
 
-        await pool.query(
-            'UPDATE subscriptions SET status = $1 WHERE id = $2',
-            [newStatus, sub.id]
-        );
+        if (sub.status === 'pending' && sub.palmpesa_order_id) {
+            const verified = await verifyPalmPesaOrder(sub.palmpesa_order_id);
 
-        if (newStatus === 'completed') {
-            await logActivity(sub.user_id, 'system', 'subscription_completed', 
-                `Reference: ${reference}, TX: ${transaction_id}`, 'webhook');
+            if (verified.status === 'COMPLETED') {
+                const completed = await completeSubscriptionPayment({
+                    subscriptionId: sub.id,
+                    orderId: verified.orderId || sub.palmpesa_order_id,
+                    transactionId: verified.transactionId || null,
+                    palmReference: verified.reference || null,
+                    channel: verified.channel || null
+                });
+
+                return res.json({
+                    success: true,
+                    status: completed.status,
+                    subscription: completed
+                });
+            }
+
+            if (verified.status === 'FAILED') {
+                const failed = await failSubscriptionPayment({
+                    subscriptionId: sub.id,
+                    orderId: verified.orderId || sub.palmpesa_order_id,
+                    transactionId: verified.transactionId || null,
+                    palmReference: verified.reference || null
+                });
+
+                return res.json({
+                    success: true,
+                    status: failed?.status || 'failed',
+                    subscription: failed
+                });
+            }
         }
 
-        res.json({ success: true });
+        res.json({
+            success: true,
+            status: sub.status,
+            subscription: sub
+        });
     } catch (err) {
-        console.error('Webhook error:', err);
-        res.status(500).json({ error: 'Webhook processing failed' });
+        console.error('PalmPesa payment-status error:', err);
+        res.status(502).json({
+            error: 'Could not verify PalmPesa payment',
+            details: process.env.NODE_ENV === 'production' ? undefined : err.message
+        });
     }
 });
 
@@ -886,6 +1329,14 @@ app.post('/api/blog', requireAuth, upload.single('image'), async (req, res) => {
 
     if (!title || !content || !category) {
         return res.status(400).json({ error: 'Title, content, and category required' });
+    }
+
+    const subCheck = await pool.query(
+        'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
+        [req.session.userId, 'completed']
+    );
+    if (subCheck.rows.length === 0) {
+        return res.status(403).json({ error: 'Active subscription required to create blog posts' });
     }
 
     try {
@@ -1178,6 +1629,7 @@ io.use((socket, next) => {
     if (session && session.userId) {
         socket.userId = session.userId;
         socket.username = session.username;
+        socket.join(`user:${socket.userId}`);
         next();
     } else {
         next(new Error('Unauthorized'));
@@ -1237,7 +1689,23 @@ io.on('connection', (socket) => {
 });
 
 // ============== FRONTEND ROUTES ==============
-// Serve index.html for SPA routing
+app.get('/mydashboard.html', requireAuth, async (req, res) => {
+    try {
+        const subCheck = await pool.query(
+            'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
+            [req.session.userId, 'completed']
+        );
+        
+        if (subCheck.rows.length === 0) {
+            return res.redirect('/subscribe.html');
+        }
+        
+        res.sendFile(path.join(__dirname, 'public', 'mydashboard.html'));
+    } catch (err) {
+        res.redirect('/login.html');
+    }
+});
+
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
         return res.status(404).json({ error: 'Not found' });
@@ -1260,6 +1728,10 @@ initDatabase().then(() => {
         console.log(`🚀 Server running on port ${PORT}`);
         console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`🔗 URL: http://localhost:${PORT}`);
+        console.log(`💳 PalmPesa: ${PALMPESA_API_TOKEN ? 'configured' : 'NOT CONFIGURED'}`);
+        if (process.env.PALMPESA_CALLBACK_URL) {
+            console.log(`🔔 PalmPesa webhook: ${process.env.PALMPESA_CALLBACK_URL}`);
+        }
     });
 }).catch(err => {
     console.error('Failed to start server:', err);

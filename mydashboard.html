@@ -117,13 +117,8 @@
         <!-- Add Product -->
         <div class="add-product-section" id="addProductSection">
             <h2><i class="fas fa-plus-circle"></i> Add New Product</h2>
-            <div id="addProductLocked" style="display:none;">
-                <div class="sub-locked">
-                    <i class="fas fa-lock"></i> You need an active subscription to add products. 
-                    <a href="subscribe.html">Subscribe Now</a>
-                </div>
-            </div>
-            <form id="addProductForm" style="display:none;">
+
+            <form id="addProductForm">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="title">Product Title <span style="color:red;">*</span></label>
@@ -222,9 +217,14 @@
                 document.getElementById('usernameDisplay').textContent = '@' + data.username;
                 await loadUserProfile();
                 await checkSubscription();
-                await loadUserProducts();
-                await loadStats();
+
+                if (isSubscribed) {
+                    await loadUserProducts();
+                    await loadStats();
+                }
+
                 return data;
+
             } catch (error) {
                 console.error('Auth check failed:', error);
                 window.location.href = '/login.html';
@@ -264,17 +264,14 @@
                         document.getElementById('addProductLocked').style.display = 'none';
                         document.getElementById('planDisplay').textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
                         document.getElementById('expiryDisplay').textContent = new Date(data.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                        document.getElementById('dashboardSubtext').textContent = 'Manage your products and business';
                     } else {
-                        document.getElementById('subBadge').style.display = 'none';
-                        document.getElementById('addProductForm').style.display = 'none';
-                        document.getElementById('addProductLocked').style.display = 'block';
-                        document.getElementById('planDisplay').textContent = 'Free';
-                        document.getElementById('expiryDisplay').textContent = 'N/A';
+                        window.location.href = '/subscribe.html';
+                        return;
                     }
                 }
             } catch (error) {
                 console.error('Failed to check subscription:', error);
+                window.location.href = '/subscribe.html';
             }
         }
 

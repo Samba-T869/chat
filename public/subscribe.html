@@ -27,7 +27,7 @@
         .header { display: flex; flex-direction: row; justify-content: space-between; margin-bottom:30px; }
         .subscribe-header { text-align:center; margin-left:24px; }
         .back-link { display:inline-block; color:#007185; }
-        .back-link a { text-decoration:none; font-weight:500; font-size: 2.2rem; }
+        .back-link a { text-decoration:none; font-weight:500; font-size: 2.2rem; color: #f00;}
         .subscribe-header .back-link:hover { text-decoration:underline; }
         .subscribe-header h1 { font-weight:400; font-size:28px; }
         .subscribe-header h1 i { color:#ff9900; }
@@ -70,10 +70,11 @@
         .current-subscription .badge.inactive { background:#dc3545; color:#fff; }
         .footer { background:#131a22; color:#ccc; padding:40px 20px 20px; margin-top:40px; }
         .footer-container { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:30px; }
-        .footer-section h3, .footer-section h4 { color:#fff; margin-bottom:12px; }
+        .footer-section h3, .footer-section h4 { color:#ff9900; margin-bottom:12px; }
         .footer-section h3 i { color:#ff9900; }
         .footer-section a { display:block; color:#ccc; text-decoration:none; padding:4px 0; font-size:14px; }
         .footer-section a:hover { text-decoration:underline; }
+        .footer-section a i { margin-right: 7px; font-size: 1rem;}
         .footer-bottom { text-align:center; padding-top:20px; border-top:1px solid #3a4553; margin-top:20px; font-size:14px; }
         @media(max-width:768px){ .nav-menu { display:none; } .subscribe-plans { grid-template-columns:1fr; } }
         .loading-spinner { text-align:center; padding:20px; }
@@ -210,6 +211,7 @@
         <div class="footer-bottom"><p>&copy; 2026 neverAlone. All rights reserved.</p></div>
     </footer>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         let currentUser = null;
         let selectedPlan = 'daily';
@@ -296,24 +298,178 @@
             });
         }
 
+        // Real-time PalmPesa payment state
+        let pendingSubscriptionId = null;
+        let paymentPollTimer = null;
+        let paymentPollStartedAt = 0;
+        let socket = null;
+
+        function setPayButtonState(state) {
+            const btn = document.getElementById('subscribeBtn');
+
+            if (state === 'processing') {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Waiting for payment...';
+            } else if (state === 'completed') {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-check"></i> Subscribed!';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now via PalmPesa';
+            }
+        }
+
+        function stopPaymentPolling() {
+            if (paymentPollTimer) {
+                clearTimeout(paymentPollTimer);
+                paymentPollTimer = null;
+            }
+            pendingSubscriptionId = null;
+            paymentPollStartedAt = 0;
+        }
+
+        async function handleConfirmedSubscription(data) {
+            stopPaymentPolling();
+            isSubscribed = true;
+
+            showFlash('Payment confirmed! Your neverAlone Pro subscription is now active.', 'success');
+            await checkSubscriptionStatus();
+            setPayButtonState('completed');
+
+            setTimeout(() => {
+                window.location.href = '/mydashboard.html';
+            }, 1200);
+        }
+
+        async function handlePaymentStatus(data) {
+            if (!data) return false;
+
+            const status = String(
+                data.payment_status ||
+                data.status ||
+                ''
+            ).toLowerCase();
+
+            if (data.active || status === 'completed') {
+                await handleConfirmedSubscription(data);
+                return true;
+            }
+
+            if (status === 'failed') {
+                stopPaymentPolling();
+                setPayButtonState('idle');
+                showFlash('The PalmPesa payment was not completed. You can try again.', 'error');
+                return true;
+            }
+
+            return false;
+        }
+
+        async function pollPaymentStatus() {
+            if (!pendingSubscriptionId) return;
+
+            // Fallback polling for up to 10 minutes. The PalmPesa webhook
+            // normally completes the payment, while this handles missed callbacks.
+            if (Date.now() - paymentPollStartedAt > 10 * 60 * 1000) {
+                stopPaymentPolling();
+                setPayButtonState('idle');
+                showFlash(
+                    'We are still waiting for PalmPesa confirmation. If you completed the payment, refresh this page shortly.',
+                    'info'
+                );
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/api/subscription/payment-status/${encodeURIComponent(pendingSubscriptionId)}`,
+                    { credentials: 'include', cache: 'no-store' }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const finished = await handlePaymentStatus(data);
+                    if (finished) return;
+                } else if (response.status === 404) {
+                    stopPaymentPolling();
+                    setPayButtonState('idle');
+                    showFlash('The payment request could not be found. Please start again.', 'error');
+                    return;
+                }
+            } catch (error) {
+                console.error('Payment status check failed:', error);
+            }
+
+            paymentPollTimer = setTimeout(pollPaymentStatus, 2500);
+        }
+
+        function startPaymentPolling(subscriptionId) {
+            stopPaymentPolling();
+            pendingSubscriptionId = subscriptionId;
+            paymentPollStartedAt = Date.now();
+            setPayButtonState('processing');
+            pollPaymentStatus();
+        }
+
+        function connectSubscriptionSocket() {
+            if (typeof io !== 'function') {
+                console.warn('Socket.IO client is unavailable; using payment-status polling.');
+                return;
+            }
+
+            socket = io({
+                transports: ['websocket', 'polling'],
+                withCredentials: true
+            });
+
+            socket.on('connect', () => {
+                console.log('✅ Real-time subscription connection established');
+            });
+
+            socket.on('subscription update', async (data) => {
+                console.log('📡 Subscription update received:', data);
+
+                if (!data) return;
+
+                if (
+                    pendingSubscriptionId &&
+                    data.subscription_id &&
+                    String(data.subscription_id) !== String(pendingSubscriptionId)
+                ) {
+                    return;
+                }
+
+                await handlePaymentStatus(data);
+            });
+
+            socket.on('connect_error', (error) => {
+                console.warn(
+                    'Subscription real-time connection unavailable:',
+                    error.message
+                );
+                // Polling remains active as the reliable fallback.
+            });
+        }
+
         // Submit subscription
         document.getElementById('subscribeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             if (isSubscribed) {
                 showFlash('You already have an active subscription!', 'info');
                 return;
             }
-            
+
             const phone = document.getElementById('phone').value.trim();
             if (!phone || phone.length < 10) {
                 showFlash('Please enter a valid phone number', 'error');
                 return;
             }
-            
+
             const btn = document.getElementById('subscribeBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending payment request...';
 
             try {
                 const response = await fetch('/api/subscription/create', {
@@ -325,42 +481,35 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    showFlash('Payment initiated! Please check your phone to confirm.', 'success');
-                    
-                    // Simulate webhook callback (in production, this would be handled by Palmpesa)
-                    setTimeout(async () => {
-                        try {
-                            const webhookResponse = await fetch('/api/payment/webhook', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    reference: data.payment_reference,
-                                    status: 'completed',
-                                    transaction_id: 'TX-' + Date.now()
-                                })
-                            });
-                            if (webhookResponse.ok) {
-                                showFlash('Payment confirmed! Your subscription is now active.', 'success');
-                                await checkSubscriptionStatus();
-                                btn.innerHTML = '<i class="fas fa-check"></i> Subscribed!';
-                                btn.disabled = true;
-                            }
-                        } catch (webhookError) {
-                            console.error('Webhook simulation failed:', webhookError);
-                        }
-                    }, 5000);
-                    
+                if (response.ok && data.success) {
+                    const subscriptionId =
+                        data.subscription_id ||
+                        data.subscription?.id;
+
+                    if (!subscriptionId) {
+                        throw new Error('The server did not return a subscription ID.');
+                    }
+
+                    showFlash(
+                        'Payment request sent to your phone. Approve it to activate your subscription.',
+                        'success'
+                    );
+
+                    startPaymentPolling(subscriptionId);
                 } else {
-                    showFlash(data.error || 'Failed to create subscription', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now via Palmpesa';
+                    showFlash(
+                        data.error || 'Failed to create PalmPesa payment request.',
+                        'error'
+                    );
+                    setPayButtonState('idle');
                 }
             } catch (error) {
-                console.error('Subscription failed:', error);
-                showFlash('An error occurred. Please try again.', 'error');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now via Palmpesa';
+                console.error('Subscription payment failed:', error);
+                showFlash(
+                    'An error occurred while starting the payment. Please try again.',
+                    'error'
+                );
+                setPayButtonState('idle');
             }
         });
 
@@ -391,6 +540,7 @@
         });
 
         // Initialize page
+        connectSubscriptionSocket();
         checkAuth();
     </script>
 </body>

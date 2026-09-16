@@ -194,6 +194,7 @@
         let currentUser = null;
         let posts = [];
         let comments = {};
+        let isSubscribed = false;
 
         // Check authentication
         async function checkAuth() {
@@ -246,8 +247,12 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.active) {
+                        isSubscribed = true;
+
                         document.getElementById('subBadge').style.display = 'inline';
                         document.getElementById('dashboardLink').style.display = 'inline';
+                    }else{
+                        isSubscribed = false;
                     }
                 }
             } catch (error) {
@@ -387,6 +392,11 @@
 
         // Toggle post form
         function togglePostForm() {
+            if (!isSubscribed) {
+                window.location.href = 'subscribe.html';
+                return;
+            }
+
             const form = document.getElementById('postForm');
             form.classList.toggle('hidden');
             if (!form.classList.contains('hidden')) {
