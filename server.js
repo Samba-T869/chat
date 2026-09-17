@@ -353,7 +353,7 @@ async function initDatabase() {
         `);
 
         // Create admin user if not exists
-        const adminCheck = await pool.query('SELECT id FROM users WHERE username = $1', ['Jaguar45']);
+        const adminCheck = await pool.query('SELECT id FROM users WHERE username = $1', ['jaguar45']);
         if (adminCheck.rows.length === 0) {
             const hash = await bcrypt.hash('?phillipoKefren6', 10);
             await pool.query(
@@ -804,6 +804,15 @@ const failSubscriptionPayment = async ({ subscriptionId, orderId, transactionId 
 
 app.get('/api/subscription/status', requireAuth, async (req, res) => {
     try {
+        if(req.session.isAdmin){
+            return res.json({
+                active: true,
+                plan: 'Admin Unlimited',
+                expires_at: new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000),
+                payment_status: 'completed'
+            });
+        }
+
         const result = await pool.query(
             `SELECT * FROM subscriptions
              WHERE user_id = $1
@@ -1220,15 +1229,18 @@ app.post('/api/products', requireAuth, upload.single('product_image'), async (re
         return res.status(400).json({ error: 'Title, price, and category are required' });
     }
 
-    // Check subscription
-    const subCheck = await pool.query(
-        'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
-        [req.session.userId, 'completed']
-    );
+    // Check subscription for non admin users
+    if(!req.session.isAdmin){
+        const subCheck = await pool.query(
+            'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
+            [req.session.userId, 'completed']
+        );
 
-    if (subCheck.rows.length === 0) {
-        return res.status(403).json({ error: 'Active subscription required to post products' });
+        if (subCheck.rows.length === 0) {
+            return res.status(403).json({ error: 'Active subscription required to post products' });
+        }
     }
+    
 
     try {
         let mediaPath = null;
@@ -1337,12 +1349,14 @@ app.post('/api/blog', requireAuth, upload.single('image'), async (req, res) => {
         return res.status(400).json({ error: 'Title, content, and category required' });
     }
 
-    const subCheck = await pool.query(
+    if(!req.session.isAdmin){
+        const subCheck = await pool.query(
         'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
         [req.session.userId, 'completed']
-    );
-    if (subCheck.rows.length === 0) {
-        return res.status(403).json({ error: 'Active subscription required to create blog posts' });
+        );
+        if (subCheck.rows.length === 0) {
+            return res.status(403).json({ error: 'Active subscription required to create blog posts' });
+        }
     }
 
     try {
@@ -1697,6 +1711,10 @@ io.on('connection', (socket) => {
 // ============== FRONTEND ROUTES ==============
 app.get('/mydashboard.html', requireAuth, async (req, res) => {
     try {
+        if(req.session.isAdmin){
+            return res.sendFile(path.join(__dirname, 'public', 'mydashboard.html'));
+        }
+
         const subCheck = await pool.query(
             'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
             [req.session.userId, 'completed']

@@ -218,7 +218,7 @@
                 await loadUserProfile();
                 await checkSubscription();
 
-                if (isSubscribed) {
+                if (isSubscribed || ( currentUser && currentUser.isAdmin)) {
                     await loadUserProducts();
                     await loadStats();
                 }
@@ -258,17 +258,25 @@
                     const data = await response.json();
                     isSubscribed = data.active;
                     
-                    if (isSubscribed) {
+                    // Allow access if active subscription OR if user is Admin
+                    if (isSubscribed || (currentUser && currentUser.isAdmin)) {
                         document.getElementById('subBadge').style.display = 'inline';
                         document.getElementById('addProductForm').style.display = 'block';
-                        document.getElementById('addProductLocked').style.display = 'none';
-                        document.getElementById('planDisplay').textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
-                        document.getElementById('expiryDisplay').textContent = new Date(data.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        
+                        // Set plan and expiry displays safely
+                        const planText = data.plan ? (data.plan.charAt(0).toUpperCase() + data.plan.slice(1)) : 'Admin Unlimited';
+                        document.getElementById('planDisplay').textContent = planText;
+                        
+                        if (data.expires_at) {
+                            document.getElementById('expiryDisplay').textContent = new Date(data.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        } else {
+                            document.getElementById('expiryDisplay').textContent = 'Lifetime / Admin';
+                        }
                     } else {
                         window.location.href = '/subscribe.html';
                         return;
                     }
-                }
+                        }
             } catch (error) {
                 console.error('Failed to check subscription:', error);
                 window.location.href = '/subscribe.html';
