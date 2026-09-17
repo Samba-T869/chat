@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>neverAlone | Activity Logs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background:#eaeded; padding-top:60px; }
+        .navbar { background:#131a22; padding:0 20px; color:#fff; position:fixed; top:0; left:0; right:0; z-index:1000; }
+        .nav-container { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px; }
+        .nav-logo { font-size:24px; font-weight:700; display:flex; align-items:center; gap:8px; cursor:pointer; }
+        .nav-logo i { color:#ff9900; }
+        .nav-menu { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .nav-menu a { color:#ccc; text-decoration:none; font-size:14px; padding:6px 8px; transition:0.2s; }
+        .nav-menu a:hover, .nav-menu a.active { color:#fff; border-bottom:2px solid #ff9900; }
+        .nav-menu a i { margin-right:4px; }
+        .nav-user { display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:32px; height:32px; border-radius:50%; overflow:hidden; border:2px solid #ff9900; flex-shrink:0; }
+        .user-avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-badge { color:#ccc; font-size:14px; }
+        .admin-badge { background:#dc3545; color:#fff; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+        
+        .container { max-width:1400px; margin:20px auto; padding:0 20px; }
+        .admin-table-section { background:#fff; border-radius:8px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:24px; }
+        .admin-table-section h2 { font-weight:600; font-size:20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; color:#131a22; }
+        .admin-table-section h2 i { color:#ff9900; margin-right:8px; }
+        
+        .admin-filters { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; align-items:flex-end; background:#f7f8fa; padding:16px; border-radius:6px; border:1px solid #e7e9ec; }
+        .filter-group { display:flex; flex-direction:column; gap:6px; flex:1; min-width:180px; }
+        .filter-group label { font-size:13px; font-weight:600; color:#555; }
+        .filter-group input, .filter-group select { padding:8px 12px; border:1px solid #d5d9dd; border-radius:4px; font-size:14px; background:#fff; }
+        .filter-group input:focus, .filter-group select:focus { border-color:#ff9900; outline:none; box-shadow:0 0 0 3px rgba(255,153,0,0.2); }
+        
+        .filter-actions { display:flex; gap:10px; align-items:flex-end; }
+        .btn-filter { padding:9px 18px; background:#ff9900; color:#131a22; border:none; border-radius:4px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:0.2s; }
+        .btn-filter:hover { background:#e68a00; }
+        .btn-reset { padding:9px 18px; background:#6c757d; color:#fff; border:none; border-radius:4px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:0.2s; }
+        .btn-reset:hover { background:#5a6268; }
+
+        .table-responsive { overflow-x:auto; }
+        .admin-table { width:100%; border-collapse:collapse; font-size:14px; }
+        .admin-table th { background:#f7f8fa; padding:12px; text-align:left; font-weight:600; border-bottom:2px solid #e7e9ec; color:#333; }
+        .admin-table td { padding:12px; border-bottom:1px solid #f0f2f2; color:#444; }
+        .admin-table tr:hover td { background:#fafafa; }
+
+        .ip-badge { font-family: monospace; background: #eef2f5; padding: 3px 8px; border-radius: 4px; font-size: 13px; color: #0066c0; border: 1px solid #d5d9dd; }
+        .action-badge { font-weight: 600; font-size: 12px; padding: 3px 8px; border-radius: 4px; background: #e7f3ff; color: #0056b3; display: inline-block; }
+
+        .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e7e9ec; }
+        .page-btn { padding: 6px 16px; border: 1px solid #d5d9dd; background: #fff; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn:hover:not(:disabled) { background: #f7f8fa; border-color: #a6a6a6; }
+
+        .loading-spinner { text-align:center; padding:40px; }
+        .loading-spinner i { font-size:32px; color:#ff9900; animation:spin 1s linear infinite; }
+        @keyframes spin { 100%{ transform:rotate(360deg); } }
+
+        .footer { background:#131a22; color:#ccc; padding:40px 20px 20px; margin-top:40px; }
+        .footer-container { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:30px; }
+        .footer-section h3, .footer-section h4 { color:#fff; margin-bottom:12px; }
+        .footer-section h3 i { color:#ff9900; }
+        .footer-section a { display:block; color:#ccc; text-decoration:none; padding:4px 0; font-size:14px; }
+        .footer-section a:hover { text-decoration:underline; }
+        .footer-bottom { text-align:center; padding-top:20px; border-top:1px solid #3a4553; margin-top:20px; font-size:14px; }
+        @media(max-width:768px){ .nav-menu { display:none; } .admin-filters { flex-direction:column; align-items:stretch; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo" onclick="window.location.href='homepage.html'"><i class="fas fa-leaf"></i><span>neverAlone</span></div>
+            <div class="nav-menu">
+                <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
+                <a href="market.html"><i class="fas fa-store"></i> Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i> Blog</a>
+                <a href="admin_dashboard.html" class="active"><i class="fas fa-dashboard"></i> Admin</a>
+                <a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+            <div class="nav-user">
+                <div class="user-avatar">
+                    <img id="userAvatar" src="" alt="Admin" onerror="this.src='https://ui-avatars.com/api/?name=Admin&background=ff9900&color=fff&size=32'">
+                </div>
+                <span class="user-badge" id="usernameDisplay">@Admin</span>
+                <span class="admin-badge"><i class="fas fa-shield-alt"></i> Admin</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="admin-table-section">
+            <h2>
+                <span><i class="fas fa-list-alt"></i> System Activity Logs</span>
+                <a href="admin_dashboard.html" class="btn-reset" style="text-decoration:none; font-size:13px;"><i class="fas fa-arrow-left"></i> Dashboard</a>
+            </h2>
+
+            <!-- Filters -->
+            <form id="filterForm" class="admin-filters">
+                <div class="filter-group">
+                    <label for="searchInput">Search User / Action / Details</label>
+                    <input type="text" id="searchInput" placeholder="e.g. jaguar45, login, subscription">
+                </div>
+                <div class="filter-group">
+                    <label for="actionSelect">Action Type</label>
+                    <select id="actionSelect">
+                        <option value="">All Actions</option>
+                        <option value="login">login</option>
+                        <option value="register">register</option>
+                        <option value="product_created">product_created</option>
+                        <option value="blog_posted">blog_posted</option>
+                        <option value="subscription_payment_initiated">subscription_payment_initiated</option>
+                        <option value="subscription_completed">subscription_completed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="dateInput">Date</label>
+                    <input type="date" id="dateInput">
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+                    <button type="button" id="resetBtn" class="btn-reset"><i class="fas fa-undo"></i> Reset</button>
+                </div>
+            </form>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr><td colspan="6" class="loading-spinner"><i class="fas fa-circle-notch"></i> Loading logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prevBtn" class="page-btn" disabled><i class="fas fa-chevron-left"></i> Previous</button>
+                <span id="pageInfo" style="font-size:14px; color:#666;">Page 1</span>
+                <button id="nextBtn" class="page-btn">Next <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3><i class="fas fa-leaf"></i> neverAlone</h3>
+                <p>Connecting communities through commerce and conversation.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="homepage.html"><i class="fas fa-home"></i>Home</a>
+                <a href="market.html"><i class="fas fa-store"></i>Marketplace</a>
+                <a href="chat.html"><i class="fas fa-comments"></i>Public Chat</a>
+                <a href="tusepe.html"><i class="fas fa-blog"></i>Blog</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <a href="https://wa.me/255614047802" target="_blank"><i class="fab fa-whatsapp"></i>WhatsApp</a>
+                <a href="tel:255618882762" target="_blank"><i class="fas fa-phone"></i>+255618882762</a>
+                <a href="tel:255656078254" target="_blank"><i class="fas fa-phone"></i>+255656078254</a>
+                <a href="mailto:sambahustler@gmail.com" target="_blank"><i class="fas fa-envelope"></i>Email Us</a>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <a href="subscribe.html"><i class="fas fa-tag"></i>Pricing</a>
+                <a href="policy.html"><i class="fas fa-file-contract"></i>Terms & Privacy</a>
+                <a href="mailto:support@neveralone.com"><i class="fas fa-envelope"></i>support@neveralone.com</a>
+            </div>
+        </div>
+        <div class="footer-bottom"><p>&copy; 2026 neverAlone. All rights reserved.</p></div>
+    </footer>
+
+    <script>
+        let currentPage = 1;
+        const limit = 50;
+
+        // Check authentication
+        async function checkAdminAuth() {
+            try {
+                const response = await fetch('/api/check-auth', { credentials: 'include' });
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/admin_login.html';
+                    return;
+                }
+                if (!data.isAdmin) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                document.getElementById('usernameDisplay').textContent = '@' + data.username;
+                
+                const profileResponse = await fetch('/api/user/profile', { credentials: 'include' });
+                if (profileResponse.ok) {
+                    const user = await profileResponse.json();
+                    if (user.profile_pic) {
+                        document.getElementById('userAvatar').src = '/uploads/profiles/' + user.profile_pic;
+                    }
+                }
+                
+                await loadLogs();
+            } catch (error) {
+                console.error('Admin auth check failed:', error);
+                window.location.href = '/admin_login.html';
+            }
+        }
+
+        // Fetch logs with query parameters matching server.js endpoint
+        async function loadLogs() {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading-spinner"><i class="fas fa-circle-notch"></i> Loading activity logs...</td></tr>';
+
+            const search = document.getElementById('searchInput').value.trim();
+            const action = document.getElementById('actionSelect').value;
+            const date = document.getElementById('dateInput').value;
+
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: limit
+            });
+
+            if (search) params.append('search', search);
+            if (action) params.append('action', action);
+            if (date) params.append('date', date);
+
+            try {
+                const response = await fetch(`/api/admin/logs?${params.toString()}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load logs');
+
+                const logs = await response.json();
+
+                if (!logs || logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;padding:20px;">No activity logs found matching the criteria.</td></tr>';
+                    document.getElementById('nextBtn').disabled = true;
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(log => `
+                    <tr>
+                        <td>#${log.id}</td>
+                        <td><strong>${escapeHtml(log.username || 'System')}</strong></td>
+                        <td><span class="action-badge">${escapeHtml(log.action)}</span></td>
+                        <td>${escapeHtml(log.details || '-')}</td>
+                        <td><span class="ip-badge">${escapeHtml(log.ip_address || 'unknown')}</span></td>
+                        <td>${new Date(log.created_at).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'medium' })}</td>
+                    </tr>
+                `).join('');
+
+                // Pagination state
+                document.getElementById('prevBtn').disabled = currentPage === 1;
+                document.getElementById('nextBtn').disabled = logs.length < limit;
+                document.getElementById('pageInfo').textContent = `Page ${currentPage}`;
+
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc3545;padding:20px;">Failed to load activity logs from server.</td></tr>';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Form events
+        document.getElementById('filterForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            currentPage = 1;
+            loadLogs();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('filterForm').reset();
+            currentPage = 1;
+            loadLogs();
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadLogs();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentPage++;
+            loadLogs();
+        });
+
+        document.getElementById('logoutLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+                if (response.ok) window.location.href = '/admin_login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        });
+
+        checkAdminAuth();
+    </script>
+</body>
+</html>

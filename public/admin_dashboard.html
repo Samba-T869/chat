@@ -136,7 +136,14 @@
             </h2>
             <div class="table-responsive">
                 <table class="admin-table">
-                    <thead><tr><th>User</th><th>Action</th><th>Time</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>IP Address</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
                     <tbody id="activityTableBody">
                         <tr><td colspan="3" style="text-align:center;color:#888;">Loading activities...</td></tr>
                     </tbody>
@@ -354,6 +361,7 @@
                     <tr>
                         <td><strong>${escapeHtml(activity.username || 'System')}</strong></td>
                         <td>${escapeHtml(activity.action)}</td>
+                        <td><code>${escapeHtml(activity.ip_address || 'N/A')}</code></td>
                         <td>${new Date(activity.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</td>
                     </tr>
                 `).join('');
