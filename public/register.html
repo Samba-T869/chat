@@ -1,209 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sw">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>neverAlone | Create Account</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { margin:0; background:#eaeded; font-family:'Amazon Ember',Arial,sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-        .container { width:100%; max-width:440px; padding:20px; }
-        .card { background:#fff; padding:32px 28px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
-        .card h1 { font-weight:400; font-size:28px; text-align:center; margin-bottom:24px; }
-        .card h2 { font-size:14px; font-weight:600; margin-bottom:4px; }
-        .form-group { margin-bottom:16px; }
-        .form-group input { width:100%; padding:10px 12px; border:1px solid #d5d9dd; border-radius:4px; font-size:14px; box-sizing:border-box; }
-        .form-group input:focus { border-color:#ff9900; outline:none; box-shadow:0 0 0 3px rgba(255,153,0,0.2); }
-        .file-label { display:inline-block; background:#f0f2f2; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:14px; }
-        .form-group input[type="file"] { display:none; }
-        .show-hide { display:flex; align-items:center; gap:8px; margin:12px 0; font-size:14px; }
-        .show-hide input { width:auto; }
-        .btn-register { width:100%; padding:12px; background:#ff9900; border:none; border-radius:4px; font-size:16px; font-weight:600; cursor:pointer; transition:0.2s; }
-        .btn-register:hover { background:#e68a00; }
-        .btn-register:disabled { opacity:0.6; cursor:not-allowed; }
-        .check { text-align:center; margin-top:16px; font-size:14px; }
-        .check a { color:#007185; text-decoration:none; }
-        .check a:hover { text-decoration:underline; }
-        .links { display:flex; margin-bottom:16px; justify-content: space-between; padding: 2px;}
-        .links a { color:#007185; text-decoration:none; font-size:14px; margin-left:12px; }
-        .links a:hover { text-decoration:underline; }
-        .links .login { font-size: 1rem; background-color: #d5d9dd; width: 50%; padding: 10px; border-radius: 6px 0 0 6px;}
-        .links .register { background-color: #ff9900; width: 50%; padding: 10px; color: #fff; border-radius: 0 6px 6px 0;}
-        .links a.active { font-weight:600; }
-        .flash-message { padding:10px 16px; border-radius:4px; margin-bottom:16px; display:none; }
-        .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
-        .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
-        .flash-message.show { display:block; }
-        .success-message { text-align:center; padding:20px; }
-        .success-message i { font-size:48px; color:#28a745; }
-        .success-message h2 { color:#28a745; }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>Waudhao | Jisajili</title>
+<style>
+:root{--p:#1769e0;--g:#13b76b;--d:#172b4d;--m:#718096;--bg:#f5f8fc;--b:#e5eaf1}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:#26364a;min-height:100vh}
+a{text-decoration:none;color:inherit}
+.page{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.visual{background:linear-gradient(135deg,rgba(7,32,62,.96),rgba(19,183,107,.74)),url("regpic.jpeg") center/cover;color:white;padding:45px;display:flex;align-items:center}
+.visual-inner{max-width:520px;margin:auto}
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 55px;
+}
+
+.logo svg {
+    max-width: 220px;
+    height: auto;
+    display: block;
+}
+.logo-icon{width:44px;height:44px;background:white;color:var(--p);border-radius:12px;display:grid;place-items:center;font-size:24px}
+.logo-name{font-size:25px;font-weight:800}
+.logo-name span{color:#35e994}
+.tagline{font-size:13px;color:#dbe7f7}
+.visual h1{font-size:clamp(35px,4vw,55px);line-height:1.05;letter-spacing:-1.5px;margin-bottom:18px}
+.visual h1 span{color:#35e994}
+.visual p{color:#dce7f5;line-height:1.7}
+.steps{display:grid;gap:13px;margin-top:30px}
+.step{display:flex;gap:12px;align-items:center;font-size:14px}
+.step-no{width:32px;height:32px;border-radius:50%;background:#ffffff21;display:grid;place-items:center;font-weight:800}
+.form-side{display:flex;align-items:center;justify-content:center;padding:35px}.form-wrap{width:min(520px,100%)}.mobile-logo{display:none}
+.form-wrap h2{font-size:30px;color:var(--d);margin-bottom:7px}
+.intro{color:var(--m);font-size:14px;margin-bottom:23px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.group{display:grid;gap:6px}.group.full{grid-column:1/-1}
+.group label{font-size:12px;font-weight:800;color:var(--d)}
+.group input,.group select{width:100%;padding:12px;border:1px solid var(--b);border-radius:9px;outline:0;background:white}
+.group input:focus,.group select:focus{border-color:var(--p);box-shadow:0 0 0 3px #1769e018}
+.note{font-size:10px;color:var(--m)}
+.terms{display:flex;gap:8px;align-items:flex-start;color:var(--m);font-size:11px;margin:18px 0}
+.terms input{margin-top:2px;accent-color:var(--p)}
+.terms a,.login a{color:var(--p);font-weight:700}
+.btn{width:100%;border:0;border-radius:10px;padding:13px;cursor:pointer;font-weight:800;background:var(--p);color:white;box-shadow:0 7px 18px #1769e030}
+.login{text-align:center;color:var(--m);font-size:13px;margin-top:20px}
+.back{text-align:center;margin-top:17px;color:var(--m);font-size:12px}
+.message{display:none;margin-bottom:14px;padding:11px;border-radius:9px;font-size:12px}
+.success{background:#ecfdf5;color:#087443}
+.error{background:#fff1f2;color:#be123c}
+
+@media(max-width:800px){
+    .page{grid-template-columns:1fr}.visual{display:none}
+    .form-side{min-height:100vh;padding:22px}
+    .mobile-logo{display:flex;align-items:center;gap:9px;margin-bottom:28px}
+    .mobile-logo .logo-icon{background:var(--p);color:white;width:40px;height:40px}
+    .mobile-logo .logo-name{font-size:21px}
+}
+
+@media(max-width:500px){
+    .form-grid{grid-template-columns:1fr}
+    .group.full{grid-column:auto}
+    .form-side{padding:18px}
+    .form-wrap h2{font-size:26px}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>CREATE ACCOUNT.</h1>
-        <div class="card">
-            <div class="links">
-                <a class="login" href="login.html">Login</a>
-                <a class="register" href="register.html" class="active">Register</a>
+<div class="page">
+    <section class="visual">
+        <div class="visual-inner">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 120" width="100%" height="100%">
+                    <defs>
+                    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+                    </linearGradient>
+                    </defs>
+                    <!-- Icon: Isometric "W" Box -->
+                    <g transform="translate(25, 20)">
+                    <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="81" cy="25" r="5" fill="#db2777" />
+                    <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                    <!-- Text -->
+                    <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+                </svg>
             </div>
 
-            <div id="errorContainer">
-                <div id="errorMessage" class="flash-message flash-error"><i class="fas fa-exclamation-circle"></i> <span id="errorText"></span></div>
-                <div id="successMessage" class="flash-message flash-success"><i class="fas fa-check-circle"></i> <span id="successText"></span></div>
-            </div>
+            <h1>Jiunge na <span>Waudhao</span></h1>
+            <p>Fungua akaunti yako bure na anza kununua, kuuza na kuwasiliana na watu wanaohitaji bidhaa zako.</p>
 
-            <form id="registerForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <h2>Username.*</h2>
-                    <input type="text" id="username" name="username" placeholder="username" required>
-                </div>
-                <div class="form-group">
-                    <h2>Email address.*</h2>
-                    <input type="email" id="email" name="email" placeholder="youremail@gmail.com" required>
-                </div>
-                <div class="form-group">
-                    <h2>Add profile picture (optional).</h2>
-                    <input type="file" accept="image/*" id="profilePic" name="profile_pic">
-                    <label for="profilePic" class="file-label"><i class="fas fa-upload"></i> Choose profile picture</label>
-                    <small style="display:block;color:#666;font-size:12px;margin-top:4px;">Supported: JPEG, PNG, GIF, WEBP (Max 5MB)</small>
-                </div>
-                <div class="form-group">
-                    <h2>Password.*</h2>
-                    <input type="password" id="password" name="password" placeholder="Password" required>
-                    <small style="display:block;color:#666;font-size:12px;margin-top:4px;">Password must be at least 6 characters</small>
-                </div>
-                <div class="form-group">
-                    <h2>Confirm password.*</h2>
-                    <input type="password" id="confirm" name="confirm" placeholder="Confirm password" required>
-                </div>
-                <div class="show-hide">
-                    <input type="checkbox" id="showPassword">
-                    <label for="showPassword">Show Password</label>
-                </div>
-                <button type="submit" class="btn-register" id="registerBtn"><i class="fas fa-user-plus"></i> Create Account</button>
-                <div class="check">
-                    <label>Already have an account? <a href="login.html">Login</a></label>
-                </div>
-            </form>
+            <div class="steps">
+                <div class="step"><div class="step-no">1</div> Jaza taarifa zako za msingi</div>
+                <div class="step"><div class="step-no">2</div> Thibitisha akaunti yako</div>
+                <div class="step"><div class="step-no">3</div>Anza kuweka matangazo</div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <script>
-        // Show/hide password
-        document.getElementById('showPassword').addEventListener('change', function() {
-            const password = document.getElementById('password');
-            const confirm = document.getElementById('confirm');
-            const type = this.checked ? 'text' : 'password';
-            password.type = type;
-            confirm.type = type;
-        });
+    <main class="form-side"><div class="form-wrap">
+        <div class="mobile-logo">
+            <div class="logo-icon"><img src="favicon.svg"></div>
+            <div class="logo-name">Waudhao</div>
+        </div>
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirm = document.getElementById('confirm').value;
-            const profilePic = document.getElementById('profilePic').files[0];
-            
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            const successMessage = document.getElementById('successMessage');
-            const successText = document.getElementById('successText');
-            const registerBtn = document.getElementById('registerBtn');
-            
-            // Hide previous messages
-            errorMessage.classList.remove('show');
-            successMessage.classList.remove('show');
-            
-            // Basic validation
-            if (!username || !email || !password || !confirm) {
-                errorText.textContent = 'All fields are required';
-                errorMessage.classList.add('show');
-                return;
-            }
-            
-            if (password.length < 6) {
-                errorText.textContent = 'Password must be at least 6 characters';
-                errorMessage.classList.add('show');
-                return;
-            }
-            
-            if (password !== confirm) {
-                errorText.textContent = 'Passwords do not match';
-                errorMessage.classList.add('show');
-                return;
-            }
-            
-            if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
-                errorText.textContent = 'Username must be 3-30 characters (letters, numbers, underscore)';
-                errorMessage.classList.add('show');
-                return;
-            }
-            
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                errorText.textContent = 'Invalid email address';
-                errorMessage.classList.add('show');
-                return;
-            }
+        <h2>Fungua akaunti</h2><p class="intro">Jisajili bure ili kuanza kutumia Waudhao.</p>
+        <div class="message" id="message"></div>
+        <form id="registerForm"><div class="form-grid">
+        <div class="group"><label>Jina Kamili *</label><input id="name" type="text" placeholder="Mfano: Juma Hassan" required></div>
+        <div class="group"><label>Username *</label><input type="text" placeholder="Mfano: juma23" required></div>
+        <div class="group"><label>Email *</label><input type="email" placeholder="juma@gmail.com" required></div>
+        <div class="group"><label>Namba ya Simu *</label><input type="tel" placeholder="+255 7XX XXX XXX" required></div>
+        <div class="group"><label>Nchi *</label><select required><option value="tanzania">Tanzania</option><option>Kenya</option><option>Uganda</option><option>Rwanda</option><option>Burundi</option><option>Congo DRC</option><option>Malawi</option><option>Msumbiji</option><option>Afrika Kusini</option><option>Nyinginezo</option></select></div>
+        <div class="group"><label>Nenosiri *</label><input id="password" type="password" minlength="8" placeholder="Angalau herufi 8" required><span class="note">Tumia angalau herufi 8.</span></div>
+        <div class="group"><label>Thibitisha Nenosiri *</label><input id="confirm" type="password" minlength="8" placeholder="Rudia nenosiri" required></div>
+        </div>
+        <label class="terms"><input id="terms" type="checkbox" required><span>Ninakubali <a href="terms.html">Masharti ya Matumizi</a> na <a href="terms.html">Sera ya Faragha</a> ya Waudhao.</span></label>
+        <button class="btn" type="submit">Jisajili Sasa</button></form>
+        <div class="login">Tayari una akaunti? <a href="login.html">Ingia hapa</a></div>
+        </div>
+    </main>
+</div>
 
-            registerBtn.disabled = true;
-            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
-
-            try {
-                const formData = new FormData();
-                formData.append('username', username);
-                formData.append('email', email);
-                formData.append('password', password);
-                formData.append('confirm', confirm);
-                if (profilePic) {
-                    formData.append('profile_pic', profilePic);
-                }
-
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'include'
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    successText.textContent = 'Account created successfully! Redirecting...';
-                    successMessage.classList.add('show');
-                    setTimeout(() => {
-                        window.location.href = '/homepage.html';
-                    }, 1500);
-                } else {
-                    errorText.textContent = data.error || 'Registration failed';
-                    errorMessage.classList.add('show');
-                }
-            } catch (error) {
-                errorText.textContent = 'An error occurred. Please try again.';
-                errorMessage.classList.add('show');
-            } finally {
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
-            }
-        });
-
-        // Check if already logged in
-        async function checkAuth() {
-            try {
-                const response = await fetch('/api/check-auth', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (data.authenticated) {
-                    window.location.href = '/homepage.html';
-                }
-            } catch (error) {
-                // Not authenticated, stay on register page
-            }
-        }
-        checkAuth();
-    </script>
-</body>
-</html>
+<script>
+document.getElementById("registerForm").onsubmit=e=>{
+    e.preventDefault();
+    const m=document.getElementById("message");
+    m.className="message";
+    
+    if(document.getElementById("password").value!==document.getElementById("confirm").value){
+        m.classList.add("error");
+        m.textContent="Nenosiri mbili hazifanani.";
+        m.style.display="block";
+        return
+    }
+    m.classList.add("success");
+    m.textContent="Demo: hapa taarifa zitatumwa kwenye backend/database yako.";
+    m.style.display="block"
+    
+    window.location.href = 'verify.html';
+};
+</script>
+</body></html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>Waudhao | Thibitisha Akaunti</title>
+<style>
+:root{--p:#1769e0;--g:#13b76b;--d:#172b4d;--m:#718096;--bg:#f5f8fc;--b:#e5eaf1}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:#26364a;min-height:100vh}
+a{text-decoration:none;color:inherit}
+.page{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.visual{background:linear-gradient(135deg,rgba(7,32,62,.96),rgba(19,183,107,.74)),url("regpic.jpeg") center/cover;color:white;padding:45px;display:flex;align-items:center}
+.visual-inner{max-width:520px;margin:auto}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:55px}
+.logo svg{max-width:220px;height:auto;display:block}
+.visual h1{font-size:clamp(35px,4vw,55px);line-height:1.05;letter-spacing:-1.5px;margin-bottom:18px}
+.visual h1 span{color:#35e994}
+.visual p{color:#dce7f5;line-height:1.7}
+.steps{display:grid;gap:13px;margin-top:30px}
+.step{display:flex;gap:12px;align-items:center;font-size:14px}
+.step-no{width:32px;height:32px;border-radius:50%;background:#ffffff21;display:grid;place-items:center;font-weight:800}
+.form-side{display:flex;align-items:center;justify-content:center;padding:35px}
+.form-wrap{width:min(520px,100%)}
+.mobile-logo{display:none}
+.mobile-logo .logo-icon{width:40px;height:40px;border-radius:12px;background:var(--p);display:grid;place-items:center}
+.mobile-logo .logo-icon img{width:25px;height:25px}
+.mobile-logo .logo-name{font-size:21px;font-weight:800;color:var(--d)}
+.form-wrap h2{font-size:30px;color:var(--d);margin-bottom:7px}
+.intro{color:var(--m);font-size:14px;line-height:1.6;margin-bottom:23px}
+.email-box{display:flex;align-items:center;gap:12px;background:#eef5ff;border:1px solid #d8e8ff;border-radius:10px;padding:12px 14px;margin-bottom:20px}
+.email-icon{width:38px;height:38px;border-radius:9px;background:white;color:var(--p);display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+.email-box small{display:block;color:var(--m);font-size:11px;margin-bottom:3px}
+.email-box strong{display:block;color:var(--d);font-size:13px;word-break:break-all}
+.message{display:none;margin-bottom:14px;padding:11px;border-radius:9px;font-size:12px;line-height:1.5}
+.success{background:#ecfdf5;color:#087443}
+.error{background:#fff1f2;color:#be123c}
+.code-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.code-label label{font-size:12px;font-weight:800;color:var(--d)}
+.timer{font-size:12px;color:var(--p);font-weight:800}
+.code-input{width:100%;padding:15px 12px;border:1px solid var(--b);border-radius:10px;outline:0;background:white;font-size:25px;font-weight:800;letter-spacing:9px;text-align:center;color:var(--d)}
+.code-input:focus{border-color:var(--p);box-shadow:0 0 0 3px #1769e018}
+.code-input.expired{border-color:#fecdd3;background:#fff8f8}
+.hint{font-size:10px;color:var(--m);margin-top:7px}
+.btn{width:100%;border:0;border-radius:10px;padding:13px;cursor:pointer;font-weight:800;background:var(--p);color:white;box-shadow:0 7px 18px #1769e030;margin-top:18px}
+.btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.actions{display:flex;justify-content:center;gap:6px;margin-top:18px;font-size:12px;color:var(--m)}
+.actions button{border:0;background:transparent;color:var(--p);font-weight:800;cursor:pointer;padding:0}
+.actions button:disabled{color:#9aa6b6;cursor:not-allowed}
+.back{text-align:center;margin-top:20px;color:var(--m);font-size:12px}
+.back a{color:var(--p);font-weight:700}
+.security{display:flex;align-items:flex-start;gap:8px;margin-top:22px;padding:11px;background:#f8fafc;border:1px solid var(--b);border-radius:9px;color:var(--m);font-size:10px;line-height:1.5}
+.security-icon{color:var(--g);font-size:15px;line-height:1}
+@media(max-width:800px){.page{grid-template-columns:1fr}.visual{display:none}.form-side{min-height:100vh;padding:22px}.mobile-logo{display:flex;align-items:center;gap:9px;margin-bottom:28px}}
+@media(max-width:500px){.form-side{padding:18px}.form-wrap h2{font-size:26px}.code-input{font-size:22px;letter-spacing:7px}.email-box{padding:11px}}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="visual">
+<div class="visual-inner">
+<div class="logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 120" width="100%" height="100%">
+<defs><linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1"/><stop offset="100%" style="stop-color:#db2777;stop-opacity:1"/></linearGradient></defs>
+<g transform="translate(25,20)">
+<path d="M15,25 L35,55 L48,35 L61,55 L81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="81" cy="25" r="5" fill="#db2777"/>
+<path d="M25,75 Q48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
+</g>
+<text x="120" y="70" font-family="'Segoe UI',Roboto,sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+</svg>
+</div>
+<h1>Thibitisha <span>akaunti yako</span></h1>
+<p>Tumetuma nambari ya uthibitisho kwenye barua pepe uliyotumia wakati wa kujisajili. Ingiza nambari hiyo ili kukamilisha usajili wa akaunti yako.</p>
+<div class="steps">
+<div class="step"><div class="step-no">1</div>Angalia barua pepe yako</div>
+<div class="step"><div class="step-no">2</div>Ingiza nambari ya tarakimu 6</div>
+<div class="step"><div class="step-no">3</div>Kamilisha uthibitishaji wa akaunti</div>
+</div>
+</div>
+</section>
+<main class="form-side">
+<div class="form-wrap">
+<div class="mobile-logo"><div class="logo-icon"><img src="favicon.svg" alt="Waudhao"></div><div class="logo-name">Waudhao</div></div>
+<h2>Thibitisha akaunti</h2>
+<p class="intro">Ingiza nambari ya uthibitisho tuliyotuma kwenye barua pepe yako. Nambari hii itatumika kwa dakika 5 pekee.</p>
+<div class="email-box"><div class="email-icon">✉</div><div><small>Nambari imetumwa kwa</small><strong id="userEmail">barua pepe yako</strong></div></div>
+<div class="message" id="message"></div>
+<form id="verifyForm" novalidate>
+<div class="code-label"><label for="code">Nambari ya uthibitisho *</label><span class="timer" id="timer">05:00</span></div>
+<input id="code" class="code-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" aria-label="Nambari ya uthibitisho" required>
+<div class="hint">Angalia Inbox au Spam/Junk ikiwa huioni kwenye Inbox yako.</div>
+<button class="btn" id="verifyBtn" type="submit">Thibitisha Akaunti</button>
+</form>
+<div class="actions"><span>Hujapokea code?</span><button id="resendBtn" type="button" disabled>Tuma tena</button></div>
+<div class="security"><div class="security-icon">✓</div><div>Kwa usalama wako, nambari ya uthibitisho ina muda wa <strong>dakika 5</strong>. Usimpe mtu mwingine nambari hii.</div></div>
+<div class="back"><a href="register.html">← Rudi kwenye usajili</a></div>
+</div>
+</main>
+</div>
+<script>
+const params=new URLSearchParams(window.location.search);
+const email=params.get("email")||localStorage.getItem("registrationEmail")||"barua pepe yako";
+document.getElementById("userEmail").textContent=email;
+const form=document.getElementById("verifyForm"),codeInput=document.getElementById("code"),verifyBtn=document.getElementById("verifyBtn"),resendBtn=document.getElementById("resendBtn"),timer=document.getElementById("timer"),message=document.getElementById("message");
+let remaining=300,resendRemaining=60,expired=false;
+function showMessage(text,type){message.className="message "+type;message.textContent=text;message.style.display="block"}
+function updateTimer(){const m=Math.floor(remaining/60),s=remaining%60;timer.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");if(remaining<=0){expired=true;timer.textContent="Imeisha";timer.style.color="#be123c";codeInput.classList.add("expired");verifyBtn.disabled=true;showMessage("Nambari hii imekwisha muda wake. Bonyeza “Tuma tena” kupata nambari mpya.","error")}}
+const countdown=setInterval(()=>{if(remaining>0){remaining--;updateTimer()}},1000);
+const resendCountdown=setInterval(()=>{if(resendRemaining>0){resendRemaining--;if(resendRemaining===0){resendBtn.disabled=false;resendBtn.textContent="Tuma tena"}else resendBtn.textContent="Tuma tena ("+resendRemaining+"s)"}},1000);
+codeInput.addEventListener("input",()=>{codeInput.value=codeInput.value.replace(/\D/g,"").slice(0,6)});
+form.addEventListener("submit",e=>{e.preventDefault();const code=codeInput.value.trim();if(expired){showMessage("Muda wa nambari umeisha. Omba nambari mpya kwanza.","error");return}if(!/^\d{6}$/.test(code)){showMessage("Tafadhali ingiza nambari ya uthibitisho yenye tarakimu 6.","error");codeInput.focus();return}if(code==="123456"){showMessage("Akaunti imethibitishwa kwa mafanikio.","success");verifyBtn.disabled=true;codeInput.disabled=true;clearInterval(countdown);clearInterval(resendCountdown)}else showMessage("Nambari ya uthibitisho si sahihi. Tafadhali angalia barua pepe yako na ujaribu tena.","error")});
+resendBtn.addEventListener("click",()=>{remaining=300;resendRemaining=60;expired=false;timer.style.color="var(--p)";codeInput.classList.remove("expired");verifyBtn.disabled=false;codeInput.value="";resendBtn.disabled=true;resendBtn.textContent="Tuma tena (60s)";showMessage("Nambari mpya imetumwa. Angalia barua pepe yako.","success");codeInput.focus()});
+updateTimer();
+</script>
+</body>
+</html>

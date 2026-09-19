@@ -1,45 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sw">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>neverAlone</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="description" content="Waudhao - Nunua na uza vitu vilivyotumika kwa urahisi Tanzania.">
+    <title>Waudhao | Karibu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body { margin:0; background:#131a22; color:#fff; font-family:'Inter',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-        .container { text-align:center; }
-        .loading-logo { font-size:52px; font-weight:700; letter-spacing:2px; }
-        .loading-logo:before { content:"\f06c"; font-family:"Font Awesome 6 Free"; font-weight:900; color:#ff9900; margin-right:12px; }
-        .description { margin-top:20px; font-size:18px; color:#ccc; }
-        .spinner { margin-top:30px; font-size:40px; color:#ff9900; animation:spin 1s linear infinite; }
-        @keyframes spin { 100%{ transform:rotate(360deg); } }
+        :root {
+            --primary: #1769e0;
+            --primary-dark: #0e4fae;
+            --secondary: #13b76b;
+            --dark: #172b4d;
+            --text: #26364a;
+            --muted: #718096;
+            --bg: #f5f8fc;
+            --white: #ffffff;
+            --border: #e5eaf1;
+            --shadow: 0 10px 30px rgba(24, 54, 93, .08);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--primary-dark);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+            padding: 20px;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease-out;
+            gap: 20px;
+        }
+
+        .logo-wrapper {
+            width: 100%;
+            max-width: 360px;
+            height: auto;
+        }
+
+        .tagline {
+            display: inline-block;
+            background: rgba(19, 183, 107, 0.1);
+            color: var(--white);
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .loading-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .splash-card {
+                padding: 30px 20px;
+            }
+            
+            .logo-wrapper {
+                max-width: 220px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="loading-logo">neverAlone</div>
-        <div class="description"><p>You will never be Alone!</p></div>
-        <div class="spinner"><i class="fas fa-circle-notch"></i></div>
+
+    <div class="logo-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="100%" height="100%" aria-label="Waudhao Logo">
+            <defs>
+                <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <g transform="translate(25, 20)">
+                <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="81" cy="25" r="5" fill="#db2777" />
+                <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+        </svg>
     </div>
+
+    <span class="tagline">Nunua • Uza • Fanya Biashara</span>
+
+    <div class="loading-box">
+        <div class="spinner" aria-hidden="true"></div>
+        <span>Tunakupeleka kwenye ukurasa mkuu...</span>
+    </div>
+
     <script>
-        // Check if user is logged in and redirect
-        async function checkAndRedirect() {
-            try {
-                const response = await fetch('/api/check-auth', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (data.authenticated) {
-                    window.location.href = '/homepage.html';
-                } else {
-                    window.location.href = '/login.html';
-                }
-            } catch (error) {
-                window.location.href = '/login.html';
-            }
+        function checkAndRedirect() {
+            window.location.href = 'homepage.html';
         }
         setTimeout(checkAndRedirect, 2000);
     </script>

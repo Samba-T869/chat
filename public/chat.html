@@ -1,464 +1,1548 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sw">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>neverAlone | Public Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: 'Inter', sans-serif; background:#eaeded; padding-top:60px; padding-bottom: 90px; }
-        .navbar { background:#131a22; padding:0 20px; color:#fff; position:fixed; top:0; left:0; right:0; z-index:1000; }
-        .nav-container { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:60px; }
-        .nav-logo { font-size:24px; font-weight:700; display:flex; align-items:center; gap:8px; cursor:pointer; }
-        .nav-logo i { color:#ff9900; }
-        .nav-menu { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
-        .nav-menu a { color:#ccc; text-decoration:none; font-size:14px; padding:6px 8px; transition:0.2s; }
-        .nav-menu a:hover, .nav-menu a.active { color:#fff; border-bottom:2px solid #ff9900; }
-        .nav-menu a i { margin-right:4px; }
-        .nav-user { display:flex; align-items:center; gap:12px; }
-        .user-avatar { width:32px; height:32px; border-radius:50%; overflow:hidden; border:2px solid #ff9900; flex-shrink:0; }
-        .user-avatar img { width:100%; height:100%; object-fit:cover; cursor: pointer;}
-        .user-badge { color:#ccc; font-size:14px; }
-        .sub-badge { background:#ff9900; color:#131a22; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; display:none; }
-        .chat-container { max-width:900px; margin:30px auto; padding:0 20px; padding-bottom: 20px; position: relative; }
-        .chat-header { background:#fff; border-radius:8px 8px 0 0; padding:16px 24px; border-bottom:1px solid #e7e9ec; display:flex; justify-content:space-between; align-items:center; }
-        .chat-header h2 { font-weight:400; font-size:20px; }
-        .chat-header h2 i { color:#ff9900; margin-right:8px; }
-        .online-users { font-size:13px; color:#28a745; }
-        .online-users i { margin-right:4px; }
-        .chat-messages { background:#fff; border-radius:0 0 8px 8px; padding:20px; min-height:400px; max-height: calc(100vh - 260px); overflow-y:auto; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:1px; scroll-behavior: smooth;  }
-        .message { display:flex; margin-bottom:16px; align-items:flex-start; }
-        .message .avatar { width:36px; height:36px; border-radius:50%; background:#f0f2f2; display:flex; align-items:center; justify-content:center; color:#666; margin-right:12px; flex-shrink:0; font-size:14px; overflow:hidden; cursor: pointer; }
-        .message .avatar img { width:100%; height:100%; object-fit:cover; }
-        .message .bubble { background:#f7f8fa; padding:10px 14px; border-radius:12px; max-width:75%; word-wrap:break-word; }
-        .message .bubble .name { font-weight:600; font-size:13px; color:#131a22; }
-        .message .bubble .time { font-size:10px; color:#888; margin-left:6px; font-weight:400; }
-        .message .bubble .text { font-size:14px; color:#333; margin-top:2px; word-wrap:break-word; }
-        .message .bubble .file-attachment { margin-top:6px; }
-        .message .bubble .file-attachment a { color:#007185; text-decoration:none; }
-        .message .bubble .file-attachment a:hover { text-decoration:underline; }
-        .message.own { flex-direction:row-reverse; }
-        .message.own .avatar { margin-right:0; margin-left:12px; }
-        .message.own .bubble { background:#ffd814; }
-        /*.chat-input { background: #fff; border-radius: 8px;
-            padding: 12px 14px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.08); display: flex;
-            bottom: 0; left: 0; right: 0; max-width: 870px; margin: 0 auto;
-            z-index: 999; border-top: 1px solid #e7e9ec;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-        }*/
-        .chat-input { background:#fff; border-radius: 0 0 8px 8px; padding:16px 24px; border-bottom:1px solid #e7e9ec; display:flex; justify-content:space-between; align-items:center; gap: 10px; }
-        .picbox{
-            max-width: 400px;
-            max-height: 400px;
-            border: 2px solid #ff9900;
-            position: absolute;
-            top: 40%;
-            left: 40%;
-            border-radius: 6px;
-        }
-        .closebtn {
-            position: absolute;
-            top: 1px;
-            right: 3px;
-            font-size: 2.2rem;
-            color: #f00;
-            background-color: transparent;
-            cursor: pointer;
-            border: none;
-            border-radius: 50%;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Waudhao Chat - Ongea na wauzaji waliothibitishwa, fanya mazungumzo na ununue bidhaa kwa usalama.">
+  <title>Waudhao | Mazungumzo ya Biashara</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-        .chat-input input[type="text"] { flex:1; padding:10px 14px; border:1px solid #d5d9dd; border-radius:4px; font-size:14px; outline:none; }
-        .chat-input input[type="text"]:focus { border-color:#ff9900; box-shadow:0 0 0 3px rgba(255,153,0,0.2); }
-        .chat-input .send-btn { background:#ff9900; border:none; border-radius:4px; padding:10px 20px; color:#131a22; font-weight:600; cursor:pointer; transition:0.2s; }
-        .chat-input .send-btn:hover { background:#e68a00; }
-        .chat-input .send-btn:disabled { opacity:0.5; cursor:not-allowed; }
-        .typing-indicator { color:#888; font-size:13px; padding:4px 12px; font-style:italic; display:none; min-height:24px; }
-        .flash-message { padding:12px 16px; border-radius:4px; margin-bottom:16px; display:none; }
-        .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
-        .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
-        .flash-message.show { display:block;}
-        .file-preview { display:inline-block; padding:4px 10px; background:#f0f2f2; border-radius:4px; font-size:12px; }
-        .file-preview i { margin-right:4px; }
-        .typing-indicator .dots { display:inline-block; animation:dots 1.4s infinite; }
-        .typing-indicator .dots:nth-child(2) { animation-delay:0.2s; }
-        .typing-indicator .dots:nth-child(3) { animation-delay:0.4s; }
-        @keyframes dots { 0%, 80%, 100% { opacity:0; } 40% { opacity:1; } }
-        @media(max-width:768px){ .nav-menu { display:none; } .chat-messages { max-height:350px; } }
-        .file-input-hidden { display:none; }
-        .loading-messages { text-align:center; padding:20px; color:#888; }
-    </style>
+  <style>
+    :root {
+      --primary: #1769e0;
+      --primary-dark: #0e4fae;
+      --primary-light: #edf4ff;
+      --secondary: #13b76b;
+      --accent: #7c3aed;
+      --dark: #172b4d;
+      --text: #26364a;
+      --muted: #718096;
+      --light-gray: #f1f5f9;
+      --bg: #f5f8fc;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --verified-blue: #1d9bf0;
+      --shadow-sm: 0 2px 8px rgba(24, 54, 93, .05);
+      --shadow: 0 10px 25px rgba(24, 54, 93, .08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .app-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .navbar {
+      height: 68px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .logo svg { height: 38px; width: auto; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-links a {
+      padding: 8px 14px;
+      color: #52627a;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      transition: all .2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .2s;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-outline {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--dark);
+    }
+
+    .btn-outline:hover { background: var(--light-gray); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(23,105,224,.2);
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    .btn-success {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      object-fit: cover;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      line-height: 1.2;
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--dark);
+    }
+
+    .chat-container {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - 68px);
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 16px;
+      gap: 16px;
+      box-sizing: border-box;
+    }
+
+    .chat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .chat-sidebar {
+      width: 380px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: #fafbfc;
+      flex-shrink: 0;
+      transition: transform .3s ease;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+    }
+
+    .sidebar-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+      background: var(--white);
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .chat-tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .chat-tab {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+    }
+
+    .chat-tab.active {
+      background: var(--white);
+      color: var(--primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    /* Conversations List */
+    .conversations-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .conversation-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .2s;
+      position: relative;
+      background: var(--white);
+    }
+
+    .conversation-item:hover {
+      background: #f8fafc;
+    }
+
+    .conversation-item.active {
+      background: #edf4ff;
+      border-left: 4px solid var(--primary);
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .conv-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .online-indicator {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      background: var(--secondary);
+      border: 2px solid var(--white);
+      border-radius: 50%;
+    }
+
+    .conv-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .conv-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .user-name-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .conv-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark);
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    /* Verified Seller Badge */
+    .verified-badge {
+      color: var(--verified-blue);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .seller-label {
+      background: #dbeafe;
+      color: #1e40af;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .conv-time {
+      font-size: 11px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .conv-product-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-last-msg {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-last-msg.unread-msg {
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .unread-counter {
+      background: var(--primary);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 6px;
+      float: right;
+    }
+
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #f8fafc;
+      position: relative;
+    }
+
+    /* Chat Active Header */
+    .chat-header {
+      padding: 12px 20px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    .active-user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .back-to-list {
+      display: none;
+      background: none;
+      border: 0;
+      font-size: 18px;
+      color: var(--dark);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .active-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .active-meta h2 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .active-status {
+      font-size: 12px;
+      color: var(--secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .action-icon-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: #bfdbfe;
+    }
+
+    .product-context-banner {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+
+    .product-thumb-details {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .product-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+
+    .product-info-text {
+      min-width: 0;
+    }
+
+    .product-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-price {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .product-quick-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-xs {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .message-stream {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background-image: radial-gradient(#cbd5e1 0.75px, transparent 0.75px);
+      background-size: 16px 16px;
+    }
+
+    .date-divider {
+      text-align: center;
+      margin: 10px 0;
+      position: relative;
+    }
+
+    .date-divider span {
+      background: #e2e8f0;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .msg-group {
+      display: flex;
+      flex-direction: column;
+      max-width: 70%;
+    }
+
+    .msg-group.sent {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .msg-group.received {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .msg-sender-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 4px;
+    }
+
+    .msg-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      word-wrap: break-word;
+    }
+
+    .sent .msg-bubble {
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .received .msg-bubble {
+      background: var(--white);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 10px;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    .sent .msg-meta { color: rgba(255,255,255,0.85); }
+    .received .msg-meta { color: var(--muted); }
+
+    /* Special Message Cards (Offers, Images, Audio) */
+    .offer-card {
+      background: var(--white);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 14px;
+      width: 260px;
+      box-shadow: 0 4px 12px rgba(23,105,224,0.08);
+    }
+
+    .offer-header {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .offer-amount {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .offer-original {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: line-through;
+      margin-bottom: 12px;
+    }
+
+    .offer-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .offer-actions button {
+      flex: 1;
+      padding: 7px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    .msg-image-attachment {
+      max-width: 240px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .msg-image-attachment img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .audio-player-snippet {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--primary-light);
+      padding: 8px 12px;
+      border-radius: 20px;
+      width: 200px;
+    }
+
+    .audio-play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      border: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .audio-waveform {
+      flex: 1;
+      height: 16px;
+      background: linear-gradient(90deg, var(--primary) 40%, #cbd5e1 40%);
+      border-radius: 4px;
+    }
+
+    .chat-input-container {
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+    }
+
+    .quick-reply-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scrollbar-width: none;
+    }
+
+    .quick-reply-chips::-webkit-scrollbar { display: none; }
+
+    .chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--dark);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .chip:hover {
+      background: var(--primary-light);
+      border-color: #bfdbfe;
+      color: var(--primary);
+    }
+
+    .input-form {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .input-tools {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tool-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    .tool-btn:hover {
+      background: var(--bg);
+      color: var(--primary);
+    }
+
+    .text-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .text-input-wrapper textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+      height: 42px;
+      max-height: 100px;
+      background: var(--bg);
+      transition: all .2s;
+    }
+
+    .text-input-wrapper textarea:focus {
+      background: var(--white);
+      border-color: var(--primary);
+    }
+
+    .send-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 0;
+      background: var(--primary);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(23,105,224,0.3);
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.03);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: var(--radius);
+      width: min(420px, 100%);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transform: translateY(10px);
+      transition: transform .2s ease;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h3 {
+      font-size: 18px;
+      color: var(--dark);
+    }
+
+    .modal-close {
+      background: none;
+      border: 0;
+      font-size: 20px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      font-size: 15px;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+    }
+
+    @media (max-width: 868px) {
+      .chat-container { padding: 0; height: calc(100vh - 68px); }
+      .chat-card { border-radius: 0; border: 0; }
+      .chat-sidebar { width: 100%; }
+      .chat-main { display: none; width: 100%; }
+      
+      .chat-card.view-active-chat .chat-sidebar { display: none; }
+      .chat-card.view-active-chat .chat-main { display: flex; }
+      .back-to-list { display: block; }
+
+      .nav-links { display: none; }
+      .menu-toggle { display: block; }
+      
+      .product-quick-actions span { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .product-context-banner { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .product-quick-actions { width: 100%; justify-content: flex-end; }
+      .msg-group { max-width: 88%; }
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo" onclick="window.location.href='homepage.html'"><i class="fas fa-leaf"></i><span>neverAlone</span></div>
-            <div class="nav-menu">
-                <a href="homepage.html"><i class="fas fa-home"></i> Home</a>
-                <a href="market.html"><i class="fas fa-store"></i> Marketplace</a>
-                <a href="chat.html" class="active"><i class="fas fa-comments"></i> Chat</a>
-                <a href="tusepe.html"><i class="fas fa-blog"></i> Blog</a>
-                <a href="mydashboard.html" id="dashboardLink" style="display:none;"><i class="fas fa-dashboard"></i> Dashboard</a>
-                <a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
-            <div class="nav-user">
-                <div class="user-avatar">
-                    <img id="userAvatar" src="" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=ff9900&color=fff&size=32'">
-                </div>
-                <span class="user-badge" id="usernameDisplay">@User</span>
-                <span class="sub-badge" id="subBadge"><i class="fas fa-crown"></i> Pro</span>
-            </div>
-        </div>
-    </nav>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            <h2><i class="fas fa-comments"></i> Public Chat</h2>
-            <span class="online-users"><i class="fas fa-circle"></i> <span id="onlineCount">0</span> online</span>
+  <div class="app-wrapper">
+    <header>
+      <div class="navbar">
+        <a href="homepage.html" class="logo" aria-label="Waudhao Nyumbani">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <g transform="translate(25, 20)">
+              <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad1)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="81" cy="25" r="5" fill="#db2777" />
+              <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad1)" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+          </svg>
+        </a>
+
+        <button class="menu-toggle" id="menuToggle" aria-label="Fungua Menyu"><i class="fas fa-bars"></i></button>
+
+        <nav class="nav-links">
+          <a href="homepage.html"><i class="fas fa-home"></i> Nyumbani</a>
+          <a href="homepage.html#matangazo"><i class="fas fa-tag"></i> Matangazo</a>
+          <a href="homepage.html#categories"><i class="fas fa-th-large"></i> Kategoria</a>
+          <a href="chat.html" class="active"><i class="fas fa-comments"></i> Chat</a>
+          <a href="subscribe.html"><i class="fas fa-crown"></i> Lipia Kifurushi</a>
+        </nav>
+
+        <div class="nav-actions">
+          <div class="user-profile">
+            <img class="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Mtumiaji Profile">
+            <div class="user-info">
+              <span class="user-name">Amina Juma</span>
+              <span style="font-size: 11px; color: var(--muted);">Mnunuzi</span>
+            </div>
+          </div>
         </div>
-        
-        <div id="flashMessage" class="flash-message"></div>
-        
-        <div class="chat-messages" id="chatMessages">
-            <div class="loading-messages"><i class="fas fa-spinner fa-spin"></i> Loading messages...</div>
-        </div>
-        
-        <div class="typing-indicator" id="typingIndicator">
-            <span id="typingUser">Someone</span> is typing<span class="dots">.</span><span class="dots">.</span><span class="dots">.</span>
-        </div>
-        
-        <div class="chat-input">
-            <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" disabled>
-            <button class="send-btn" id="sendBtn" title="Send" disabled><i class="fas fa-paper-plane"></i></button>
-        </div>
+      </div>
+    </header>
+
+    <main class="chat-container">
+      <div class="chat-card" id="chatCard">
+
+        <!-- Sidebar Conversation List -->
+        <aside class="chat-sidebar">
+          <div class="sidebar-header">
+            <div class="sidebar-title-row">
+              <div class="sidebar-title">
+                <i class="fas fa-comments" style="color: var(--primary);"></i> Mazungumzo
+              </div>
+              <button class="tool-btn" title="Ujumbe Mpya"><i class="fas fa-edit"></i></button>
+            </div>
+
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Tafuta wauzaji au bidhaa...">
+            </div>
+
+            <div class="chat-tabs">
+              <button class="chat-tab active" onclick="filterChats('all', this)">Vyote</button>
+              <button class="chat-tab" onclick="filterChats('sellers', this)">Wauzaji ⭐</button>
+              <button class="chat-tab" onclick="filterChats('unread', this)">Yasiyosomwa</button>
+            </div>
+          </div>
+
+          <div class="conversations-list" id="conversationsList">
+            <!-- Dynamic Conversations inserted via JavaScript -->
+          </div>
+        </aside>
+
+        <section class="chat-main">
+          
+          <!-- Active Contact Header -->
+          <div class="chat-header">
+            <div class="active-user-info">
+              <button class="back-to-list" id="backToListBtn" onclick="toggleMobileView(false)">
+                <i class="fas fa-arrow-left"></i>
+              </button>
+              <div class="avatar-wrapper">
+                <img id="activeAvatar" class="active-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" alt="Muuzaji">
+                <div class="online-indicator"></div>
+              </div>
+              <div class="active-meta">
+                <h2 id="activeName">
+                  Juma Gadgets 
+                  <i class="fas fa-check-circle verified-badge" title="Muuzaji Aliethibitishwa"></i>
+                  <span class="seller-label">Muuzaji</span>
+                </h2>
+                <div class="active-status">
+                  <i class="fas fa-circle" style="font-size: 8px;"></i> Yupo Hewani (Online)
+                </div>
+              </div>
+            </div>
+
+            <div class="header-actions">
+              <a href="tel:+255710000000" class="action-icon-btn" title="Piga Simu"><i class="fas fa-phone"></i></a>
+              <button class="action-icon-btn" title="Hifadhi Seller"><i class="far fa-star"></i></button>
+              <button class="action-icon-btn" title="Chaguo zaidi"><i class="fas fa-ellipsis-v"></i></button>
+            </div>
+          </div>
+
+          <!-- Product Banner Snippet -->
+          <div class="product-context-banner" id="productBanner">
+            <div class="product-thumb-details">
+              <img id="productThumb" class="product-thumb" src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&q=80&w=200" alt="Product Image">
+              <div class="product-info-text">
+                <div class="product-title" id="productTitle">iPhone 13 Pro 256GB - Condition Mpya</div>
+                <div class="product-price" id="productPrice">TZS 1,850,000</div>
+              </div>
+            </div>
+
+            <div class="product-quick-actions">
+              <button class="btn btn-outline btn-xs" onclick="openOfferModal()">
+                <i class="fas fa-hand-holding-usd"></i> <span>Toa Offa</span>
+              </button>
+              <button class="btn btn-primary btn-xs" onclick="requestMorePics()">
+                <i class="fas fa-camera"></i> <span>Omba Picha</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Message Stream -->
+          <div class="message-stream" id="messageStream">
+            <!-- Dynamic Messages inserted here -->
+          </div>
+
+          <!-- Chat Input Area -->
+          <div class="chat-input-container">
+            <!-- Quick Chips -->
+            <div class="quick-reply-chips">
+              <button class="chip" onclick="sendQuickReply('Punguzo kidogo lipo?')">🏷️ Punguzo kidogo lipo?</button>
+              <button class="chip" onclick="sendQuickReply('Ipo wapi kwasasa?')">📍 Ipo wapi kwasasa?</button>
+              <button class="chip" onclick="sendQuickReply('Bado ipo au imeshauzwa?')">❓ Bado ipo?</button>
+              <button class="chip" onclick="sendQuickReply('Naomba kukuona ukaguzi')">🤝 Naomba ukaguzi</button>
+            </div>
+
+            <form class="input-form" id="chatForm" onsubmit="handleSendMessage(event)">
+              <div class="input-tools">
+                <button type="button" class="tool-btn" title="Weka Picha/Faili" onclick="triggerFileUpload()"><i class="fas fa-paperclip"></i></button>
+                <button type="button" class="tool-btn" title="Toa Offa ya Bei" onclick="openOfferModal()"><i class="fas fa-tag"></i></button>
+              </div>
+
+              <div class="text-input-wrapper">
+                <textarea id="messageInput" placeholder="Andika ujumbe hapa..." onkeydown="handleKeyPress(event)"></textarea>
+              </div>
+
+              <button type="submit" class="send-btn" title="Tuma Ujumbe">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="offerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fas fa-hand-holding-usd" style="color: var(--primary);"></i> Tuma Offa ya Bei</h3>
+        <button class="modal-close" onclick="closeOfferModal()">&times;</button>
+      </div>
+
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">
+        Muuzaji anauza bidhaa hii kwa <strong id="modalOriginalPrice">TZS 1,850,000</strong>. Weka kiasi unachopendekeza.
+      </p>
+
+      <div class="form-group">
+        <label for="offerAmountInput">Kiasi cha Offa Unachotoa (TZS)</label>
+        <input type="number" id="offerAmountInput" placeholder="Mfano: 1700000">
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+        <button class="btn btn-outline" onclick="closeOfferModal()">Ghairi</button>
+        <button class="btn btn-primary" onclick="submitCustomOffer()">Tuma Offa</button>
+      </div>
     </div>
+  </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        let socket = null;
-        let currentUser = null;
-        let currentUsername = '';
-        let isSubscribed = false;
-        let isTyping = false;
-        let typingTimeout = null;
+  <script>
+    // Mock Data for Conversations
+    const mockConversations = [
+      {
+        id: 'conv1',
+        name: 'Juma Gadgets',
+        isSeller: true,
+        isVerified: true,
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+        online: true,
+        unread: 1,
+        product: {
+          title: 'iPhone 13 Pro 256GB - Condition Mpya',
+          price: 'TZS 1,850,000',
+          rawPrice: 1850000,
+          thumb: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&q=80&w=200'
+        },
+        lastMessage: 'Ndiyo simu bado ipo, risiti na box vyote vipo.',
+        lastTime: '10:42 AM',
+        messages: [
+          { sender: 'received', text: 'Habari! Karibu Juma Gadgets. Unahitaji simu hii?', time: '10:30 AM' },
+          { sender: 'sent', text: 'Habari, bado ipo? Na inakuja na chaja yake ya original?', time: '10:35 AM' },
+          { sender: 'received', text: 'Ndiyo simu bado ipo, risiti na box vyote vipo na chaja yake original.', time: '10:42 AM' },
+          {
+            type: 'offer',
+            sender: 'received',
+            amount: 'TZS 1,800,000',
+            originalPrice: 'TZS 1,850,000',
+            status: 'pending',
+            time: '10:43 AM'
+          }
+        ]
+      },
+      {
+        id: 'conv2',
+        name: 'Kariakoo Auto Parts',
+        isSeller: true,
+        isVerified: true,
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
+        online: true,
+        unread: 0,
+        product: {
+          title: 'Taa za Mbele za Subaru Forester (2015)',
+          price: 'TZS 450,000',
+          rawPrice: 450000,
+          thumb: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=200'
+        },
+        lastMessage: 'Picha zaidi ziko tayari. Mzigo mpya kabisa.',
+        lastTime: 'Jana',
+        messages: [
+          { sender: 'sent', text: 'Hizi taa zinafaa Subaru 2015 XT?', time: 'Jana 3:15 PM' },
+          { sender: 'received', text: 'Ndiyo kaka, zinafaa sana. Zina LED DRL za asili.', time: 'Jana 3:20 PM' },
+          { sender: 'received', text: 'Picha zaidi ziko tayari. Mzigo mpya kabisa.', time: 'Jana 3:21 PM' }
+        ]
+      },
+      {
+        id: 'conv3',
+        name: 'Mama Mwajuma Boutique',
+        isSeller: true,
+        isVerified: false,
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+        online: false,
+        unread: 0,
+        product: {
+          title: 'Gauni la Harusi/Sherehe (Size M)',
+          price: 'TZS 120,000',
+          rawPrice: 120000,
+          thumb: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=200'
+        },
+        lastMessage: 'Asante kwa kufanya manunuzi!',
+        lastTime: '12/09',
+        messages: [
+          { sender: 'sent', text: 'Habari, hili gauni lipo rangi nyekundu?', time: '12/09 11:00 AM' },
+          { sender: 'received', text: 'Ndiyo yapo rangi zote. Karibu duka letu Sinza.', time: '12/09 11:15 AM' }
+        ]
+      },
+      {
+        id: 'conv4',
+        name: 'Baraka Electronics',
+        isSeller: true,
+        isVerified: true,
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150',
+        online: true,
+        unread: 0,
+        product: {
+          title: 'Smart TV Samsung 55 Inch 4K UHD',
+          price: 'TZS 1,400,000',
+          rawPrice: 1400000,
+          thumb: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&q=80&w=200'
+        },
+        lastMessage: 'Tuna guarantee ya mwaka mmoja.',
+        lastTime: '08/09',
+        messages: [
+          { sender: 'sent', text: 'Televisheni hii ina warranty?', time: '08/09 09:00 AM' },
+          { sender: 'received', text: 'Ndiyo, tuna guarantee ya mwaka mmoja na delivery ni bure Mlimani City karibu.', time: '08/09 09:10 AM' }
+        ]
+      }
+    ];
 
-        // Check authentication
-        async function checkAuth() {
-            try {
-                const response = await fetch('/api/check-auth', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                
-                if (!data.authenticated) {
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                currentUser = data;
-                currentUsername = data.username;
-                document.getElementById('usernameDisplay').textContent = '@' + data.username;
-                document.getElementById('messageInput').disabled = false;
-                document.getElementById('sendBtn').disabled = false;
-                
-                // Load user profile
-                await loadUserProfile();
-                // Check subscription
-                await checkSubscription();
-                // Initialize socket
-                initializeSocket();
-                // Load messages
-                await loadMessages();
-                // Load online users
-                await fetchOnlineUsers();
-                
-                return data;
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                window.location.href = '/login.html';
-            }
+    let currentConvId = 'conv1';
+    let currentFilter = 'all';
+
+    // Initialize UI on DOM Ready
+    document.addEventListener('DOMContentLoaded', () => {
+      renderConversationsList();
+      loadActiveConversation(currentConvId);
+    });
+
+    function renderConversationsList() {
+      const container = document.getElementById('conversationsList');
+      container.innerHTML = '';
+
+      const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+
+      const filtered = mockConversations.filter(c => {
+        const matchesFilter = 
+          currentFilter === 'all' || 
+          (currentFilter === 'sellers' && c.isSeller) || 
+          (currentFilter === 'unread' && c.unread > 0);
+
+        const matchesSearch = c.name.toLowerCase().includes(searchKeyword) || 
+                              c.product.title.toLowerCase().includes(searchKeyword);
+
+        return matchesFilter && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="padding: 30px; text-align: center; color: var(--muted); font-size: 13px;">Hakuna mazungumzo yaliyopatikana</div>`;
+        return;
+      }
+
+      filtered.forEach(conv => {
+        const item = document.createElement('div');
+        item.className = `conversation-item ${conv.id === currentConvId ? 'active' : ''}`;
+        item.onclick = () => selectConversation(conv.id);
+
+        item.innerHTML = `
+          <div class="avatar-wrapper">
+            <img class="conv-avatar" src="${conv.avatar}" alt="${conv.name}">
+            ${conv.online ? '<div class="online-indicator"></div>' : ''}
+          </div>
+          <div class="conv-details">
+            <div class="conv-top-row">
+              <div class="user-name-wrapper">
+                <span class="conv-name">${conv.name}</span>
+                ${conv.isVerified ? '<i class="fas fa-check-circle verified-badge" title="Muuzaji Aliethibitishwa"></i>' : ''}
+                ${conv.isSeller ? '<span class="seller-label">Muuzaji</span>' : ''}
+              </div>
+              <span class="conv-time">${conv.lastTime}</span>
+            </div>
+            <div class="conv-product-tag">
+              <i class="fas fa-box-open"></i> ${conv.product.title}
+            </div>
+            <div class="conv-last-msg ${conv.unread ? 'unread-msg' : ''}">
+              ${conv.unread ? `<span class="unread-counter">${conv.unread}</span>` : ''}
+              ${conv.lastMessage}
+            </div>
+          </div>
+        `;
+
+        container.appendChild(item);
+      });
+    }
+
+    // Filter conversations by category
+    function filterChats(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.chat-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderConversationsList();
+    }
+
+    // Search event listener
+    document.getElementById('searchInput').addEventListener('input', renderConversationsList);
+
+    function selectConversation(id) {
+      currentConvId = id;
+      const conv = mockConversations.find(c => c.id === id);
+      if (conv) conv.unread = 0; // Clear unread
+      
+      renderConversationsList();
+      loadActiveConversation(id);
+      toggleMobileView(true);
+    }
+
+    function loadActiveConversation(id) {
+      const conv = mockConversations.find(c => c.id === id);
+      if (!conv) return;
+
+      // Update Header
+      document.getElementById('activeAvatar').src = conv.avatar;
+      document.getElementById('activeName').innerHTML = `
+        ${conv.name}
+        ${conv.isVerified ? '<i class="fas fa-check-circle verified-badge" title="Muuzaji Aliethibitishwa"></i>' : ''}
+        ${conv.isSeller ? '<span class="seller-label">Muuzaji</span>' : ''}
+      `;
+
+      // Update Product Banner
+      document.getElementById('productThumb').src = conv.product.thumb;
+      document.getElementById('productTitle').textContent = conv.product.title;
+      document.getElementById('productPrice').textContent = conv.product.price;
+      document.getElementById('modalOriginalPrice').textContent = conv.product.price;
+
+      // Render Messages Stream
+      renderMessages(conv);
+    }
+
+    function renderMessages(conv) {
+      const stream = document.getElementById('messageStream');
+      stream.innerHTML = `
+        <div class="date-divider">
+          <span>Leo</span>
+        </div>
+      `;
+
+      conv.messages.forEach(msg => {
+        const group = document.createElement('div');
+        group.className = `msg-group ${msg.sender}`;
+
+        if (msg.sender === 'received' && conv.isSeller) {
+          group.innerHTML += `
+            <div class="msg-sender-label">
+              ${conv.name} 
+              <i class="fas fa-check-circle verified-badge" style="font-size:11px;"></i>
+            </div>
+          `;
         }
 
-        // Load user profile
-        async function loadUserProfile() {
-            try {
-                const response = await fetch('/api/user/profile', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const user = await response.json();
-                    if (user.profile_pic) {
-                        document.getElementById('userAvatar').src = '/uploads/profiles/' + user.profile_pic;
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load profile:', error);
-            }
-        }
-
-        // Check subscription status
-        async function checkSubscription() {
-            try {
-                const response = await fetch('/api/subscription/status', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    isSubscribed = data.active;
-                    if (isSubscribed) {
-                        document.getElementById('subBadge').style.display = 'inline';
-                        document.getElementById('dashboardLink').style.display = 'inline';
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to check subscription:', error);
-            }
-        }
-
-        // Initialize Socket.IO
-        function initializeSocket() {
-            socket = io({
-                transports: ['websocket', 'polling'],
-                withCredentials: true
-            });
-
-            socket.on('connect', () => {
-                console.log('Socket connected');
-            });
-
-            socket.on('connect_error', (error) => {
-                console.error('Socket connection error:', error);
-                showFlash('Connection error. Please refresh the page.', 'error');
-            });
-
-            socket.on('online users', (users) => {
-                const onlineCount = document.getElementById('onlineCount');
-                onlineCount.textContent = users.length;
-            });
-
-            socket.on('previous messages', (messages) => {
-                const container = document.getElementById('chatMessages');
-                container.innerHTML = '';
-                if (messages && messages.length > 0) {
-                    messages.forEach(msg => {
-                        const isOwn = msg.username === currentUsername;
-                        container.appendChild(createMessageElement(msg, isOwn));
-                    });
-                } else {
-                    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">No messages yet. Be the first to chat!</div>';
-                }
-                scrollToBottom();
-            });
-
-            socket.on('receive message', (data) => {
-                const isOwn = data.username === currentUsername;
-                const container = document.getElementById('chatMessages');
-                // Remove empty state if present
-                const emptyState = container.querySelector('div[style*="text-align:center"]');
-                if (emptyState) emptyState.remove();
-                container.appendChild(createMessageElement(data, isOwn));
-                scrollToBottom();
-            });
-
-            socket.on('user typing', (username) => {
-                if (username !== currentUsername) {
-                    const indicator = document.getElementById('typingIndicator');
-                    document.getElementById('typingUser').textContent = username;
-                    indicator.style.display = 'block';
-                }
-            });
-
-            socket.on('stop typing', () => {
-                document.getElementById('typingIndicator').style.display = 'none';
-            });
-
-            socket.on('error', (error) => {
-                showFlash(error, 'error');
-            });
-        }
-
-        // Create message element
-        function createMessageElement(data, isOwn) {
-            const div = document.createElement('div');
-            div.className = `message ${isOwn ? 'own' : ''}`;
-            
-            const avatarUrl = data.profile_pic ? `/uploads/profiles/${data.profile_pic}` : '';
-            const avatarHtml = avatarUrl 
-                ? `<img src="${avatarUrl}" alt="${data.username}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data.username)}&background=ff9900&color=fff&size=36'">`
-                : `<i class="fas fa-user"></i>`;
-            
-            const time = data.timestamp ? new Date(data.timestamp) : new Date();
-            const timeStr = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-            
-            div.innerHTML = `
-                <div class="avatar">${avatarHtml}</div>
-                <div class="bubble">
-                    <span class="name">${data.username}</span>
-                    <span class="time">${timeStr}</span>
-                    <div class="text">${escapeHtml(data.message)}</div>
+        if (msg.type === 'offer') {
+          group.innerHTML += `
+            <div class="offer-card">
+              <div class="offer-header">
+                <i class="fas fa-tag"></i> Ombi la Punguzo la Bei
+              </div>
+              <div class="offer-amount">${msg.amount}</div>
+              <div class="offer-original">Bei ya Kwanza: ${msg.originalPrice}</div>
+              ${msg.sender === 'received' ? `
+                <div class="offer-actions">
+                  <button class="btn btn-outline" onclick="respondOffer('Kataa')">Kataa</button>
+                  <button class="btn btn-success" onclick="respondOffer('Kubali')">Kubali Offa</button>
                 </div>
-            `;
-            
-            return div;
+              ` : `<div style="font-size:12px; color:var(--muted); text-align:center;">Inasubiri majibu ya muuzaji...</div>`}
+            </div>
+          `;
+        } else {
+          group.innerHTML += `
+            <div class="msg-bubble">
+              ${msg.text}
+              <div class="msg-meta">
+                <span>${msg.time}</span>
+                ${msg.sender === 'sent' ? '<i class="fas fa-check-double" style="color:#93c5fd;"></i>' : ''}
+              </div>
+            </div>
+          `;
         }
 
-        // Simple HTML escaping
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+        stream.appendChild(group);
+      });
 
-        // Load messages from API
-        async function loadMessages() {
-            try {
-                const response = await fetch('/api/messages', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const messages = await response.json();
-                    const container = document.getElementById('chatMessages');
-                    container.innerHTML = '';
-                    if (messages && messages.length > 0) {
-                        messages.forEach(msg => {
-                            const isOwn = msg.username === currentUsername;
-                            container.appendChild(createMessageElement(msg, isOwn));
-                        });
-                    } else {
-                        container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">No messages yet. Be the first to chat!</div>';
-                    }
-                    scrollToBottom();
-                }
-            } catch (error) {
-                console.error('Failed to load messages:', error);
-            }
-        }
+      // Scroll to bottom
+      stream.scrollTop = stream.scrollHeight;
+    }
 
-        // Fetch online users
-        async function fetchOnlineUsers() {
-            try {
-                const response = await fetch('/api/online-users', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const users = await response.json();
-                    document.getElementById('onlineCount').textContent = users.length;
-                }
-            } catch (error) {
-                console.error('Failed to fetch online users:', error);
-            }
-        }
+    function handleSendMessage(event) {
+      event.preventDefault();
+      const textarea = document.getElementById('messageInput');
+      const text = textarea.value.trim();
 
-        // Send message
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            if (!message || !socket || !socket.connected) return;
-            
-            socket.emit('send message', { message });
-            input.value = '';
-            
-            if (isTyping) {
-                socket.emit('stop typing');
-                isTyping = false;
-            }
-        }
+      if (!text) return;
 
-        // Show flash message
-        function showFlash(message, type) {
-            const el = document.getElementById('flashMessage');
-            el.textContent = message;
-            el.className = `flash-message flash-${type} show`;
-            setTimeout(() => {
-                el.classList.remove('show');
-            }, 5000);
-        }
+      const conv = mockConversations.find(c => c.id === currentConvId);
+      if (!conv) return;
 
-        // Scroll to bottom
-        function scrollToBottom() {
-            const container = document.getElementById('chatMessages');
-            container.scrollTop = container.scrollHeight;
-        }
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        // Logout
-        document.getElementById('logoutLink').addEventListener('click', async (e) => {
-            e.preventDefault();
-            try {
-                const response = await fetch('/api/logout', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    window.location.href = '/login.html';
-                }
-            } catch (error) {
-                console.error('Logout failed:', error);
-            }
+      // Append user message
+      conv.messages.push({
+        sender: 'sent',
+        text: text,
+        time: timeStr
+      });
+
+      conv.lastMessage = text;
+      conv.lastTime = timeStr;
+
+      textarea.value = '';
+      renderMessages(conv);
+      renderConversationsList();
+
+      // Trigger Simulated Seller Response
+      simulateSellerReply(conv);
+    }
+
+    function sendQuickReply(text) {
+      document.getElementById('messageInput').value = text;
+      document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+    }
+
+    function handleKeyPress(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+      }
+    }
+
+    function simulateSellerReply(conv) {
+      setTimeout(() => {
+        const replies = [
+          "Karibu sana! Bidhaa hii bado ipo. Unaweza kuja kuikagua Mlimani City au Kariakoo.",
+          "Asante kwa kuwasiliana nasi. Bei hii ni ya mwisho kwasababu mzigo ni mupya kutoka dukani.",
+          "Sawa kaka, nimekuelewa. Ukifanya malipo sasa hivi nakutumia mzigo na Bodaboda mara moja.",
+          "Ndio kaka, tuna warranty ya miezi 6 kwa bidhaa zetu zote zilizothibitishwa."
+        ];
+
+        const randomReply = replies[Math.floor(Math.random() * replies.length)];
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        conv.messages.push({
+          sender: 'received',
+          text: randomReply,
+          time: timeStr
         });
 
-        // Event listeners
-        document.getElementById('messageInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
+        conv.lastMessage = randomReply;
+        conv.lastTime = timeStr;
 
-        //Expanding the profile picture
-        document.getElementById('chatMessages').addEventListener('click', (e) => {
-            const avatar = e.target.closest('.avatar');
-            if (!avatar) return;
+        if (currentConvId === conv.id) {
+          renderMessages(conv);
+        }
+        renderConversationsList();
+      }, 1500);
+    }
 
-            const img = avatar.querySelector('img');
-            if (!img) return;
+    function openOfferModal() {
+      document.getElementById('offerModal').classList.add('active');
+    }
 
-            const picBox = document.createElement('div');
-            picBox.className = 'picbox';
+    function closeOfferModal() {
+      document.getElementById('offerModal').classList.remove('active');
+    }
 
-            const image = document.createElement('img');
-            image.src = img.src; // Uses the clicked avatar's image source
-            image.style.width = '100%';
-            image.style.height = '100%';
+    function submitCustomOffer() {
+      const amount = document.getElementById('offerAmountInput').value;
+      if (!amount) return;
 
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'closebtn';
-            closeBtn.innerHTML = `&times;`;
-            closeBtn.title = 'Close';
+      const conv = mockConversations.find(c => c.id === currentConvId);
+      if (!conv) return;
 
-            picBox.appendChild(image);
-            picBox.appendChild(closeBtn);
-            document.body.appendChild(picBox);
-            
-            closeBtn.addEventListener('click', () => picBox.remove());
-        });
+      const formattedAmount = `TZS ${parseInt(amount).toLocaleString()}`;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        document.getElementById('messageInput').addEventListener('input', () => {
-            const input = document.getElementById('messageInput');
-            if (input.value.length > 0 && !isTyping) {
-                isTyping = true;
-                socket.emit('typing');
-            } else if (input.value.length === 0 && isTyping) {
-                isTyping = false;
-                socket.emit('stop typing');
-            }
-            
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                if (isTyping) {
-                    isTyping = false;
-                    socket.emit('stop typing');
-                }
-            }, 2000);
-        });
+      conv.messages.push({
+        type: 'offer',
+        sender: 'sent',
+        amount: formattedAmount,
+        originalPrice: conv.product.price,
+        time: timeStr
+      });
 
-        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+      conv.lastMessage = `Umetuma Offa: ${formattedAmount}`;
+      conv.lastTime = timeStr;
 
-        // Initialize page
-        checkAuth();
-    </script>
+      closeOfferModal();
+      document.getElementById('offerAmountInput').value = '';
+
+      renderMessages(conv);
+      renderConversationsList();
+
+      simulateSellerReply(conv);
+    }
+
+    function respondOffer(action) {
+      alert(`Umechagua: ${action} offa hii.`);
+    }
+
+    function requestMorePics() {
+      sendQuickReply("Naomba nitumie picha zaidi za bidhaa hii tafadhali.");
+    }
+
+    function triggerFileUpload() {
+      alert("Chagua picha au faili kutoka kwenye kifaa chako.");
+    }
+
+    function toggleMobileView(showActiveChat) {
+      const chatCard = document.getElementById('chatCard');
+      if (showActiveChat) {
+        chatCard.classList.add('view-active-chat');
+      } else {
+        chatCard.classList.remove('view-active-chat');
+      }
+    }
+  </script>
 </body>
 </html>

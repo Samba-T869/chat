@@ -1,139 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sw">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>neverAlone | Login</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { margin:0; background:#eaeded; font-family:'Amazon Ember',Arial,sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-        .container { width:100%; max-width:400px; padding:20px; }
-        .header { text-align:center; margin-bottom:24px; }
-        .header h1 { font-weight:400; font-size:28px; }
-        .card { background:#fff; padding:32px 28px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
-        .links { display:flex; margin-bottom:16px; justify-content: space-between; padding: 2px;}
-        .links .login { font-size: 1rem; background-color: #ff9900; color: #fff; width: 50%; padding: 20px; border-radius: 6px 0 0 6px;}
-        .links .register { background-color: #d5d9dd; width: 50%; padding: 20px; border-radius: 0 6px 6px 0;}
-        .links a { color:#007185; text-decoration:none; font-size:14px; }
-        .links a:hover { background-color: #ff9900; }
-        .links a.active { font-weight:600; }
-        .form-group { margin-bottom:16px; }
-        .form-group label { display:block; font-weight:600; font-size:14px; margin-bottom:4px; }
-        .input-field { display:flex; align-items:center; border:1px solid #d5d9dd; border-radius:4px; background:#fff; }
-        .input-field i { padding:0 12px; color:#888; }
-        .input-field input { border:none; padding:10px 0; font-size:14px; width:100%; outline:none; background:transparent; }
-        .input-field input:focus { border-color:#ff9900; box-shadow:0 0 0 3px rgba(255,153,0,0.2); }
-        .toggle-password { cursor:pointer; padding:0 12px; color:#888; }
-        .submit-btn { width:100%; padding:12px; background:#ff9900; border:none; border-radius:4px; font-size:16px; font-weight:600; cursor:pointer; transition:0.2s; }
-        .submit-btn:hover { background:#e68a00; }
-        .flash-message { padding:10px 16px; border-radius:4px; margin-bottom:16px; display:none; }
-        .flash-error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
-        .flash-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
-        .flash-message.show { display:block; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="description" content="Waudhao - Nunua na uza bidhaa mbalimbali kwa urahisi Tanzania.">
+<title>Waudhao | Ingia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+:root{--p:#1769e0;--g:#13b76b;--d:#172b4d;--m:#718096;--bg:#f5f8fc;--b:#e5eaf1}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:#26364a;min-height:100vh}
+a{text-decoration:none;color:inherit}
+.page{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.visual{background:linear-gradient(135deg,rgba(7,32,62,.86),rgba(23,105,224,.84)),url("logpic.jpeg") center/cover;color:white;padding:45px;display:flex;align-items:center}
+.visual-inner{max-width:520px;margin:auto}
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 55px;
+}
+
+.logo svg {
+    max-width: 220px;
+    height: auto;
+    display: block;
+}
+.logo-icon{width:44px;height:44px;background:white;color:var(--p);border-radius:12px;display:grid;place-items:center;font-size:24px}
+.logo-name{font-size:25px;font-weight:800}
+.logo-name span{color:#35e994}
+.tagline{font-size:13px;color:#dbe7f7}
+.visual h1{font-size:clamp(35px,4vw,55px);line-height:1.05;letter-spacing:-1.5px;margin-bottom:18px}
+.visual h1 span{color:#35e994}.visual p{color:#dce7f5;line-height:1.7}
+.points{display:grid;gap:13px;margin-top:30px}
+.point{display:flex;gap:11px;align-items:center;font-size:14px}
+.point-icon{width:32px;height:32px;border-radius:50%;background:#ffffff1f;display:grid;place-items:center}
+.form-side{display:flex;align-items:center;justify-content:center;padding:35px}
+.form-wrap{width:min(440px,100%)}
+.mobile-logo{display:none}
+.form-wrap h2{font-size:30px;color:var(--d);margin-bottom:7px}
+.intro{color:var(--m);font-size:14px;margin-bottom:27px}
+.group{display:grid;gap:7px;margin-bottom:16px}
+.group label{font-size:13px;font-weight:800;color:var(--d)}
+.input-wrap{position:relative}
+.group input{width:100%;padding:13px 43px 13px 13px;border:1px solid var(--b);border-radius:10px;outline:0;background:white}
+.group input:focus{border-color:var(--p);box-shadow:0 0 0 3px #1769e018}
+.input-icon{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#8996a8; cursor: pointer;}
+.row{display:flex;justify-content:space-between;align-items:center;margin:5px 0 20px;font-size:12px}
+.remember{display:flex;gap:7px;color:var(--m)}
+.remember input{accent-color:var(--p)}
+.forgot,.register a{color:var(--p);font-weight:700}
+.btn{width:100%;border:0;border-radius:10px;padding:13px;cursor:pointer;font-weight:800;background:var(--p);color:white;box-shadow:0 7px 18px #1769e030}.divider{display:flex;align-items:center;gap:12px;color:#9aa6b5;font-size:11px;margin:23px 0}
+.divider:before,.divider:after{content:"";height:1px;background:var(--b);flex:1}
+.register{text-align:center;color:var(--m);font-size:13px}
+.back{text-align:center;margin-top:18px;font-size:12px;color:var(--m)}
+.message{display:none;margin-bottom:15px;padding:11px;border-radius:9px;background:#ecfdf5;color:#087443;font-size:12px}
+@media(max-width:800px){
+    .page{grid-template-columns:1fr}
+    .visual{display:none}
+    .form-side{min-height:100vh;padding:25px}
+    .mobile-logo{display:flex;align-items:center;gap:9px;margin-bottom:35px}
+    .mobile-logo .logo-icon{background:var(--p);color:white;width:40px;height:40px}
+    .mobile-logo .logo-name{font-size:21px}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header"><h1>Login to Continue</h1></div>
-        <div class="card">
-            <div class="links">
-                <a class="login" href="login.html" class="active">Login</a>
-                <a class="register" href="register.html">Register</a>
+<div class="page">
+    <section class="visual">
+        <div class="visual-inner">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 120" width="100%" height="100%">
+                    <defs>
+                    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+                    </linearGradient>
+                    </defs>
+                    <!-- Icon: Isometric "W" Box -->
+                    <g transform="translate(25, 20)">
+                    <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="81" cy="25" r="5" fill="#db2777" />
+                    <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                    <!-- Text -->
+                    <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+                </svg>
             </div>
             
-            <div id="errorMessage" class="flash-message flash-error"><i class="fas fa-exclamation-circle"></i> <span id="errorText"></span></div>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <div class="input-field">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="input-field">
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword(this)"></i>
-                    </div>
-                </div>
-                <button type="submit" class="submit-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
-            </form>
-            <div style="text-align:center;margin-top:16px;font-size:14px;">
-                <a href="#" style="color:#007185;text-decoration:none;">Forgot password?</a>
+            <h1>Karibu tena kwenye <span>Waudhao</span></h1>
+            <p>Ingia kwenye akaunti yako ili kusimamia matangazo yako, kuwasiliana na wauzaji na kufuatilia shughuli zako.</p>
+
+            <div class="points">
+                <div class="point"><div class="point-icon">✓</div> Weka na simamia matangazo yako</div>
+                <div class="point"><div class="point-icon">💬</div> Wasiliana na wanunuzi na wauzaji</div>
+                <div class="point"><div class="point-icon">🔒</div> Akaunti yako inalindwa</div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <script>
-        function togglePassword(el) {
-            const input = el.parentElement.querySelector('input');
-            if (input.type === 'password') {
-                input.type = 'text';
-                el.classList.remove('fa-eye');
-                el.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                el.classList.remove('fa-eye-slash');
-                el.classList.add('fa-eye');
-            }
-        }
-
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            errorMessage.classList.remove('show');
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password }),
-                    credentials: 'include'
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    window.location.href = '/homepage.html';
-                } else {
-                    errorText.textContent = data.error || 'Login failed';
-                    errorMessage.classList.add('show');
-                }
-            } catch (error) {
-                errorText.textContent = 'An error occurred. Please try again.';
-                errorMessage.classList.add('show');
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-            }
-        });
-
-        // Check if already logged in
-        async function checkAuth() {
-            try {
-                const response = await fetch('/api/check-auth', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (data.authenticated) {
-                    window.location.href = '/homepage.html';
-                }
-            } catch (error) {
-                // Not authenticated, stay on login page
-                console.error('Login failed');
-            }
-        }
-        checkAuth();
-    </script>
+    <main class="form-side">
+        <div class="form-wrap">
+        <div class="mobile-logo"><div class="logo-icon">🛒</div>
+        <div class="logo-name"><span>Waudhao</span></div></div>
+        <h2>Ingia kwenye akaunti</h2>
+        <p class="intro">Weka taarifa zako ili kuendelea.</p>
+        <div class="message" id="message"></div>
+        <form id="loginForm">
+        <div class="group">
+            <label>Email au Jina la Mtumiaji</label><div class="input-wrap">
+                <input id="identifier" type="text" autocomplete="username" placeholder="mfano@gmail.com" required><span class="input-icon">👤</span></div></div>
+        <div class="group">
+            <label>Nenosiri</label>
+            <div class="input-wrap">
+                <input id="password" type="password" autocomplete="current-password" placeholder="Weka nenosiri lako" required><span class="input-icon" id="toggle"><i class="fas fa-eye"></i></span></div></div>
+        <div class="row">
+            <label class="remember">
+            <input type="checkbox"> Nikumbuke</label>
+            <a class="forgot" href="#" onclick="forgot(event)">Umesahau nenosiri?</a></div>
+        <button class="btn" type="submit">Ingia</button>
+        </form>
+        <div class="divider">AU</div>
+        <div class="register">Huna akaunti? <a href="register.html">Jisajili hapa</a>
+        </div>
+        <div class="back">Kwa kuendelea, unakubaliana na <a href="terms.html">Masharti na Sera ya Faragha, </a> na kupokea barua pepe za mauzo kutoka waudhao. Unaweza kujiondoa wakati wowote.</div>
+        </div>
+    </main>
+</div>
+<script>
+const p=document.getElementById("password");
+document.getElementById("toggle").onclick=()=>p.type=p.type==="password"?"text":"password";
+document.getElementById("loginForm").onsubmit=e=>{e.preventDefault();const m=document.getElementById("message");m.style.display="block";m.textContent="Demo: hapa login itaunganishwa na backend yako.";};
+function forgot(e){e.preventDefault();alert("Demo: hapa itaunganishwa na mfumo wa kurejesha nenosiri.");}
+</script>
 </body>
 </html>
