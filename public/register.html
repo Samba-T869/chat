@@ -110,40 +110,117 @@ a{text-decoration:none;color:inherit}
         </div>
 
         <h2>Fungua akaunti</h2><p class="intro">Jisajili bure ili kuanza kutumia Waudhao.</p>
-        <div class="message" id="message"></div>
-        <form id="registerForm"><div class="form-grid">
-        <div class="group"><label>Jina Kamili *</label><input id="name" type="text" placeholder="Mfano: Juma Hassan" required></div>
-        <div class="group"><label>Username *</label><input type="text" placeholder="Mfano: juma23" required></div>
-        <div class="group"><label>Email *</label><input type="email" placeholder="juma@gmail.com" required></div>
-        <div class="group"><label>Namba ya Simu *</label><input type="tel" placeholder="+255 7XX XXX XXX" required></div>
-        <div class="group"><label>Nchi *</label><select required><option value="tanzania">Tanzania</option><option>Kenya</option><option>Uganda</option><option>Rwanda</option><option>Burundi</option><option>Congo DRC</option><option>Malawi</option><option>Msumbiji</option><option>Afrika Kusini</option><option>Nyinginezo</option></select></div>
-        <div class="group"><label>Nenosiri *</label><input id="password" type="password" minlength="8" placeholder="Angalau herufi 8" required><span class="note">Tumia angalau herufi 8.</span></div>
-        <div class="group"><label>Thibitisha Nenosiri *</label><input id="confirm" type="password" minlength="8" placeholder="Rudia nenosiri" required></div>
-        </div>
-        <label class="terms"><input id="terms" type="checkbox" required><span>Ninakubali <a href="terms.html">Masharti ya Matumizi</a> na <a href="terms.html">Sera ya Faragha</a> ya Waudhao.</span></label>
-        <button class="btn" type="submit">Jisajili Sasa</button></form>
+        <div class="message" id="errorMessage"></div>
+        <div class="message" id="successMessage"></div>
+
+        <form id="registerForm" method="post" action="/api/register">
+            <div class="form-grid">
+            <div class="group"><label>Jina Kamili *</label><input id="fullname" name="fullname" type="text" placeholder="Mfano: Juma Hassan" required></div>
+            <div class="group"><label>Username *</label><input type="text" id="username" name="username" placeholder="Mfano: juma23" required></div>
+            <div class="group"><label>Email *</label><input type="email" id="email" name="email" placeholder="juma@gmail.com" required></div>
+            <div class="group"><label>Namba ya Simu *</label><input type="tel" id="phone" name="phone" placeholder="+255 7XX XXX XXX" required></div>
+            <div class="group"><label>Nchi *</label><select name="country" id="country" required><option value="tanzania">Tanzania</option><option>Kenya</option><option>Uganda</option><option>Rwanda</option><option>Burundi</option><option>Congo DRC</option><option>Malawi</option><option>Msumbiji</option><option>Afrika Kusini</option><option>Nyinginezo</option></select></div>
+            <div class="group"><label>Nenosiri *</label><input id="password" type="password" name="password" minlength="6" placeholder="Angalau herufi 8" required><span class="note">Tumia angalau herufi 8.</span></div>
+            <div class="group"><label>Thibitisha Nenosiri *</label><input id="confirm" type="password" name="confirm" minlength="6" placeholder="Rudia nenosiri" required></div>
+            </div>
+            <label class="terms"><input id="terms" type="checkbox" required><span>Ninakubali <a href="terms.html">Masharti ya Matumizi</a> na <a href="terms.html">Sera ya Faragha</a> ya Waudhao.</span></label>
+            <button class="btn" id="registerBtn" type="submit">Jisajili Sasa</button>
+        </form>
         <div class="login">Tayari una akaunti? <a href="login.html">Ingia hapa</a></div>
         </div>
     </main>
 </div>
 
-<script>
-document.getElementById("registerForm").onsubmit=e=>{
-    e.preventDefault();
-    const m=document.getElementById("message");
-    m.className="message";
-    
-    if(document.getElementById("password").value!==document.getElementById("confirm").value){
-        m.classList.add("error");
-        m.textContent="Nenosiri mbili hazifanani.";
-        m.style.display="block";
-        return
-    }
-    m.classList.add("success");
-    m.textContent="Demo: hapa taarifa zitatumwa kwenye backend/database yako.";
-    m.style.display="block"
-    
-    window.location.href = 'verify.html';
-};
-</script>
-</body></html>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const registerForm = document.getElementById('registerForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const registerBtn = document.getElementById('registerBtn');
+
+            function showError(msg) {
+                errorMessage.textContent = msg;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+
+            function hideMessages() {
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+            }
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); // Prevents default page navigation
+                hideMessages();
+
+                const fullname = document.getElementById('fullname').value.trim();
+                const username = document.getElementById('username').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const country = document.getElementById('country').value.trim();
+                const password = document.getElementById('password').value;
+                const confirm = document.getElementById('confirm').value;
+
+                // Form validation
+                if (!fullname || !username || !email || !phone || !country || !password || !confirm) {
+                    return showError('All fields are required.');
+                }
+                if (password.length < 6) {
+                    return showError('Password must be at least 6 characters.');
+                }
+                if (password !== confirm) {
+                    return showError('Passwords do not match.');
+                }
+                if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+                    return showError('Username must be 3-30 characters (letters, numbers, underscore).');
+                }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    return showError('Invalid email address.');
+                }
+
+                registerBtn.disabled = true;
+                registerBtn.textContent = 'Inasindika...';
+
+                try {
+                    const formData = new FormData(registerForm);
+
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('registrationEmail', email);
+                        window.location.href = `/verify.html?email=${encodeURIComponent(email)}`;
+                    } else {
+                        showError(data.error || 'Usajili umefeli. Tafadhali jaribu tena.');
+                    }
+                } catch (error) {
+                    showError('Kuna tatizo la mtandao. Tafadhali jaribu tena.');
+                } finally {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Jisajili Sasa';
+                }
+            });
+
+            // Check if user is already authenticated
+            async function checkAuth() {
+                try {
+                    const response = await fetch('/api/check-auth', { credentials: 'include' });
+                    const data = await response.json();
+                    if (data.authenticated) {
+                        window.location.href = '/homepage.html';
+                    }
+                } catch (error) {
+                    // Not authenticated
+                }
+            }
+
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

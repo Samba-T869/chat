@@ -14,6 +14,8 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { S3Client } from '@aws-sdk/client-s3';
 import multerS3 from 'multer-s3';
+import initDb from './scripts/init-db.js';
+import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -214,161 +216,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============== DATABASE INIT ==============
-async function initDatabase() {
-    try {
-        // Users table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                email VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                profile_pic VARCHAR(255),
-                is_admin BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Subscriptions table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS subscriptions (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                plan VARCHAR(20) NOT NULL CHECK (plan IN ('daily', 'monthly', 'yearly')),
-                amount DECIMAL(10,2) NOT NULL,
-                payment_method VARCHAR(50) DEFAULT 'palmpesa',
-                payment_reference VARCHAR(100),
-                palmpesa_order_id VARCHAR(100),
-                palmpesa_transaction_id VARCHAR(100),
-                palmpesa_reference VARCHAR(100),
-                status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed')),
-                starts_at TIMESTAMP,
-                expires_at TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Products table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS products (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                title VARCHAR(200) NOT NULL,
-                description TEXT,
-                price DECIMAL(10,2) NOT NULL,
-                category VARCHAR(50),
-                media_path VARCHAR(255),
-                status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'sold')),
-                views INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Messages table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS messages (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                username VARCHAR(50) NOT NULL,
-                message TEXT NOT NULL,
-                file_path VARCHAR(255),
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Blog posts table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS blog_posts (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                username VARCHAR(50) NOT NULL,
-                title VARCHAR(200) NOT NULL,
-                content TEXT NOT NULL,
-                category VARCHAR(50),
-                price DECIMAL(10,2) DEFAULT 0,
-                media_path VARCHAR(255),
-                media_type VARCHAR(20),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Blog comments table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS blog_comments (
-                id SERIAL PRIMARY KEY,
-                post_id INTEGER REFERENCES blog_posts(id) ON DELETE CASCADE,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                username VARCHAR(50) NOT NULL,
-                comment TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Product comments table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS product_comments (
-                id SERIAL PRIMARY KEY,
-                product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                username VARCHAR(50) NOT NULL,
-                comment TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Activity logs table
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS activity_logs (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                username VARCHAR(50),
-                action VARCHAR(100) NOT NULL,
-                details TEXT,
-                ip_address VARCHAR(45),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Upgrade older subscription tables without destroying existing data.
-        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS palmpesa_order_id VARCHAR(100)`);
-        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS palmpesa_transaction_id VARCHAR(100)`);
-        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS palmpesa_reference VARCHAR(100)`);
-        await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`);
-        await pool.query(`ALTER TABLE subscriptions ALTER COLUMN starts_at DROP NOT NULL`);
-        await pool.query(`ALTER TABLE subscriptions ALTER COLUMN expires_at DROP NOT NULL`);
-
-        // Indexes
-        await pool.query(`
-            CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp DESC);
-            CREATE INDEX IF NOT EXISTS idx_products_user_id ON products(user_id);
-            CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
-            CREATE INDEX IF NOT EXISTS idx_blog_posts_created_at ON blog_posts(created_at DESC);
-            CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
-            CREATE INDEX IF NOT EXISTS idx_subscriptions_expires_at ON subscriptions(expires_at);
-        `);
-
-        // Create admin user if not exists
-        const adminCheck = await pool.query('SELECT id FROM users WHERE username = $1', ['jaguar45']);
-        if (adminCheck.rows.length === 0) {
-            const hash = await bcrypt.hash('?phillipoKefren6', 10);
-            await pool.query(
-                'INSERT INTO users (username, email, password_hash, is_admin) VALUES ($1, $2, $3, $4)',
-                ['jaguar45', 'sambahustler@gmail.com', hash, true]
-            );
-            console.log('✅ Admin user created');
-        }
-
-        console.log('✅ Database initialized successfully');
-    } catch (err) {
-        console.error('❌ Database initialization error:', err);
-        throw err;
-    }
-}
 
 pool.query('SELECT current_database() AS database_name')
   .then(result => {
@@ -420,11 +267,54 @@ const getClientIP = (req) => {
            'unknown';
 };
 
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false, // true for port 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS, 
+    },
+});
+
+// Function to generate and save verification code
+async function sendVerify(email, code) {
+    // HTML Email Template
+    const mailOptions = {
+        from: process.env.SMTP_FROM || '"Waudhao" <no-reply@waudhao.com>',
+        to: email,
+        subject: 'Nambari Yako ya Uhakiki / Your Verification Code',
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #333; text-align: center;">Uhakiki wa Akaunti</h2>
+                <p>Habari,</p>
+                <p>Nambari yako ya siri ya kuthibitisha akaunti yako ni:</p>
+                <div style="background-color: #f4f4f4; padding: 15px; text-align: center; border-radius: 6px; font-size: 28px; font-weight: bold; letter-spacing: 5px; color: #007bff; margin: 20px 0;">
+                    ${code}
+                </div>
+                <p style="color: #666; font-size: 14px;">Nambari hii itaisha muda wake baada ya <strong>dakika 5</strong>.</p>
+                <p style="color: #999; font-size: 12px; margin-top: 30px; text-align: center;">Ikiwa hukuomba ombi hili, tafadhali puuza barua pepe hii.</p>
+            </div>
+        `
+    };
+
+    // Dispatch Email
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`[VERIFICATION EMAIL] Code ${code} successfully dispatched to ${email}`);
+    } catch (error) {
+        console.error(`[VERIFICATION EMAIL ERROR] Failed to send email to ${email}:`, error);
+        throw new Error('Imeshindikana kutuma barua pepe ya usajili.');
+    }
+
+    return code;
+}
+
 // ============== AUTH ROUTES ==============
 app.post('/api/register', upload.single('profile_pic'), async (req, res) => {
-    const { username, email, password, confirm } = req.body;
+    const { fullname, username, email, phone, country, password, confirm } = req.body;
     
-    if (!username || !email || !password || !confirm) {
+    if (!fullname || !username || !email || !phone || !country || !password || !confirm) {
         return res.status(400).json({ error: 'All fields are required' });
     }
     if (password.length < 6) {
@@ -441,6 +331,7 @@ app.post('/api/register', upload.single('profile_pic'), async (req, res) => {
     }
 
     try {
+        // 1. Check if user already exists in verified users
         const userCheck = await pool.query(
             'SELECT id FROM users WHERE username = $1 OR email = $2',
             [username.toLowerCase(), email.toLowerCase()]
@@ -457,32 +348,40 @@ app.post('/api/register', upload.single('profile_pic'), async (req, res) => {
             profilePic = req.file.filename;
         }
 
-        const result = await pool.query(
-            'INSERT INTO users (username, email, password_hash, profile_pic) VALUES ($1, $2, $3, $4) RETURNING id, username, email, profile_pic',
-            [username.toLowerCase(), email.toLowerCase(), passwordHash, profilePic]
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        // 2. Clear previous pending entry if user re-registers before verifying
+        await pool.query(
+            'DELETE FROM pending_users WHERE username = $1 OR email = $2',
+            [username.toLowerCase(), email.toLowerCase()]
         );
 
-        req.session.userId = result.rows[0].id;
-        req.session.username = result.rows[0].username;
+        // 3. Save to pending_users
+        await pool.query(
+            `INSERT INTO pending_users 
+                (fullname, username, email, phone, country, password_hash, profile_pic, verification_code, code_expires_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [
+                fullname, 
+                username.toLowerCase(), 
+                email.toLowerCase(), 
+                phone, 
+                country.toLowerCase(), 
+                passwordHash, 
+                profilePic, 
+                code, 
+                expiresAt
+            ]
+        );
 
-        await new Promise((resolve, reject) => {
-            req.session.save((err) => {
-                if (err) {
-                    console.error('❌ Registration session save error:', err);
-                    reject(err);
-                } else {
-                    console.log('✅ Registration session saved:', req.sessionID);
-                    resolve();
-                }
-            });
-        });
-
-        await logActivity(result.rows[0].id, username, 'register', 'User registered', getClientIP(req));
+        // 4. Send email
+        await sendVerify(email.toLowerCase(), code);
 
         res.status(201).json({
             success: true,
-            message: 'Registration successful',
-            user: result.rows[0]
+            message: 'Registration initiated. Please verify your email.',
+            email: email.toLowerCase()
         });
     } catch (err) {
         console.error('Registration error:', err);
@@ -490,17 +389,116 @@ app.post('/api/register', upload.single('profile_pic'), async (req, res) => {
     }
 });
 
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
+// Verification Code Endpoint
+app.post('/api/verify-code', async (req, res) => {
+    const { email, code } = req.body;
 
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password required' });
+    if (!email || !code) {
+        return res.status(400).json({ error: 'Email and verification code are required' });
     }
 
     try {
         const result = await pool.query(
-            'SELECT id, username, email, password_hash, profile_pic, is_admin FROM users WHERE username = $1',
-            [username.toLowerCase()]
+            `SELECT * FROM pending_users WHERE email = $1`,
+            [email.toLowerCase()]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Pending registration not found or expired. Please register again.' });
+        }
+
+        const pendingUser = result.rows[0];
+
+        if (pendingUser.verification_code !== code) {
+            return res.status(400).json({ error: 'Invalid verification code' });
+        }
+
+        if (new Date() > new Date(pendingUser.code_expires_at)) {
+            return res.status(400).json({ error: 'Verification code has expired. Please register again.' });
+        }
+
+        // Move user to permanent 'users' table
+        const newUser = await pool.query(
+            `INSERT INTO users (fullname, username, email, phone, country, password_hash, profile_pic, is_verified)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+             RETURNING id, username, email`,
+            [
+                pendingUser.fullname,
+                pendingUser.username,
+                pendingUser.email,
+                pendingUser.phone,
+                pendingUser.country,
+                pendingUser.password_hash,
+                pendingUser.profile_pic
+            ]
+        );
+
+        const user = newUser.rows[0];
+
+        // Delete from pending_users
+        await pool.query('DELETE FROM pending_users WHERE id = $1', [pendingUser.id]);
+
+        // Log registration activity
+        await logActivity(user.id, user.username, 'register', 'User registered and verified', getClientIP(req));
+
+        // Initialize user session
+        req.session.userId = user.id;
+        req.session.username = user.username;
+
+        res.json({ success: true, message: 'Account verified and created successfully' });
+    } catch (err) {
+        console.error('Verification error:', err);
+        res.status(500).json({ error: 'Verification failed' });
+    }
+});
+
+// Resend Code Endpoint
+app.post('/api/resend-code', async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT id, email FROM pending_users WHERE email = $1',
+            [email.toLowerCase()]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'No pending registration found for this email.' });
+        }
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        await pool.query(
+            'UPDATE pending_users SET verification_code = $1, code_expires_at = $2 WHERE email = $3',
+            [code, expiresAt, email.toLowerCase()]
+        );
+
+        await sendVerify(email.toLowerCase(), code);
+
+        res.json({ success: true, message: 'New verification code sent' });
+    } catch (err) {
+        console.error('Resend error:', err);
+        res.status(500).json({ error: 'Failed to resend code' });
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    const { identifier, password } = req.body;
+    const loginValue = (identifier || '').trim().toLowerCase();
+
+    if (!loginValue || !password) {
+        return res.status(400).json({ error: 'Username or email and password required' });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT id, username, email, password_hash, profile_pic, is_admin FROM users WHERE username = $1 OR email = $1',
+            [loginValue]
         );
 
         if (result.rows.length === 0) {
@@ -1327,119 +1325,6 @@ app.post('/api/messages', requireAuth, upload.single('chat_file'), async (req, r
     }
 });
 
-// ============== BLOG ROUTES ==============
-app.get('/api/blog', async (req, res) => {
-    try {
-        const result = await pool.query(
-            `SELECT b.*, u.username, u.profile_pic 
-             FROM blog_posts b 
-             LEFT JOIN users u ON b.user_id = u.id 
-             ORDER BY b.created_at DESC`
-        );
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-app.post('/api/blog', requireAuth, upload.single('image'), async (req, res) => {
-    const { title, content, category, price } = req.body;
-
-    if (!title || !content || !category) {
-        return res.status(400).json({ error: 'Title, content, and category required' });
-    }
-
-    if(!req.session.isAdmin){
-        const subCheck = await pool.query(
-        'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
-        [req.session.userId, 'completed']
-        );
-        if (subCheck.rows.length === 0) {
-            return res.status(403).json({ error: 'Active subscription required to create blog posts' });
-        }
-    }
-
-    try {
-        let mediaPath = null;
-        let mediaType = null;
-        if (req.file) {
-            mediaPath = req.file.filename;
-            mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
-        }
-
-        const result = await pool.query(
-            `INSERT INTO blog_posts (user_id, username, title, content, category, price, media_path, media_type) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-            [req.session.userId, req.session.username, title, content, category, parseFloat(price) || 0, mediaPath, mediaType]
-        );
-
-        await logActivity(req.session.userId, req.session.username, 'blog_posted', 
-            `Post: ${title}`, getClientIP(req));
-
-        res.status(201).json({ success: true, post: result.rows[0] });
-    } catch (err) {
-        console.error('Blog post error:', err);
-        res.status(500).json({ error: 'Failed to create post' });
-    }
-});
-
-app.delete('/api/blog/:id', requireAuth, async (req, res) => {
-    try {
-        const check = await pool.query(
-            'SELECT user_id FROM blog_posts WHERE id = $1',
-            [req.params.id]
-        );
-        if (check.rows.length === 0) {
-            return res.status(404).json({ error: 'Post not found' });
-        }
-        if (check.rows[0].user_id !== req.session.userId) {
-            return res.status(403).json({ error: 'Not your post' });
-        }
-
-        await pool.query('DELETE FROM blog_posts WHERE id = $1', [req.params.id]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Delete failed' });
-    }
-});
-
-// Blog comments
-app.post('/api/blog/:id/comment', requireAuth, async (req, res) => {
-    const { comment } = req.body;
-    const postId = req.params.id;
-
-    if (!comment) {
-        return res.status(400).json({ error: 'Comment required' });
-    }
-
-    try {
-        const result = await pool.query(
-            `INSERT INTO blog_comments (post_id, user_id, username, comment) 
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [postId, req.session.userId, req.session.username, comment]
-        );
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        res.status(500).json({ error: 'Comment failed' });
-    }
-});
-
-app.get('/api/blog/:id/comments', async (req, res) => {
-    try {
-        const result = await pool.query(
-            `SELECT c.*, u.profile_pic 
-             FROM blog_comments c 
-             LEFT JOIN users u ON c.user_id = u.id 
-             WHERE c.post_id = $1 
-             ORDER BY c.created_at ASC`,
-            [req.params.id]
-        );
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
 // ============== ADMIN ROUTES ==============
 app.get('/api/admin/stats', requireAuth, requireAdmin, async (req, res) => {
     try {
@@ -1747,7 +1632,7 @@ app.get('*', (req, res) => {
 // ============== START SERVER ==============
 const PORT = process.env.PORT || 3000;
 
-initDatabase().then(() => {
+initDb().then(() => {
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Server running on port ${PORT}`);
         console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);

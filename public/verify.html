@@ -99,19 +99,120 @@ a{text-decoration:none;color:inherit}
 </div>
 </main>
 </div>
+
 <script>
 const params=new URLSearchParams(window.location.search);
-const email=params.get("email")||localStorage.getItem("registrationEmail")||"barua pepe yako";
-document.getElementById("userEmail").textContent=email;
-const form=document.getElementById("verifyForm"),codeInput=document.getElementById("code"),verifyBtn=document.getElementById("verifyBtn"),resendBtn=document.getElementById("resendBtn"),timer=document.getElementById("timer"),message=document.getElementById("message");
+const email=params.get("email")||localStorage.getItem("registrationEmail");
+document.getElementById("userEmail").textContent = email;
+const form=document.getElementById("verifyForm");
+const codeInput=document.getElementById("code"),verifyBtn=document.getElementById("verifyBtn");
+const resendBtn=document.getElementById("resendBtn"),timer=document.getElementById("timer");
+const message=document.getElementById("message");
+
 let remaining=300,resendRemaining=60,expired=false;
 function showMessage(text,type){message.className="message "+type;message.textContent=text;message.style.display="block"}
-function updateTimer(){const m=Math.floor(remaining/60),s=remaining%60;timer.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");if(remaining<=0){expired=true;timer.textContent="Imeisha";timer.style.color="#be123c";codeInput.classList.add("expired");verifyBtn.disabled=true;showMessage("Nambari hii imekwisha muda wake. Bonyeza “Tuma tena” kupata nambari mpya.","error")}}
-const countdown=setInterval(()=>{if(remaining>0){remaining--;updateTimer()}},1000);
-const resendCountdown=setInterval(()=>{if(resendRemaining>0){resendRemaining--;if(resendRemaining===0){resendBtn.disabled=false;resendBtn.textContent="Tuma tena"}else resendBtn.textContent="Tuma tena ("+resendRemaining+"s)"}},1000);
-codeInput.addEventListener("input",()=>{codeInput.value=codeInput.value.replace(/\D/g,"").slice(0,6)});
-form.addEventListener("submit",e=>{e.preventDefault();const code=codeInput.value.trim();if(expired){showMessage("Muda wa nambari umeisha. Omba nambari mpya kwanza.","error");return}if(!/^\d{6}$/.test(code)){showMessage("Tafadhali ingiza nambari ya uthibitisho yenye tarakimu 6.","error");codeInput.focus();return}if(code==="123456"){showMessage("Akaunti imethibitishwa kwa mafanikio.","success");verifyBtn.disabled=true;codeInput.disabled=true;clearInterval(countdown);clearInterval(resendCountdown)}else showMessage("Nambari ya uthibitisho si sahihi. Tafadhali angalia barua pepe yako na ujaribu tena.","error")});
-resendBtn.addEventListener("click",()=>{remaining=300;resendRemaining=60;expired=false;timer.style.color="var(--p)";codeInput.classList.remove("expired");verifyBtn.disabled=false;codeInput.value="";resendBtn.disabled=true;resendBtn.textContent="Tuma tena (60s)";showMessage("Nambari mpya imetumwa. Angalia barua pepe yako.","success");codeInput.focus()});
+function updateTimer(){
+    const m=Math.floor(remaining/60),s=remaining%60;timer.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+    if(remaining<=0){
+        expired=true;
+        timer.textContent="Imeisha";
+        timer.style.color="#be123c";
+        codeInput.classList.add("expired");
+        verifyBtn.disabled=true;
+        showMessage("Nambari hii imekwisha muda wake. Bonyeza “Tuma tena” kupata nambari mpya.","error")
+    }
+}
+const countdown=setInterval(()=>{
+    if(remaining>0){
+        remaining--;
+        updateTimer()
+    }
+},1000);
+
+const resendCountdown=setInterval(()=>{
+    if(resendRemaining>0){
+        resendRemaining--;
+        if(resendRemaining===0){
+            resendBtn.disabled=false;
+            resendBtn.textContent="Tuma tena"
+        }else resendBtn.textContent="Tuma tena ("+resendRemaining+"s)"
+    }
+},1000);
+
+codeInput.addEventListener("input",()=>{
+    codeInput.value=codeInput.value.replace(/\D/g,"").slice(0,6)
+});
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = codeInput.value.trim();
+
+    if (expired) {
+        showMessage("Muda wa nambari umeisha. Omba nambari mpya kwanza.", "error");
+        return;
+    }
+    if (!/^\d{6}$/.test(code)) {
+        showMessage("Tafadhali ingiza nambari ya uthibitisho yenye tarakimu 6.", "error");
+        codeInput.focus();
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/verify-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showMessage("Akaunti imethibitishwa kwa mafanikio. Inaelekeza...", "success");
+            verifyBtn.disabled = true;
+            codeInput.disabled = true;
+            clearInterval(countdown);
+            clearInterval(resendCountdown);
+            setTimeout(() => {
+                window.location.href = '/homepage.html';
+            }, 1500);
+        } else {
+            showMessage(data.error || "Nambari ya uthibitisho si sahihi.", "error");
+        }
+    } catch (err) {
+        showMessage("Hitilafu imetokea. Tafadhali jaribu tena.", "error");
+    }
+});
+
+resendBtn.addEventListener("click", async () => {
+    try {
+        const response = await fetch('/api/resend-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            remaining = 300;
+            resendRemaining = 60;
+            expired = false;
+            timer.style.color = "var(--p)";
+            codeInput.classList.remove("expired");
+            verifyBtn.disabled = false;
+            codeInput.value = "";
+            resendBtn.disabled = true;
+            resendBtn.textContent = "Tuma tena (60s)";
+            showMessage("Nambari mpya imetumwa. Angalia barua pepe yako.", "success");
+            codeInput.focus();
+        } else {
+            showMessage(data.error || "Imeshindikana kutuma nambari mpya.", "error");
+        }
+    } catch (err) {
+        showMessage("Hitilafu imetokea wakati wa kutuma nambari.", "error");
+    }
+});
+
 updateTimer();
 </script>
 </body>
