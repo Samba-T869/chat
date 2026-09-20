@@ -187,24 +187,27 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
     storage: multerS3({
-        s3: s3,
+        s3,
         bucket: process.env.R2_BUCKET_NAME,
-        metadata: (req, file, cb) => {
-            cb(null, { fieldName: file.fieldname });
-        },
+        metadata: (req, file, cb) => cb(null, { fieldName: file.fieldname }),
         key: (req, file, cb) => {
             let folder = 'misc/';
             if (file.fieldname === 'profile_pic') folder = 'profiles/';
             else if (file.fieldname === 'product_image') folder = 'products/';
-            else if (file.fieldname === 'image' || file.fieldname === 'file') folder = 'blog/';
-
-            const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            cb(null, folder + unique + path.extname(file.originalname));
+            else if (file.fieldname === 'image' || file.fieldname === 'file' || file.fieldname === 'chat_file') folder = 'blog/';
+            const unique = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
+            cb(null, folder + unique + path.extname(file.originalname).toLowerCase());
         }
     }),
-    limits: { fileSize: 10 * 1024 * 1024 },
-    fileFilter: fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024, files: 6 },
+    fileFilter
 });
+
+// multer-s3 does not provide the old local `filename` property. Always use the
+// object URL/key returned by multer-s3 so uploads work correctly on Railway/R2.
+const uploadedUrl = (file) => file?.location ||
+    (file?.key && process.env.R2_PUBLIC_URL ? `${process.env.R2_PUBLIC_URL.replace(/\/$/, '')}/${file.key}` : null) ||
+    file?.key || null;
 
 // ============== MIDDLEWARE ==============
 app.use(cors({
@@ -619,47 +622,40 @@ app.get('/api/user/profile', requireAuth, async (req, res) => {
 
 app.put('/api/user/profile', requireAuth, upload.single('profile_pic'), async (req, res) => {
     const { email } = req.body;
-    let profilePic = null;
-
     try {
-        if (req.file) {
-            profilePic = req.file.filename;
-            // Delete old profile pic
-            const old = await pool.query('SELECT profile_pic FROM users WHERE id = $1', [req.session.userId]);
-            if (old.rows[0]?.profile_pic) {
-                const oldPath = path.join('public/uploads/profiles/', old.rows[0].profile_pic);
-                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-            }
-        }
-
-        let query = 'UPDATE users SET ';
+        const fields = [];
         const params = [];
         let idx = 1;
-
-        if (email) {
-            query += `email = $${idx}, `;
-            params.push(email.toLowerCase());
-            idx++;
-        }
-        if (profilePic) {
-            query += `profile_pic = $${idx}, `;
-            params.push(profilePic);
-            idx++;
-        }
-
-        if (params.length === 0) {
-            return res.status(400).json({ error: 'No fields to update' });
-        }
-
-        query = query.slice(0, -2) + ` WHERE id = $${idx} RETURNING id, username, email, profile_pic`;
+        if (email) { fields.push(`email = $${idx++}`); params.push(email.trim().toLowerCase()); }
+        if (req.file) { fields.push(`profile_pic = $${idx++}`); params.push(uploadedUrl(req.file)); }
+        if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
         params.push(req.session.userId);
-
-        const result = await pool.query(query, params);
+        const result = await pool.query(
+            `UPDATE users SET ${fields.join(', ')} WHERE id = $${idx}
+             RETURNING id, fullname, username, email, phone, country, profile_pic, is_admin, created_at`, params);
+        if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
         res.json({ success: true, user: result.rows[0] });
     } catch (err) {
         console.error('Profile update error:', err);
+        if (err.code === '23505') return res.status(409).json({ error: 'Email already in use' });
         res.status(500).json({ error: 'Update failed' });
     }
+});
+
+app.put('/api/user/password', requireAuth, async (req, res) => {
+    const { current_password, new_password } = req.body;
+    if (!current_password || !new_password) return res.status(400).json({ error: 'Current and new passwords are required' });
+    if (String(new_password).length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    try {
+        const result = await pool.query('SELECT password_hash, username FROM users WHERE id = $1', [req.session.userId]);
+        if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
+        const ok = await bcrypt.compare(current_password, result.rows[0].password_hash);
+        if (!ok) return res.status(401).json({ error: 'Current password is incorrect' });
+        const hash = await bcrypt.hash(new_password, 12);
+        await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.session.userId]);
+        await logActivity(req.session.userId, result.rows[0].username, 'password_changed', 'Password changed', getClientIP(req));
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (err) { console.error('Password change error:', err); res.status(500).json({ error: 'Password change failed' }); }
 });
 
 // ============== SUBSCRIPTION ROUTES ==============
@@ -1143,187 +1139,122 @@ app.get('/api/subscription/payment-status/:subscriptionId', requireAuth, async (
     }
 });
 
-// ============== PRODUCT ROUTES ==============
+// ============== DASHBOARD PRODUCT ROUTES ==============
+const activeSubscription = async (userId) => {
+    const r = await pool.query(`SELECT id, plan, starts_at, expires_at FROM subscriptions
+        WHERE user_id=$1 AND status='completed' AND expires_at > NOW()
+        ORDER BY expires_at DESC LIMIT 1`, [userId]);
+    return r.rows[0] || null;
+};
+
+app.get('/api/my/products', requireAuth, async (req, res) => {
+    try {
+        const r = await pool.query(`SELECT p.*, COALESCE(p.media_path, ARRAY[]::text[]) AS media_path,
+            u.username, u.profile_pic AS seller_profile_pic
+            FROM products p LEFT JOIN users u ON u.id=p.user_id
+            WHERE p.user_id=$1 ORDER BY p.created_at DESC`, [req.session.userId]);
+        res.json({ products: r.rows });
+    } catch (err) { console.error('My products error:', err); res.status(500).json({ error:'Database error' }); }
+});
+
+app.get('/api/my/dashboard', requireAuth, async (req, res) => {
+    try {
+        const [u,p,stats,sub] = await Promise.all([
+            pool.query(`SELECT id, fullname, username, email, phone, country, profile_pic, is_admin, created_at FROM users WHERE id=$1`, [req.session.userId]),
+            pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status='active')::int AS active,
+                        COALESCE(SUM(views),0)::int AS views FROM products WHERE user_id=$1`, [req.session.userId]),
+            pool.query(`SELECT COUNT(*) FILTER (WHERE receiver_id=$1 AND is_read=false)::int AS unread,
+                        COUNT(*)::int AS total FROM messages WHERE receiver_id=$1`, [req.session.userId]),
+            req.session.isAdmin ? Promise.resolve({ rows: [{plan:'Admin Unlimited', expires_at:null}] }) : pool.query(`SELECT plan,starts_at,expires_at FROM subscriptions WHERE user_id=$1 AND status='completed' AND expires_at>NOW() ORDER BY expires_at DESC LIMIT 1`, [req.session.userId])
+        ]);
+        if (!u.rows.length) return res.status(404).json({error:'User not found'});
+        res.json({ user:u.rows[0], stats:{...p.rows[0], ...stats.rows[0]}, subscription:sub.rows[0]||null });
+    } catch(err){ console.error('Dashboard error:',err); res.status(500).json({error:'Failed to load dashboard'}); }
+});
+
 app.get('/api/products', async (req, res) => {
-    const { search, category, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
-
+    const { search, category, page=1, limit=20 }=req.query; const lim=Math.min(Math.max(Number(limit)||20,1),100); const pg=Math.max(Number(page)||1,1); const offset=(pg-1)*lim;
     try {
-        let query = `SELECT p.*, u.username, u.profile_pic 
-                     FROM products p 
-                     LEFT JOIN users u ON p.user_id = u.id 
-                     WHERE p.status = 'active'`;
-        const params = [];
-        let idx = 1;
-
-        if (search) {
-            query += ` AND (p.title ILIKE $${idx} OR p.description ILIKE $${idx})`;
-            params.push(`%${search}%`);
-            idx++;
-        }
-
-        if (category && category !== 'all') {
-            query += ` AND p.category = $${idx}`;
-            params.push(category);
-            idx++;
-        }
-
-        query += ` ORDER BY p.created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
-        params.push(limit, offset);
-
-        const result = await pool.query(query, params);
-
-        // Get total count
-        let countQuery = 'SELECT COUNT(*) FROM products WHERE status = $1';
-        const countParams = ['active'];
-        if (search) {
-            countQuery += ' AND (title ILIKE $2 OR description ILIKE $2)';
-            countParams.push(`%${search}%`);
-        }
-        if (category && category !== 'all') {
-            countQuery += ' AND category = $3';
-            countParams.push(category);
-        }
-        const countResult = await pool.query(countQuery, countParams);
-
-        res.json({
-            products: result.rows,
-            total: parseInt(countResult.rows[0].count),
-            page: parseInt(page),
-            totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit)
-        });
-    } catch (err) {
-        console.error('Products fetch error:', err);
-        res.status(500).json({ error: 'Database error' });
-    }
+        let where=`WHERE p.status='active'`, params=[], i=1;
+        if(search){where+=` AND (p.title ILIKE $${i} OR p.description ILIKE $${i})`;params.push(`%${search}%`);i++;}
+        if(category&&category!=='all'){where+=` AND p.category=$${i}`;params.push(category);i++;}
+        const count=await pool.query(`SELECT COUNT(*) FROM products p ${where}`,params);
+        const r=await pool.query(`SELECT p.*,u.username,u.profile_pic FROM products p LEFT JOIN users u ON u.id=p.user_id ${where} ORDER BY p.created_at DESC LIMIT $${i} OFFSET $${i+1}`,[...params,lim,offset]);
+        const total=Number(count.rows[0].count); res.json({products:r.rows,total,page:pg,totalPages:Math.ceil(total/lim)});
+    }catch(err){console.error('Products fetch error:',err);res.status(500).json({error:'Database error'});}
 });
 
-app.get('/api/products/:id', async (req, res) => {
-    try {
-        const result = await pool.query(
-            `SELECT p.*, u.username, u.profile_pic 
-             FROM products p 
-             LEFT JOIN users u ON p.user_id = u.id 
-             WHERE p.id = $1`,
-            [req.params.id]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-        
-        // Increment views
-        await pool.query('UPDATE products SET views = views + 1 WHERE id = $1', [req.params.id]);
-        
-        res.json(result.rows[0]);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
+app.get('/api/products/:id', async (req,res)=>{try{const r=await pool.query(`SELECT p.*,u.username,u.profile_pic FROM products p LEFT JOIN users u ON u.id=p.user_id WHERE p.id=$1`,[req.params.id]);if(!r.rows.length)return res.status(404).json({error:'Product not found'});await pool.query('UPDATE products SET views=views+1 WHERE id=$1',[req.params.id]);res.json(r.rows[0]);}catch(err){res.status(500).json({error:'Server error'});}});
+
+app.post('/api/products', requireAuth, upload.array('product_image',6), async (req,res)=>{
+    const {title,description,price,category,location,whatsapp,call_number}=req.body;
+    if(!title||!description||!price||!category||!location||!whatsapp||!call_number)return res.status(400).json({error:'All product fields are required'});
+    if(!req.session.isAdmin && !(await activeSubscription(req.session.userId)))return res.status(403).json({error:'Active subscription required to post products'});
+    try{
+        const media=(req.files||[]).map(uploadedUrl).filter(Boolean);
+        if(media.length>6)return res.status(400).json({error:'Maximum 6 images allowed'});
+        const r=await pool.query(`INSERT INTO products(user_id,title,category,price,location,whatsapp,call_number,description,media_path)
+            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,[req.session.userId,title.trim(),category,Number(price),location.trim(),whatsapp.trim(),call_number.trim(),description.trim(),media]);
+        await logActivity(req.session.userId,req.session.username,'product_created',`Product: ${title}`,getClientIP(req));
+        res.status(201).json({success:true,product:r.rows[0]});
+    }catch(err){console.error('Product creation error:',err);res.status(500).json({error:'Failed to create product'});}
 });
 
-app.post('/api/products', requireAuth, upload.single('product_image'), async (req, res) => {
-    const { title, description, price, category } = req.body;
-
-    if (!title || !price || !category) {
-        return res.status(400).json({ error: 'Title, price, and category are required' });
-    }
-
-    // Check subscription for non admin users
-    if(!req.session.isAdmin){
-        const subCheck = await pool.query(
-            'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
-            [req.session.userId, 'completed']
-        );
-
-        if (subCheck.rows.length === 0) {
-            return res.status(403).json({ error: 'Active subscription required to post products' });
-        }
-    }
-    
-
-    try {
-        let mediaPath = null;
-        if (req.file) {
-            mediaPath = req.file.filename;
-        }
-
-        const result = await pool.query(
-            `INSERT INTO products (user_id, title, description, price, category, media_path) 
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [req.session.userId, title, description, parseFloat(price), category, mediaPath]
-        );
-
-        await logActivity(req.session.userId, req.session.username, 'product_created', 
-            `Product: ${title}`, getClientIP(req));
-
-        res.status(201).json({ success: true, product: result.rows[0] });
-    } catch (err) {
-        console.error('Product creation error:', err);
-        res.status(500).json({ error: 'Failed to create product' });
-    }
+app.put('/api/products/:id', requireAuth, upload.array('product_image',6), async(req,res)=>{
+    const {title,description,price,category,location,whatsapp,call_number,existing_media}=req.body;
+    try{
+        const own=await pool.query('SELECT * FROM products WHERE id=$1 AND user_id=$2',[req.params.id,req.session.userId]);
+        if(!own.rows.length)return res.status(404).json({error:'Product not found'});
+        const existing=Array.isArray(JSON.parse(existing_media||'[]'))?JSON.parse(existing_media||'[]'):[];
+        const uploaded=(req.files||[]).map(uploadedUrl).filter(Boolean); const media=[...existing,...uploaded].slice(0,6);
+        if(!title||!description||!price||!category||!location||!whatsapp||!call_number)return res.status(400).json({error:'All product fields are required'});
+        const r=await pool.query(`UPDATE products SET title=$1,category=$2,price=$3,location=$4,whatsapp=$5,call_number=$6,description=$7,media_path=$8,updated_at=CURRENT_TIMESTAMP WHERE id=$9 AND user_id=$10 RETURNING *`,[title.trim(),category,Number(price),location.trim(),whatsapp.trim(),call_number.trim(),description.trim(),media,req.params.id,req.session.userId]);
+        await logActivity(req.session.userId,req.session.username,'product_updated',`Product ID: ${req.params.id}`,getClientIP(req));res.json({success:true,product:r.rows[0]});
+    }catch(err){console.error('Product update error:',err);res.status(500).json({error:'Update failed'});}
 });
 
-app.delete('/api/products/:id', requireAuth, async (req, res) => {
-    try {
-        const check = await pool.query(
-            'SELECT user_id FROM products WHERE id = $1',
-            [req.params.id]
-        );
-        if (check.rows.length === 0) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-        if (check.rows[0].user_id !== req.session.userId) {
-            return res.status(403).json({ error: 'Not your product' });
-        }
+app.delete('/api/products/:id', requireAuth, async(req,res)=>{try{const r=await pool.query('DELETE FROM products WHERE id=$1 AND user_id=$2 RETURNING id',[req.params.id,req.session.userId]);if(!r.rows.length)return res.status(404).json({error:'Product not found'});await logActivity(req.session.userId,req.session.username,'product_deleted',`Product ID: ${req.params.id}`,getClientIP(req));res.json({success:true});}catch(err){console.error('Delete product error:',err);res.status(500).json({error:'Delete failed'});}});
 
-        await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Delete failed' });
-    }
+// ============== PRIVATE MESSAGES ==============
+app.get('/api/messages/inbox', requireAuth, async(req,res)=>{
+    try{
+        const r=await pool.query(`WITH ranked AS (
+          SELECT m.*, ROW_NUMBER() OVER(PARTITION BY LEAST(sender_id,receiver_id),GREATEST(sender_id,receiver_id),COALESCE(product_id,0) ORDER BY created_at DESC) rn
+          FROM messages m WHERE m.sender_id=$1 OR m.receiver_id=$1
+        ) SELECT r.id,r.sender_id,r.receiver_id,r.product_id,r.message,r.message_type,r.offer_amount,r.file_paths,r.is_read,r.created_at,
+                 u.id AS partner_id,u.username AS partner_username,u.profile_pic AS partner_profile,
+                 p.title AS product_title,p.media_path AS product_media
+          FROM ranked r LEFT JOIN users u ON u.id=CASE WHEN r.sender_id=$1 THEN r.receiver_id ELSE r.sender_id END
+          LEFT JOIN products p ON p.id=r.product_id WHERE r.rn=1 ORDER BY r.created_at DESC`,[req.session.userId]);
+        res.json({conversations:r.rows});
+    }catch(err){console.error('Inbox error:',err);res.status(500).json({error:'Failed to load inbox'});}
 });
 
-// ============== MESSAGE ROUTES ==============
-app.get('/api/messages', requireAuth, async (req, res) => {
-    try {
-        const result = await pool.query(
-            `SELECT m.*, u.profile_pic 
-             FROM messages m 
-             LEFT JOIN users u ON m.user_id = u.id 
-             ORDER BY m.timestamp DESC LIMIT 50`
-        );
-        res.json(result.rows.reverse());
-    } catch (err) {
-        console.error('Error fetching messages:', err);
-        res.status(500).json({ error: 'Database error' });
-    }
+app.get('/api/messages/conversation/:userId', requireAuth, async(req,res)=>{
+    const other=Number(req.params.userId); if(!other||other===req.session.userId)return res.status(400).json({error:'Invalid conversation'});
+    try{
+        const r=await pool.query(`SELECT m.*,su.username sender_username,ru.username receiver_username
+          FROM messages m JOIN users su ON su.id=m.sender_id JOIN users ru ON ru.id=m.receiver_id
+          WHERE (m.sender_id=$1 AND m.receiver_id=$2) OR (m.sender_id=$2 AND m.receiver_id=$1)
+          ORDER BY m.created_at ASC LIMIT 200`,[req.session.userId,other]);
+        await pool.query(`UPDATE messages SET is_read=true WHERE receiver_id=$1 AND sender_id=$2`,[req.session.userId,other]);
+        res.json({messages:r.rows});
+    }catch(err){console.error('Conversation error:',err);res.status(500).json({error:'Failed to load conversation'});}
 });
 
-app.post('/api/messages', requireAuth, upload.single('chat_file'), async (req, res) => {
-    const { message } = req.body;
-
-    if (!message && !req.file) {
-        return res.status(400).json({ error: 'Message or file required' });
-    }
-
-    try {
-        let filePath = null;
-        if (req.file) {
-            filePath = req.file.filename;
-        }
-
-        const result = await pool.query(
-            'INSERT INTO messages (user_id, username, message, file_path) VALUES ($1, $2, $3, $4) RETURNING *',
-            [req.session.userId, req.session.username, message || '', filePath]
-        );
-
-        const newMessage = result.rows[0];
-        io.emit('receive message', newMessage);
-        res.status(201).json(newMessage);
-    } catch (err) {
-        console.error('Error saving message:', err);
-        res.status(500).json({ error: 'Database error' });
-    }
+app.post('/api/messages', requireAuth, upload.single('chat_file'), async(req,res)=>{
+    const {message,receiver_id,product_id,offer_amount}=req.body; const receiver=Number(receiver_id), product=product_id?Number(product_id):null;
+    if(!receiver||receiver===req.session.userId)return res.status(400).json({error:'A valid receiver is required'});
+    if(!message && !req.file && !offer_amount)return res.status(400).json({error:'Message is required'});
+    try{
+        const user=await pool.query('SELECT id FROM users WHERE id=$1',[receiver]); if(!user.rows.length)return res.status(404).json({error:'Receiver not found'});
+        const file=req.file?[uploadedUrl(req.file)]:null;
+        const r=await pool.query(`INSERT INTO messages(sender_id,receiver_id,product_id,message,offer_amount,file_paths,is_read) VALUES($1,$2,$3,$4,$5,$6,false) RETURNING *`,[req.session.userId,receiver,product||null,message||'',offer_amount?Number(offer_amount):null,file]);
+        const msg=r.rows[0]; io.to(`user:${receiver}`).emit('private message',msg); io.to(`user:${req.session.userId}`).emit('private message',msg); res.status(201).json({success:true,message:msg});
+    }catch(err){console.error('Send message error:',err);res.status(500).json({error:'Failed to send message'});}
 });
+
+app.patch('/api/messages/:id/read',requireAuth,async(req,res)=>{try{const r=await pool.query('UPDATE messages SET is_read=true WHERE id=$1 AND receiver_id=$2 RETURNING id',[req.params.id,req.session.userId]);res.json({success:true,updated:!!r.rows.length});}catch(err){res.status(500).json({error:'Failed to mark message read'});}});
 
 // ============== ADMIN ROUTES ==============
 app.get('/api/admin/stats', requireAuth, requireAdmin, async (req, res) => {
@@ -1529,68 +1460,13 @@ app.get('/api/online-users', requireAuth, (req, res) => {
 });
 
 // ============== SOCKET.IO ==============
-io.use((socket, next) => {
-    const session = socket.request.session;
-    if (session && session.userId) {
-        socket.userId = session.userId;
-        socket.username = session.username;
-        socket.join(`user:${socket.userId}`);
-        next();
-    } else {
-        next(new Error('Unauthorized'));
-    }
-});
-
-io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.username}`);
-
-    onlineUsers.set(socket.username, { userId: socket.userId, socketId: socket.id });
-    io.emit('online users', Array.from(onlineUsers.keys()).map(u => ({ username: u, status: 'online' })));
-
-    // Send recent messages
-    pool.query(`
-    SELECT m.*, u.profile_pic 
-    FROM messages m 
-    LEFT JOIN users u ON m.user_id = u.id 
-    ORDER BY m.timestamp DESC LIMIT 50
-    `)
-        .then(result => {
-            socket.emit('previous messages', result.rows.reverse());
-        })
-        .catch(err => console.error('Error sending previous messages:', err));
-
-    socket.on('send message', async (data) => {
-        const { message } = data;
-        if (!message) return;
-
-        try {
-            const result = await pool.query(
-                `INSERT INTO messages (user_id, username, message) 
-             VALUES ($1, $2, $3) 
-             RETURNING *, 
-                (SELECT profile_pic FROM users WHERE id = $1) AS profile_pic`,
-                [socket.userId, socket.username, message]
-            );
-            io.emit('receive message', result.rows[0]);
-        } catch (err) {
-            console.error('Error saving message:', err);
-            socket.emit('error', 'Failed to save message');
-        }
-    });
-
-    socket.on('typing', () => {
-        socket.broadcast.emit('user typing', socket.username);
-    });
-
-    socket.on('stop typing', () => {
-        socket.broadcast.emit('stop typing');
-    });
-
-    socket.on('disconnect', () => {
-        console.log(`User disconnected: ${socket.username}`);
-        onlineUsers.delete(socket.username);
-        io.emit('online users', Array.from(onlineUsers.keys()).map(u => ({ username: u, status: 'online' })));
-    });
+io.use((socket,next)=>{const session=socket.request.session;if(session?.userId){socket.userId=session.userId;socket.username=session.username;socket.join(`user:${socket.userId}`);next();}else next(new Error('Unauthorized'));});
+io.on('connection',socket=>{
+    console.log(`User connected: ${socket.username}`); onlineUsers.set(socket.username,{userId:socket.userId,socketId:socket.id});
+    io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({username,status:'online'})));
+    socket.on('typing',data=>{if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('typing',{userId:socket.userId,username:socket.username});});
+    socket.on('stop typing',data=>{if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('stop typing',{userId:socket.userId});});
+    socket.on('disconnect',()=>{console.log(`User disconnected: ${socket.username}`);onlineUsers.delete(socket.username);io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({username,status:'online'})));});
 });
 
 // ============== FRONTEND ROUTES ==============

@@ -132,64 +132,64 @@ a{text-decoration:none;color:inherit}
         </div>
     </main>
 </div>
+
 <script>
-const p=document.getElementById("password");
-document.getElementById("toggle").onclick=()=>p.type=p.type==="password"?"text":"password";
+    const messageInput = document.getElementById('message');
+    const p = document.getElementById("password");
+    document.getElementById("toggle").onclick = () => p.type = p.type === "password" ? "text" : "password";
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const identifier = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            errorMessage.classList.remove('show');
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Corrected element IDs to match the HTML
+        const identifier = document.getElementById('identifier').value.trim();
+        const password = document.getElementById('password').value;
+        const loginBtn = e.target.querySelector('button[type="submit"]');
+        
+        messageInput.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
 
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier, password }),
-                    credentials: 'include'
-                });
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier, password }),
+                credentials: 'include'
+            });
 
-                const data = await response.json();
+            const data = await response.json();
 
-                if (response.ok) {
-                    window.location.href = '/homepage.html';
-                } else {
-                    errorText.textContent = data.error || 'Login failed';
-                    errorMessage.classList.add('show');
-                }
-            } catch (error) {
-                errorText.textContent = 'An error occurred. Please try again.';
-                errorMessage.classList.add('show');
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            if (response.ok) {
+                window.location.href = '/homepage.html';
+            } else {
+                messageInput.style.display = 'block';
+                messageInput.innerHTML = data.error || 'Login failed';
             }
-        });
-
-        // Check if already logged in
-        async function checkAuth() {
-            try {
-                const response = await fetch('/api/check-auth', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (data.authenticated) {
-                    window.location.href = '/homepage.html';
-                }
-            } catch (error) {
-                // Not authenticated, stay on login page
-                console.error('Login failed');
-            }
+        } catch (error) {
+            messageInput.style.display = 'block';
+            messageInput.innerHTML = 'An error occurred. Please try again.';
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'Ingia';
         }
-        checkAuth();
+    });
+
+    // Check if already logged in
+    async function checkAuth() {
+        try {
+            const response = await fetch('/api/check-auth', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.authenticated) {
+                window.location.href = '/homepage.html';
+            }
+        } catch (error) {
+            console.error('Login failed');
+        }
+    }
+    checkAuth();
 </script>
 </body>
 </html>

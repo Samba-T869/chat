@@ -105,6 +105,21 @@ const initDb = async () => {
 
         console.log('✅ Products table ready');
 
+        // Compatibility migrations for older Waudhao databases.
+        await client.query(`
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS location VARCHAR(150);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(20);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS call_number VARCHAR(20);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS media_path TEXT[];
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active';
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+        `);
+        await client.query(`UPDATE products SET location=COALESCE(location,'Not specified'), whatsapp=COALESCE(whatsapp,'Not specified'), call_number=COALESCE(call_number,'Not specified') WHERE location IS NULL OR whatsapp IS NULL OR call_number IS NULL`);
+        await client.query(`ALTER TABLE products ALTER COLUMN location SET NOT NULL`);
+        await client.query(`ALTER TABLE products ALTER COLUMN whatsapp SET NOT NULL`);
+        await client.query(`ALTER TABLE products ALTER COLUMN call_number SET NOT NULL`);
+
         await client.query(`
             CREATE TABLE IF NOT EXISTS messages (
                 id SERIAL PRIMARY KEY,
@@ -130,6 +145,21 @@ const initDb = async () => {
             ADD COLUMN IF NOT EXISTS file_path VARCHAR(255);
         `);
 
+        await client.query(`
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS sender_id INTEGER;
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS receiver_id INTEGER;
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS product_id INTEGER;
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS message TEXT;
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(20) DEFAULT 'text';
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS offer_amount NUMERIC(12,2);
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS file_paths TEXT[];
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE;
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+        `);
+        // Older versions used `timestamp`; the dashboard now consistently uses created_at.
+        await client.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS timestamp TIMESTAMP WITH TIME ZONE`);
+        await client.query(`UPDATE messages SET created_at=COALESCE(created_at,timestamp,CURRENT_TIMESTAMP) WHERE created_at IS NULL`);
+
         const messageForeignKey = await client.query(`
             SELECT 1
             FROM pg_constraint
@@ -148,6 +178,13 @@ const initDb = async () => {
             `);
         }
 
+
+        for (const [name, column] of [['messages_sender_id_fkey','sender_id'],['messages_receiver_id_fkey','receiver_id']]) {
+            const fk = await client.query(`SELECT 1 FROM pg_constraint WHERE conname=$1 AND conrelid='messages'::regclass`, [name]);
+            if (!fk.rows.length) {
+                await client.query(`ALTER TABLE messages ADD CONSTRAINT ${name} FOREIGN KEY (${column}) REFERENCES users(id) ON DELETE CASCADE`);
+            }
+        }
         console.log('✅ Messages table ready');
 
         await client.query(`
