@@ -26,7 +26,7 @@ dotenv.config();
 const PALMPESA_BASE_URL = process.env.PALMPESA_BASE_URL || 'https://palmpesa.drmlelwa.co.tz';
 const PALMPESA_API_TOKEN = process.env.PALMPESA_API_TOKEN;
 const PALMPESA_DEFAULT_ADDRESS = process.env.PALMPESA_DEFAULT_ADDRESS || 'Tanzania';
-const PALMPESA_DEFAULT_POSTCODE = process.env.PALMPESA_DEFAULT_POSTCODE;
+const PALMPESA_DEFAULT_POSTCODE = process.env.PALMPESA_DEFAULT_POSTCODE || '00000';
 
 const requirePalmPesaConfig = () => {
     if (!PALMPESA_API_TOKEN) {
@@ -164,7 +164,9 @@ const sessionMiddleware = session({
 });
 
 app.use(sessionMiddleware);
-io.engine.use(sessionMiddleware);
+
+const wrap = middleware => (socket, next) => middleware(socket.request, {}, next);
+io.use(wrap(sessionMiddleware));
 
 // ============== FILE UPLOAD SETUP ==============
 const s3 = new S3Client({
@@ -906,7 +908,7 @@ app.post('/api/subscription/create', requireAuth, async (req, res) => {
 
         try {
             // Ensure the name string has at least two words to satisfy PalmPesa validation rules
-            let formattedName = String(user.username || 'Valued Customer').trim();
+            let formattedName = String(user.fullname || 'Valued Customer').trim();
             if (!formattedName.includes(' ')) {
                 formattedName = `${formattedName} Customer`; // Append a second word if missing
             }
@@ -924,6 +926,10 @@ app.post('/api/subscription/create', requireAuth, async (req, res) => {
                     callback_url: process.env.PALMPESA_CALLBACK_URL
                 })
             });
+
+            if (!paymentData || paymentData.status === 'error' || paymentData.success === false) {
+                throw new Error(paymentData?.message || paymentData?.error || 'PalmPesa rejection');
+            }
 
             const orderId =
                 paymentData?.order_id ||
@@ -1013,6 +1019,8 @@ app.post('/api/payment/webhook', async (req, res) => {
             return res.status(400).json({ error: 'Missing PalmPesa order_id' });
         }
 
+        const callbackReference = callback?.transaction_id || callback?.reference || callback?.data?.transaction_id;
+
         const subResult = await pool.query(
             `SELECT id, user_id, status
              FROM subscriptions
@@ -1020,7 +1028,7 @@ app.post('/api/payment/webhook', async (req, res) => {
                 OR payment_reference = $2
              ORDER BY created_at DESC
              LIMIT 1`,
-            [callbackOrderId, callbackOrderId]
+            [callbackOrderId, callbackReference || callbackOrderId]
         );
 
         if (subResult.rows.length === 0) {
@@ -1216,45 +1224,128 @@ app.put('/api/products/:id', requireAuth, upload.array('product_image',6), async
 app.delete('/api/products/:id', requireAuth, async(req,res)=>{try{const r=await pool.query('DELETE FROM products WHERE id=$1 AND user_id=$2 RETURNING id',[req.params.id,req.session.userId]);if(!r.rows.length)return res.status(404).json({error:'Product not found'});await logActivity(req.session.userId,req.session.username,'product_deleted',`Product ID: ${req.params.id}`,getClientIP(req));res.json({success:true});}catch(err){console.error('Delete product error:',err);res.status(500).json({error:'Delete failed'});}});
 
 // ============== PRIVATE MESSAGES ==============
-app.get('/api/messages/inbox', requireAuth, async(req,res)=>{
-    try{
-        const r=await pool.query(`WITH ranked AS (
-          SELECT m.*, ROW_NUMBER() OVER(PARTITION BY LEAST(sender_id,receiver_id),GREATEST(sender_id,receiver_id),COALESCE(product_id,0) ORDER BY created_at DESC) rn
-          FROM messages m WHERE m.sender_id=$1 OR m.receiver_id=$1
-        ) SELECT r.id,r.sender_id,r.receiver_id,r.product_id,r.message,r.message_type,r.offer_amount,r.file_paths,r.is_read,r.created_at,
-                 u.id AS partner_id,u.username AS partner_username,u.profile_pic AS partner_profile,
-                 p.title AS product_title,p.media_path AS product_media
-          FROM ranked r LEFT JOIN users u ON u.id=CASE WHEN r.sender_id=$1 THEN r.receiver_id ELSE r.sender_id END
-          LEFT JOIN products p ON p.id=r.product_id WHERE r.rn=1 ORDER BY r.created_at DESC`,[req.session.userId]);
-        res.json({conversations:r.rows});
-    }catch(err){console.error('Inbox error:',err);res.status(500).json({error:'Failed to load inbox'});}
-});
-
-app.get('/api/messages/conversation/:userId', requireAuth, async(req,res)=>{
-    const other=Number(req.params.userId); if(!other||other===req.session.userId)return res.status(400).json({error:'Invalid conversation'});
-    try{
-        const r=await pool.query(`SELECT m.*,su.username sender_username,ru.username receiver_username
-          FROM messages m JOIN users su ON su.id=m.sender_id JOIN users ru ON ru.id=m.receiver_id
-          WHERE (m.sender_id=$1 AND m.receiver_id=$2) OR (m.sender_id=$2 AND m.receiver_id=$1)
-          ORDER BY m.created_at ASC LIMIT 200`,[req.session.userId,other]);
-        await pool.query(`UPDATE messages SET is_read=true WHERE receiver_id=$1 AND sender_id=$2`,[req.session.userId,other]);
-        res.json({messages:r.rows});
-    }catch(err){console.error('Conversation error:',err);res.status(500).json({error:'Failed to load conversation'});}
-});
-
-app.post('/api/messages', requireAuth, upload.single('chat_file'), async(req,res)=>{
-    const {message,receiver_id,product_id,offer_amount}=req.body; const receiver=Number(receiver_id), product=product_id?Number(product_id):null;
-    if(!receiver||receiver===req.session.userId)return res.status(400).json({error:'A valid receiver is required'});
-    if(!message && !req.file && !offer_amount)return res.status(400).json({error:'Message is required'});
-    try{
-        const user=await pool.query('SELECT id FROM users WHERE id=$1',[receiver]); if(!user.rows.length)return res.status(404).json({error:'Receiver not found'});
-        const file=req.file?[uploadedUrl(req.file)]:null;
-        const r=await pool.query(`INSERT INTO messages(sender_id,receiver_id,product_id,message,offer_amount,file_paths,is_read) VALUES($1,$2,$3,$4,$5,$6,false) RETURNING *`,[req.session.userId,receiver,product||null,message||'',offer_amount?Number(offer_amount):null,file]);
-        const msg=r.rows[0]; io.to(`user:${receiver}`).emit('private message',msg); io.to(`user:${req.session.userId}`).emit('private message',msg); res.status(201).json({success:true,message:msg});
-    }catch(err){console.error('Send message error:',err);res.status(500).json({error:'Failed to send message'});}
-});
-
 app.patch('/api/messages/:id/read',requireAuth,async(req,res)=>{try{const r=await pool.query('UPDATE messages SET is_read=true WHERE id=$1 AND receiver_id=$2 RETURNING id',[req.params.id,req.session.userId]);res.json({success:true,updated:!!r.rows.length});}catch(err){res.status(500).json({error:'Failed to mark message read'});}});
+
+// 1. Fetch User Inbox / Conversations
+app.get('/api/messages/inbox', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const query = `
+            SELECT DISTINCT ON (partner_id)
+                partner_id,
+                u.username AS partner_username,
+                u.profile_pic AS partner_profile_pic,
+                u.is_verified,
+                m.product_id,
+                p.title AS product_title,
+                m.message,
+                m.created_at,
+                m.is_read,
+                m.receiver_id
+            FROM (
+                SELECT 
+                    CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END AS partner_id,
+                    id
+                FROM messages
+                WHERE sender_id = $1 OR receiver_id = $1
+            ) sub
+            JOIN messages m ON sub.id = m.id
+            JOIN users u ON u.id = sub.partner_id
+            LEFT JOIN products p ON p.id = m.product_id
+            ORDER BY partner_id, m.created_at DESC;
+        `;
+        const result = await pool.query(query, [userId]);
+        res.json({ conversations: result.rows });
+    } catch (err) {
+        console.error('Inbox retrieval error:', err);
+        res.status(500).json({ error: 'Failed to fetch conversations' });
+    }
+});
+
+// 2. Fetch Conversation Messages
+app.get('/api/messages/conversation/:partnerId', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const partnerId = parseInt(req.params.partnerId, 10);
+
+        // Fetch Partner Info
+        const partnerRes = await pool.query(
+            'SELECT id, username, fullname, profile_pic, phone FROM users WHERE id = $1',
+            [partnerId]
+        );
+
+        if (partnerRes.rows.length === 0) {
+            return res.status(404).json({ error: 'Partner not found' });
+        }
+
+        // Mark incoming messages as read
+        await pool.query(
+            'UPDATE messages SET is_read = TRUE WHERE sender_id = $1 AND receiver_id = $2',
+            [partnerId, userId]
+        );
+
+        // Fetch Messages
+        const msgRes = await pool.query(
+            `SELECT * FROM messages 
+             WHERE (sender_id = $1 AND receiver_id = $2) 
+                OR (sender_id = $2 AND receiver_id = $1)
+             ORDER BY created_at ASC`,
+            [userId, partnerId]
+        );
+
+        res.json({
+            partner: partnerRes.rows[0],
+            messages: msgRes.rows
+        });
+    } catch (err) {
+        console.error('Conversation fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch conversation thread' });
+    }
+});
+
+// 3. Post Message (Supports Text, Offers, and File Uploads)
+app.post('/api/messages', requireAuth, upload.array('chat_file', 5), async (req, res) => {
+    try {
+        const senderId = req.session.userId;
+        const { receiver_id, product_id, message, message_type, offer_amount } = req.body;
+
+        if (!receiver_id) {
+            return res.status(400).json({ error: 'Receiver ID is required' });
+        }
+
+        let filePaths = [];
+        if (req.files && req.files.length > 0) {
+            filePaths = req.files.map(f => uploadedUrl(f));
+        }
+
+        const insertQuery = `
+            INSERT INTO messages (sender_id, receiver_id, product_id, message, message_type, offer_amount, file_paths)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *;
+        `;
+
+        const values = [
+            senderId,
+            parseInt(receiver_id, 10),
+            product_id ? parseInt(product_id, 10) : null,
+            message || '',
+            message_type || 'text',
+            offer_amount ? parseFloat(offer_amount) : null,
+            filePaths.length > 0 ? filePaths : null
+        ];
+
+        const result = await pool.query(insertQuery, values);
+        const newMessage = result.rows[0];
+
+        // Emit real-time notification via Socket.IO
+        io.to(`user:${receiver_id}`).emit('new_message', newMessage);
+
+        res.status(201).json({ success: true, message: newMessage });
+    } catch (err) {
+        console.error('Message post error:', err);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
 
 // ============== ADMIN ROUTES ==============
 app.get('/api/admin/stats', requireAuth, requireAdmin, async (req, res) => {
@@ -1460,13 +1551,38 @@ app.get('/api/online-users', requireAuth, (req, res) => {
 });
 
 // ============== SOCKET.IO ==============
-io.use((socket,next)=>{const session=socket.request.session;if(session?.userId){socket.userId=session.userId;socket.username=session.username;socket.join(`user:${socket.userId}`);next();}else next(new Error('Unauthorized'));});
+io.use((socket,next)=>{
+    const session=socket.request.session;
+    if(session && session.userId){
+        socket.userId=session.userId;
+        socket.username=session.username;
+        socket.join(`user:${socket.userId}`);
+        next();
+    }
+
+    return next(new Error('Unauthorized'));
+});
+
 io.on('connection',socket=>{
-    console.log(`User connected: ${socket.username}`); onlineUsers.set(socket.username,{userId:socket.userId,socketId:socket.id});
-    io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({username,status:'online'})));
-    socket.on('typing',data=>{if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('typing',{userId:socket.userId,username:socket.username});});
-    socket.on('stop typing',data=>{if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('stop typing',{userId:socket.userId});});
-    socket.on('disconnect',()=>{console.log(`User disconnected: ${socket.username}`);onlineUsers.delete(socket.username);io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({username,status:'online'})));});
+    console.log(`User connected: ${socket.username}`);
+    onlineUsers.set(socket.username,{
+        userId:socket.userId,socketId:socket.id
+    });
+
+    io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({
+        username,status:'online'})));
+
+    socket.on('typing',data=>{
+        if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('typing',{userId:socket.userId,username:socket.username});
+    });
+
+    socket.on('stop typing',data=>{
+        if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('stop typing',{userId:socket.userId});
+    });
+    socket.on('disconnect',()=>{
+        console.log(`User disconnected: ${socket.username}`);
+        onlineUsers.delete(socket.username);io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({username,status:'online'})));
+    });
 });
 
 // ============== FRONTEND ROUTES ==============
@@ -1487,7 +1603,7 @@ app.get('/mydashboard.html', requireAuth, async (req, res) => {
         
         res.sendFile(path.join(__dirname, 'public', 'mydashboard.html'));
     } catch (err) {
-        res.redirect('/login.html');
+        res.redirect('/homepage.html');
     }
 });
 

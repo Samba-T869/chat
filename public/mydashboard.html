@@ -165,9 +165,53 @@ async function loadProfile(){
   }
 }
 
-$('profilePic').onchange=async function(){const f=this.files?.[0];if(!f||!f.type.startsWith('image/')){toast('Chagua picha halali.');return;}const fd=new FormData();fd.append('profile_pic',f);try{const d=await api('/api/user/profile',{method:'PUT',body:fd});currentUser=d.user;renderUser();$('picLabel').textContent='Badilisha Picha ya Profile';toast('Picha ya profile imehifadhiwa.');}catch(e){toast(e.message);}this.value='';};
-$('passwordForm').onsubmit=async e=>{e.preventDefault();if($('newPass').value.length<8)return toast('Nenosiri jipya liwe na angalau herufi 8.');if($('newPass').value!==$('confirmPass').value)return toast('Nenosiri jipya mbili hazifanani.');try{await api('/api/user/password',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password:$('oldPass').value,new_password:$('newPass').value})});e.target.reset();toast('Nenosiri limebadilishwa kikamilifu.');}catch(err){toast(err.message);}};
-async function logout(){try{await api('/api/logout',{method:'POST'});window.location.href='/login.html';}catch(e){toast(e.message);}}
+$('profilePic').onchange=async function(){
+  const f=this.files?.[0];if(!f||!f.type.startsWith('image/')){
+    toast('Chagua picha halali.');
+    return;
+  }
+  
+  const fd=new FormData();
+  fd.append('profile_pic',f);
+  try{
+    const d=await api('/api/user/profile',{
+      method:'PUT',
+      body:fd
+    });
+    
+    currentUser=d.user;renderUser();
+    $('picLabel').textContent='Badilisha Picha ya Profile';
+    toast('Picha ya profile imehifadhiwa.');
+  }catch(e){
+    toast(e.message);
+  }this.value='';
+};
+
+$('passwordForm').onsubmit=async e=>{
+  e.preventDefault();
+  if($('newPass').value.length<8)return toast('Nenosiri jipya liwe na angalau herufi 8.');
+  if($('newPass').value!==$('confirmPass').value)return toast('Nenosiri jipya mbili hazifanani.');
+  try{
+    await api('/api/user/password',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({current_password:$('oldPass').value,new_password:$('newPass').value})
+    });
+    
+    e.target.reset();
+    toast('Nenosiri limebadilishwa kikamilifu.');
+  }catch(err){
+    toast(err.message);
+  }
+};
+
+async function logout(){
+  try{await api('/api/logout',{method:'POST'});
+    window.location.href='/homepage.html';
+  }catch(e){
+    toast(e.message);
+  }
+}
 $('side').querySelector('.logout').onclick=logout;
 
 async function boot(){

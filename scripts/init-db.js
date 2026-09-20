@@ -120,6 +120,7 @@ const initDb = async () => {
         await client.query(`ALTER TABLE products ALTER COLUMN whatsapp SET NOT NULL`);
         await client.query(`ALTER TABLE products ALTER COLUMN call_number SET NOT NULL`);
 
+
         await client.query(`
             CREATE TABLE IF NOT EXISTS messages (
                 id SERIAL PRIMARY KEY,
@@ -127,64 +128,14 @@ const initDb = async () => {
                 receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
                 message TEXT,
-                message_type VARCHAR(20) DEFAULT 'text', -- 'text', 'offer', 'image', 'system'
-                offer_amount NUMERIC(12, 2),             -- Stores custom price offers made in chat.html
-                file_paths TEXT[],                       -- Stores multiple file/image attachments
+                message_type VARCHAR(20) DEFAULT 'text',
+                offer_amount NUMERIC(12, 2),
+                file_paths TEXT[],
                 is_read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
 
-        await client.query(`
-            ALTER TABLE messages
-            ADD COLUMN IF NOT EXISTS user_id INTEGER;
-        `);
-
-        await client.query(`
-            ALTER TABLE messages
-            ADD COLUMN IF NOT EXISTS file_path VARCHAR(255);
-        `);
-
-        await client.query(`
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS sender_id INTEGER;
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS receiver_id INTEGER;
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS product_id INTEGER;
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS message TEXT;
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS message_type VARCHAR(20) DEFAULT 'text';
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS offer_amount NUMERIC(12,2);
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS file_paths TEXT[];
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE;
-            ALTER TABLE messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
-        `);
-        // Older versions used `timestamp`; the dashboard now consistently uses created_at.
-        await client.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS timestamp TIMESTAMP WITH TIME ZONE`);
-        await client.query(`UPDATE messages SET created_at=COALESCE(created_at,timestamp,CURRENT_TIMESTAMP) WHERE created_at IS NULL`);
-
-        const messageForeignKey = await client.query(`
-            SELECT 1
-            FROM pg_constraint
-            WHERE conname = 'messages_user_id_fkey'
-              AND conrelid = 'messages'::regclass
-            LIMIT 1;
-        `);
-
-        if (messageForeignKey.rows.length === 0) {
-            await client.query(`
-                ALTER TABLE messages
-                ADD CONSTRAINT messages_user_id_fkey
-                FOREIGN KEY (user_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE;
-            `);
-        }
-
-
-        for (const [name, column] of [['messages_sender_id_fkey','sender_id'],['messages_receiver_id_fkey','receiver_id']]) {
-            const fk = await client.query(`SELECT 1 FROM pg_constraint WHERE conname=$1 AND conrelid='messages'::regclass`, [name]);
-            if (!fk.rows.length) {
-                await client.query(`ALTER TABLE messages ADD CONSTRAINT ${name} FOREIGN KEY (${column}) REFERENCES users(id) ON DELETE CASCADE`);
-            }
-        }
         console.log('✅ Messages table ready');
 
         await client.query(`
@@ -207,19 +158,7 @@ const initDb = async () => {
          * INDEXES
          * ========================================================
          */
-
         await client.query(`
-            CREATE INDEX IF NOT EXISTS idx_messages_created_at
-            ON messages(created_at DESC);
-        `);
-
-        await client.query(`
-            CREATE INDEX IF NOT EXISTS idx_messages_user_id
-            ON messages(user_id);
-        `);
-
-        await client.query(`
-            -- Indexing for performance when querying conversation threads
             CREATE INDEX IF NOT EXISTS idx_messages_conversation 
             ON messages (sender_id, receiver_id, product_id);
         `);

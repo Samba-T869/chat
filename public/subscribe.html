@@ -495,10 +495,9 @@
 
       <nav class="nav-links" id="navLinks">
         <a href="homepage.html" class="active"><i class="fas fa-home"></i> Nyumbani</a>
-        <a href="#matangazo">🏷️ Matangazo</a>
-        <a href="#categories">▦ Kategoria</a>
+        <a href="market.html"><i class="fas fa-tag"></i> Sokoni</a>
         <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
-        <a href="#footer">✉ Wasiliana Nasi</a>
+        <a href="mydashboard.html"> Dashibodi</a>
       </nav>
 
       <div class="nav-actions">
@@ -605,7 +604,7 @@
                     <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
                   </linearGradient>
                 </defs>
-                <!-- Icon: Isometric "W" Box -->
+                <!-- Icon:-->
                 <g transform="translate(25, 20)">
                   <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
                   <circle cx="81" cy="25" r="5" fill="#db2777" />
@@ -630,8 +629,8 @@
           <h3>Kurasa</h3>
           <ul>
             <li><a href="homepage.html">Nyumbani</a></li>
-            <li><a href="homepage.html#matangazo">Matangazo</a></li>
-            <li><a href="homepage.html#categories">Kategoria</a></li>
+            <li><a href="market.html">Sokoni</a></li>
+            <li><a href="chat.html">Chat</a></li>
             <li><a href="homepage.html#kuhusu">Kuhusu Sisi</a></li>
           </ul>
         </div>
@@ -851,7 +850,7 @@
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       try {
         await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-        window.location.href = 'login.html';
+        window.location.href = 'homepage.html';
       } catch (error) {
         console.error('Logout error:', error);
       }

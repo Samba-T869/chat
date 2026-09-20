@@ -144,6 +144,13 @@
       border-radius: 50%;
       border: 2px solid var(--primary);
       object-fit: cover;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: var(--white);
+      font-weight: 800;
+      font-size: 14px;
+      overflow: hidden;
     }
 
     .user-info {
@@ -319,6 +326,13 @@
       height: 48px;
       border-radius: 50%;
       object-fit: cover;
+      display: grid;
+      place-items: center;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 16px;
+      overflow: hidden;
     }
 
     .online-indicator {
@@ -465,6 +479,13 @@
       height: 44px;
       border-radius: 50%;
       object-fit: cover;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: white;
+      font-weight: 800;
+      font-size: 16px;
+      overflow: hidden;
     }
 
     .active-meta h2 {
@@ -534,6 +555,7 @@
       border-radius: 8px;
       object-fit: cover;
       border: 1px solid var(--border);
+      background: #edf2f7;
     }
 
     .product-info-text {
@@ -941,6 +963,9 @@
       border-color: var(--primary);
     }
 
+    /* Hidden File Input */
+    #chatFileInput { display: none; }
+
     @media (max-width: 868px) {
       .chat-container { padding: 0; height: calc(100vh - 68px); }
       .chat-card { border-radius: 0; border: 0; }
@@ -996,11 +1021,11 @@
         </nav>
 
         <div class="nav-actions">
-          <div class="user-profile">
-            <img class="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Mtumiaji Profile">
+          <div class="user-profile" id="userProfileNav">
+            <div id="currentUserAvatar" class="user-avatar">U</div>
             <div class="user-info">
-              <span class="user-name">Amina Juma</span>
-              <span style="font-size: 11px; color: var(--muted);">Mnunuzi</span>
+              <span class="user-name" id="currentUserName">Mtumiaji</span>
+              <span style="font-size: 11px; color: var(--muted);" id="currentUserRole">Akaunti</span>
             </div>
           </div>
         </div>
@@ -1017,7 +1042,7 @@
               <div class="sidebar-title">
                 <i class="fas fa-comments" style="color: var(--primary);"></i> Mazungumzo
               </div>
-              <button class="tool-btn" title="Ujumbe Mpya"><i class="fas fa-edit"></i></button>
+              <button class="tool-btn" title="Ujumbe Mpya" onclick="location.href='homepage.html'"><i class="fas fa-edit"></i></button>
             </div>
 
             <div class="search-box">
@@ -1046,23 +1071,21 @@
                 <i class="fas fa-arrow-left"></i>
               </button>
               <div class="avatar-wrapper">
-                <img id="activeAvatar" class="active-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" alt="Muuzaji">
+                <div id="activeAvatar" class="active-avatar">U</div>
                 <div class="online-indicator"></div>
               </div>
               <div class="active-meta">
                 <h2 id="activeName">
-                  Juma Gadgets 
-                  <i class="fas fa-check-circle verified-badge" title="Muuzaji Aliethibitishwa"></i>
-                  <span class="seller-label">Muuzaji</span>
+                  Mtumiaji
                 </h2>
-                <div class="active-status">
+                <div class="active-status" id="activeStatus">
                   <i class="fas fa-circle" style="font-size: 8px;"></i> Yupo Hewani (Online)
                 </div>
               </div>
             </div>
 
             <div class="header-actions">
-              <a href="tel:+255710000000" class="action-icon-btn" title="Piga Simu"><i class="fas fa-phone"></i></a>
+              <a href="#" id="callSellerBtn" class="action-icon-btn" title="Piga Simu"><i class="fas fa-phone"></i></a>
               <button class="action-icon-btn" title="Hifadhi Seller"><i class="far fa-star"></i></button>
               <button class="action-icon-btn" title="Chaguo zaidi"><i class="fas fa-ellipsis-v"></i></button>
             </div>
@@ -1071,10 +1094,10 @@
           <!-- Product Banner Snippet -->
           <div class="product-context-banner" id="productBanner">
             <div class="product-thumb-details">
-              <img id="productThumb" class="product-thumb" src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&q=80&w=200" alt="Product Image">
+              <img id="productThumb" class="product-thumb" src="data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22200%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23edf2f7%22%2F%3E%3C%2Fsvg%3E" alt="Product Image">
               <div class="product-info-text">
-                <div class="product-title" id="productTitle">iPhone 13 Pro 256GB - Condition Mpya</div>
-                <div class="product-price" id="productPrice">TZS 1,850,000</div>
+                <div class="product-title" id="productTitle">Inapakia Bidhaa...</div>
+                <div class="product-price" id="productPrice">TZS 0</div>
               </div>
             </div>
 
@@ -1105,6 +1128,7 @@
 
             <form class="input-form" id="chatForm" onsubmit="handleSendMessage(event)">
               <div class="input-tools">
+                <input type="file" id="chatFileInput" accept="image/*" onchange="handleFileSelected(event)">
                 <button type="button" class="tool-btn" title="Weka Picha/Faili" onclick="triggerFileUpload()"><i class="fas fa-paperclip"></i></button>
                 <button type="button" class="tool-btn" title="Toa Offa ya Bei" onclick="openOfferModal()"><i class="fas fa-tag"></i></button>
               </div>
@@ -1133,7 +1157,7 @@
       </div>
 
       <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">
-        Muuzaji anauza bidhaa hii kwa <strong id="modalOriginalPrice">TZS 1,850,000</strong>. Weka kiasi unachopendekeza.
+        Muuzaji anauza bidhaa hii kwa <strong id="modalOriginalPrice">TZS 0</strong>. Weka kiasi unachopendekeza.
       </p>
 
       <div class="form-group">
@@ -1148,113 +1172,130 @@
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
+  
   <script>
-    // Mock Data for Conversations
-    const mockConversations = [
-      {
-        id: 'conv1',
-        name: 'Juma Gadgets',
-        isSeller: true,
-        isVerified: true,
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-        online: true,
-        unread: 1,
-        product: {
-          title: 'iPhone 13 Pro 256GB - Condition Mpya',
-          price: 'TZS 1,850,000',
-          rawPrice: 1850000,
-          thumb: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&q=80&w=200'
-        },
-        lastMessage: 'Ndiyo simu bado ipo, risiti na box vyote vipo.',
-        lastTime: '10:42 AM',
-        messages: [
-          { sender: 'received', text: 'Habari! Karibu Juma Gadgets. Unahitaji simu hii?', time: '10:30 AM' },
-          { sender: 'sent', text: 'Habari, bado ipo? Na inakuja na chaja yake ya original?', time: '10:35 AM' },
-          { sender: 'received', text: 'Ndiyo simu bado ipo, risiti na box vyote vipo na chaja yake original.', time: '10:42 AM' },
-          {
-            type: 'offer',
-            sender: 'received',
-            amount: 'TZS 1,800,000',
-            originalPrice: 'TZS 1,850,000',
-            status: 'pending',
-            time: '10:43 AM'
-          }
-        ]
-      },
-      {
-        id: 'conv2',
-        name: 'Kariakoo Auto Parts',
-        isSeller: true,
-        isVerified: true,
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
-        online: true,
-        unread: 0,
-        product: {
-          title: 'Taa za Mbele za Subaru Forester (2015)',
-          price: 'TZS 450,000',
-          rawPrice: 450000,
-          thumb: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=200'
-        },
-        lastMessage: 'Picha zaidi ziko tayari. Mzigo mpya kabisa.',
-        lastTime: 'Jana',
-        messages: [
-          { sender: 'sent', text: 'Hizi taa zinafaa Subaru 2015 XT?', time: 'Jana 3:15 PM' },
-          { sender: 'received', text: 'Ndiyo kaka, zinafaa sana. Zina LED DRL za asili.', time: 'Jana 3:20 PM' },
-          { sender: 'received', text: 'Picha zaidi ziko tayari. Mzigo mpya kabisa.', time: 'Jana 3:21 PM' }
-        ]
-      },
-      {
-        id: 'conv3',
-        name: 'Mama Mwajuma Boutique',
-        isSeller: true,
-        isVerified: false,
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
-        online: false,
-        unread: 0,
-        product: {
-          title: 'Gauni la Harusi/Sherehe (Size M)',
-          price: 'TZS 120,000',
-          rawPrice: 120000,
-          thumb: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=200'
-        },
-        lastMessage: 'Asante kwa kufanya manunuzi!',
-        lastTime: '12/09',
-        messages: [
-          { sender: 'sent', text: 'Habari, hili gauni lipo rangi nyekundu?', time: '12/09 11:00 AM' },
-          { sender: 'received', text: 'Ndiyo yapo rangi zote. Karibu duka letu Sinza.', time: '12/09 11:15 AM' }
-        ]
-      },
-      {
-        id: 'conv4',
-        name: 'Baraka Electronics',
-        isSeller: true,
-        isVerified: true,
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150',
-        online: true,
-        unread: 0,
-        product: {
-          title: 'Smart TV Samsung 55 Inch 4K UHD',
-          price: 'TZS 1,400,000',
-          rawPrice: 1400000,
-          thumb: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&q=80&w=200'
-        },
-        lastMessage: 'Tuna guarantee ya mwaka mmoja.',
-        lastTime: '08/09',
-        messages: [
-          { sender: 'sent', text: 'Televisheni hii ina warranty?', time: '08/09 09:00 AM' },
-          { sender: 'received', text: 'Ndiyo, tuna guarantee ya mwaka mmoja na delivery ni bure Mlimani City karibu.', time: '08/09 09:10 AM' }
-        ]
-      }
-    ];
-
-    let currentConvId = 'conv1';
+    const API_BASE = '';
+    let currentUser = null;
+    let conversations = [];
+    let currentPartnerId = null;
+    let currentProductId = null;
+    let activeProductData = null;
     let currentFilter = 'all';
+    let pollInterval = null;
 
-    // Initialize UI on DOM Ready
-    document.addEventListener('DOMContentLoaded', () => {
-      renderConversationsList();
-      loadActiveConversation(currentConvId);
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[x]));
+    }
+
+    function formatMoney(n) {
+      return 'TZS ' + new Intl.NumberFormat('en-TZ').format(Number(n || 0));
+    }
+
+    function formatTimeStr(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function apiCall(endpoint, options = {}) {
+      try {
+        const res = await fetch(API_BASE + endpoint, { credentials: 'include', ...options });
+        let data = {};
+        try { data = await res.json(); } catch(e) {}
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = 'login.html';
+            return null;
+          }
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
+        return data;
+      } catch (err) {
+        console.error('API Error:', err);
+        return null;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeChatApp();
     });
+
+    async function initializeChatApp() {
+      // 1. Authenticate user
+      const auth = await apiCall('/api/check-auth');
+      if (!auth || !auth.authenticated) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // 2. Load User Profile
+      const dash = await apiCall('/api/my/dashboard');
+      if (dash && dash.user) {
+        currentUser = dash.user;
+        document.getElementById('currentUserName').textContent = currentUser.fullname || currentUser.username;
+        document.getElementById('currentUserRole').textContent = currentUser.is_admin ? 'Admin' : 'Mtumiaji';
+        const avatarEl = document.getElementById('currentUserAvatar');
+        if (currentUser.profile_pic) {
+          avatarEl.innerHTML = `<img src="${esc(currentUser.profile_pic)}" class="user-avatar" alt="Avatar">`;
+        } else {
+          avatarEl.textContent = (currentUser.username || 'U').slice(0, 2).toUpperCase();
+        }
+      }
+
+      // Parse Query Params (e.g. chat.html?seller_id=2&product_id=5)
+      const urlParams = new URLSearchParams(window.location.search);
+      const querySeller = urlParams.get('seller_id') || urlParams.get('partner_id');
+      const queryProduct = urlParams.get('product_id');
+
+      if (querySeller) currentPartnerId = parseInt(querySeller);
+      if (queryProduct) currentProductId = parseInt(queryProduct);
+
+      // 3. Load Conversations
+      await fetchAndRenderConversations();
+
+      // Start Auto Polling
+      startPolling();
+    }
+
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
+        await fetchAndRenderConversations(true);
+        if (currentPartnerId) {
+          await loadActiveConversation(currentPartnerId, currentProductId, true);
+        }
+      }, 4000);
+    }
+
+    async function fetchAndRenderConversations(isBackground = false) {
+      const data = await apiCall('/api/messages/inbox');
+      if (!data) return;
+
+      conversations = data.conversations || [];
+
+      // If URL contained partner_id not yet in inbox list, synthesize temporary entry
+      if (currentPartnerId && !conversations.some(c => Number(c.partner_id) === currentPartnerId)) {
+        conversations.unshift({
+          partner_id: currentPartnerId,
+          partner_username: 'Muuzaji',
+          product_id: currentProductId,
+          product_title: 'Taarifa za Bidhaa',
+          message: 'Anza mazungumzo...',
+          created_at: new Date().toISOString(),
+          is_read: true,
+          is_seller: true,
+          is_verified: false
+        });
+      }
+
+      renderConversationsList();
+
+      if (!isBackground && conversations.length > 0 && !currentPartnerId) {
+        const first = conversations[0];
+        selectConversation(first.partner_id, first.product_id);
+      }
+    }
 
     function renderConversationsList() {
       const container = document.getElementById('conversationsList');
@@ -1262,14 +1303,14 @@
 
       const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
 
-      const filtered = mockConversations.filter(c => {
+      const filtered = conversations.filter(c => {
         const matchesFilter = 
           currentFilter === 'all' || 
-          (currentFilter === 'sellers' && c.isSeller) || 
-          (currentFilter === 'unread' && c.unread > 0);
+          (currentFilter === 'sellers' && (c.is_seller || c.is_verified)) || 
+          (currentFilter === 'unread' && !c.is_read && Number(c.receiver_id) === Number(currentUser?.id));
 
-        const matchesSearch = c.name.toLowerCase().includes(searchKeyword) || 
-                              c.product.title.toLowerCase().includes(searchKeyword);
+        const matchesSearch = (c.partner_username || '').toLowerCase().includes(searchKeyword) || 
+                              (c.product_title || '').toLowerCase().includes(searchKeyword);
 
         return matchesFilter && matchesSearch;
       });
@@ -1280,30 +1321,38 @@
       }
 
       filtered.forEach(conv => {
+        const isUnread = !conv.is_read && Number(conv.receiver_id) === Number(currentUser?.id);
+        const isActive = Number(conv.partner_id) === Number(currentPartnerId);
+
         const item = document.createElement('div');
-        item.className = `conversation-item ${conv.id === currentConvId ? 'active' : ''}`;
-        item.onclick = () => selectConversation(conv.id);
+        item.className = `conversation-item ${isActive ? 'active' : ''}`;
+        item.onclick = () => selectConversation(conv.partner_id, conv.product_id);
+
+        const initials = (conv.partner_username || 'U').slice(0, 2).toUpperCase();
+        const avatarMarkup = conv.partner_profile_pic 
+          ? `<img class="conv-avatar" src="${esc(conv.partner_profile_pic)}" alt="Avatar">`
+          : `<div class="conv-avatar">${initials}</div>`;
 
         item.innerHTML = `
           <div class="avatar-wrapper">
-            <img class="conv-avatar" src="${conv.avatar}" alt="${conv.name}">
-            ${conv.online ? '<div class="online-indicator"></div>' : ''}
+            ${avatarMarkup}
+            <div class="online-indicator"></div>
           </div>
           <div class="conv-details">
             <div class="conv-top-row">
               <div class="user-name-wrapper">
-                <span class="conv-name">${conv.name}</span>
-                ${conv.isVerified ? '<i class="fas fa-check-circle verified-badge" title="Muuzaji Aliethibitishwa"></i>' : ''}
-                ${conv.isSeller ? '<span class="seller-label">Muuzaji</span>' : ''}
+                <span class="conv-name">${esc(conv.partner_username || 'Mtumiaji')}</span>
+                ${conv.is_verified ? '<i class="fas fa-check-circle verified-badge" title="Muuzaji Aliethibitishwa"></i>' : ''}
+                <span class="seller-label">Muuzaji</span>
               </div>
-              <span class="conv-time">${conv.lastTime}</span>
+              <span class="conv-time">${formatTimeStr(conv.created_at)}</span>
             </div>
             <div class="conv-product-tag">
-              <i class="fas fa-box-open"></i> ${conv.product.title}
+              <i class="fas fa-box-open"></i> ${esc(conv.product_title || 'Jumla')}
             </div>
-            <div class="conv-last-msg ${conv.unread ? 'unread-msg' : ''}">
-              ${conv.unread ? `<span class="unread-counter">${conv.unread}</span>` : ''}
-              ${conv.lastMessage}
+            <div class="conv-last-msg ${isUnread ? 'unread-msg' : ''}">
+              ${isUnread ? `<span class="unread-counter">1</span>` : ''}
+              ${esc(conv.message || 'Attachment')}
             </div>
           </div>
         `;
@@ -1312,7 +1361,6 @@
       });
     }
 
-    // Filter conversations by category
     function filterChats(filter, btn) {
       currentFilter = filter;
       document.querySelectorAll('.chat-tab').forEach(b => b.classList.remove('active'));
@@ -1320,85 +1368,152 @@
       renderConversationsList();
     }
 
-    // Search event listener
     document.getElementById('searchInput').addEventListener('input', renderConversationsList);
 
-    function selectConversation(id) {
-      currentConvId = id;
-      const conv = mockConversations.find(c => c.id === id);
-      if (conv) conv.unread = 0; // Clear unread
+    function selectConversation(partnerId, productId) {
+      currentPartnerId = Number(partnerId);
+      currentProductId = productId ? Number(productId) : null;
       
       renderConversationsList();
-      loadActiveConversation(id);
+      loadActiveConversation(currentPartnerId, currentProductId);
       toggleMobileView(true);
     }
 
-    function loadActiveConversation(id) {
-      const conv = mockConversations.find(c => c.id === id);
-      if (!conv) return;
+    async function loadActiveConversation(partnerId, productId, isBackground = false) {
+      if (!partnerId) return;
 
-      // Update Header
-      document.getElementById('activeAvatar').src = conv.avatar;
+      const data = await apiCall(`/api/messages/conversation/${partnerId}`);
+      if (!data) return;
+
+      const messages = data.messages || [];
+
+      // Update Header Info
+      const activePartnerName = data.partner?.username || data.partner?.fullname || 'Mtumiaji';
       document.getElementById('activeName').innerHTML = `
-        ${conv.name}
-        ${conv.isVerified ? '<i class="fas fa-check-circle verified-badge" title="Muuzaji Aliethibitishwa"></i>' : ''}
-        ${conv.isSeller ? '<span class="seller-label">Muuzaji</span>' : ''}
+        ${esc(activePartnerName)}
+        <i class="fas fa-check-circle verified-badge" title="Aliethibitishwa"></i>
+        <span class="seller-label">Muuzaji</span>
       `;
 
-      // Update Product Banner
-      document.getElementById('productThumb').src = conv.product.thumb;
-      document.getElementById('productTitle').textContent = conv.product.title;
-      document.getElementById('productPrice').textContent = conv.product.price;
-      document.getElementById('modalOriginalPrice').textContent = conv.product.price;
+      const avatarEl = document.getElementById('activeAvatar');
+      if (data.partner?.profile_pic) {
+        avatarEl.innerHTML = `<img src="${esc(data.partner.profile_pic)}" class="active-avatar" alt="Avatar">`;
+      } else {
+        avatarEl.textContent = activePartnerName.slice(0, 2).toUpperCase();
+      }
 
-      // Render Messages Stream
-      renderMessages(conv);
+      if (data.partner?.phone) {
+        document.getElementById('callSellerBtn').href = `tel:${data.partner.phone}`;
+      }
+
+      // Fetch active product context banner if product_id available
+      const pId = productId || (messages.length > 0 ? messages[0].product_id : null);
+      if (pId) {
+        fetchProductBannerDetails(pId);
+      } else {
+        document.getElementById('productBanner').style.display = 'none';
+      }
+
+      // Render Messages
+      renderMessages(messages, activePartnerName);
     }
 
-    function renderMessages(conv) {
+    async function fetchProductBannerDetails(productId) {
+      const banner = document.getElementById('productBanner');
+      banner.style.display = 'flex';
+
+      const prod = await apiCall(`/api/products/${productId}`);
+      if (prod && prod.product) {
+        activeProductData = prod.product;
+        const p = prod.product;
+        document.getElementById('productTitle').textContent = p.title;
+        document.getElementById('productPrice').textContent = formatMoney(p.price);
+        document.getElementById('modalOriginalPrice').textContent = formatMoney(p.price);
+
+        const img = (Array.isArray(p.media_path) && p.media_path.length > 0) ? p.media_path[0] : null;
+        if (img) {
+          document.getElementById('productThumb').src = img;
+        }
+      } else {
+        document.getElementById('productTitle').textContent = 'Bidhaa ya Biashara';
+      }
+    }
+
+    function renderMessages(messages, partnerName) {
       const stream = document.getElementById('messageStream');
+      const isAtBottom = stream.scrollHeight - stream.scrollTop <= stream.clientHeight + 100;
+
       stream.innerHTML = `
         <div class="date-divider">
-          <span>Leo</span>
+          <span>Mazungumzo</span>
         </div>
       `;
 
-      conv.messages.forEach(msg => {
-        const group = document.createElement('div');
-        group.className = `msg-group ${msg.sender}`;
+      if (messages.length === 0) {
+        stream.innerHTML += `<div style="text-align:center; color: var(--muted); font-size:12px; margin-top:20px;">Anza kutuma ujumbe sasa...</div>`;
+      }
 
-        if (msg.sender === 'received' && conv.isSeller) {
+      messages.forEach(msg => {
+        const isSentByMe = Number(msg.sender_id) === Number(currentUser.id);
+        const group = document.createElement('div');
+        group.className = `msg-group ${isSentByMe ? 'sent' : 'received'}`;
+
+        if (!isSentByMe) {
           group.innerHTML += `
             <div class="msg-sender-label">
-              ${conv.name} 
+              ${esc(partnerName)} 
               <i class="fas fa-check-circle verified-badge" style="font-size:11px;"></i>
             </div>
           `;
         }
 
-        if (msg.type === 'offer') {
+        // Render based on Message Type
+        if (msg.message_type === 'offer' || msg.offer_amount) {
+          const formattedOffer = formatMoney(msg.offer_amount || 0);
+          const origPrice = activeProductData ? formatMoney(activeProductData.price) : 'TZS -';
+
           group.innerHTML += `
             <div class="offer-card">
               <div class="offer-header">
                 <i class="fas fa-tag"></i> Ombi la Punguzo la Bei
               </div>
-              <div class="offer-amount">${msg.amount}</div>
-              <div class="offer-original">Bei ya Kwanza: ${msg.originalPrice}</div>
-              ${msg.sender === 'received' ? `
+              <div class="offer-amount">${formattedOffer}</div>
+              <div class="offer-original">Bei ya Kwanza: ${origPrice}</div>
+              ${!isSentByMe ? `
                 <div class="offer-actions">
-                  <button class="btn btn-outline" onclick="respondOffer('Kataa')">Kataa</button>
-                  <button class="btn btn-success" onclick="respondOffer('Kubali')">Kubali Offa</button>
+                  <button class="btn btn-outline" onclick="respondOffer('Kataa', ${msg.id})">Kataa</button>
+                  <button class="btn btn-success" onclick="respondOffer('Kubali', ${msg.id})">Kubali Offa</button>
                 </div>
-              ` : `<div style="font-size:12px; color:var(--muted); text-align:center;">Inasubiri majibu ya muuzaji...</div>`}
+              ` : `<div style="font-size:12px; color:var(--muted); text-align:center;">Inasubiri majibu...</div>`}
             </div>
           `;
         } else {
+          let attachmentHtml = '';
+          const attachments = msg.file_paths || (msg.file_path ? [msg.file_path] : []);
+          
+          attachments.forEach(filePath => {
+            if (filePath.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+              attachmentHtml += `
+                <div class="msg-image-attachment">
+                  <a href="${esc(filePath)}" target="_blank"><img src="${esc(filePath)}" alt="Picha Attachment"></a>
+                </div>
+              `;
+            } else {
+              attachmentHtml += `
+                <div style="margin-bottom:6px;">
+                  <a href="${esc(filePath)}" target="_blank" style="color:var(--primary); font-weight:bold; font-size:12px;">📎 Pakua Faili</a>
+                </div>
+              `;
+            }
+          });
+
           group.innerHTML += `
             <div class="msg-bubble">
-              ${msg.text}
+              ${attachmentHtml}
+              ${esc(msg.message || '')}
               <div class="msg-meta">
-                <span>${msg.time}</span>
-                ${msg.sender === 'sent' ? '<i class="fas fa-check-double" style="color:#93c5fd;"></i>' : ''}
+                <span>${formatTimeStr(msg.created_at)}</span>
+                ${isSentByMe ? '<i class="fas fa-check-double" style="color:#93c5fd;"></i>' : ''}
               </div>
             </div>
           `;
@@ -1407,80 +1522,47 @@
         stream.appendChild(group);
       });
 
-      // Scroll to bottom
-      stream.scrollTop = stream.scrollHeight;
+      if (isAtBottom) {
+        stream.scrollTop = stream.scrollHeight;
+      }
     }
 
-    function handleSendMessage(event) {
-      event.preventDefault();
+    async function handleSendMessage(event) {
+      if (event) event.preventDefault();
       const textarea = document.getElementById('messageInput');
       const text = textarea.value.trim();
 
-      if (!text) return;
-
-      const conv = mockConversations.find(c => c.id === currentConvId);
-      if (!conv) return;
-
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      // Append user message
-      conv.messages.push({
-        sender: 'sent',
-        text: text,
-        time: timeStr
-      });
-
-      conv.lastMessage = text;
-      conv.lastTime = timeStr;
+      if (!text || !currentPartnerId) return;
 
       textarea.value = '';
-      renderMessages(conv);
-      renderConversationsList();
 
-      // Trigger Simulated Seller Response
-      simulateSellerReply(conv);
+      const res = await apiCall('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiver_id: currentPartnerId,
+          product_id: currentProductId,
+          message: text,
+          message_type: 'text'
+        })
+      });
+
+      if (res) {
+        await loadActiveConversation(currentPartnerId, currentProductId);
+        await fetchAndRenderConversations(true);
+      }
     }
 
     function sendQuickReply(text) {
       document.getElementById('messageInput').value = text;
-      document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+      handleSendMessage();
     }
 
     function handleKeyPress(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+        handleSendMessage();
       }
-    }
-
-    function simulateSellerReply(conv) {
-      setTimeout(() => {
-        const replies = [
-          "Karibu sana! Bidhaa hii bado ipo. Unaweza kuja kuikagua Mlimani City au Kariakoo.",
-          "Asante kwa kuwasiliana nasi. Bei hii ni ya mwisho kwasababu mzigo ni mupya kutoka dukani.",
-          "Sawa kaka, nimekuelewa. Ukifanya malipo sasa hivi nakutumia mzigo na Bodaboda mara moja.",
-          "Ndio kaka, tuna warranty ya miezi 6 kwa bidhaa zetu zote zilizothibitishwa."
-        ];
-
-        const randomReply = replies[Math.floor(Math.random() * replies.length)];
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        conv.messages.push({
-          sender: 'received',
-          text: randomReply,
-          time: timeStr
-        });
-
-        conv.lastMessage = randomReply;
-        conv.lastTime = timeStr;
-
-        if (currentConvId === conv.id) {
-          renderMessages(conv);
-        }
-        renderConversationsList();
-      }, 1500);
     }
 
     function openOfferModal() {
@@ -1491,39 +1573,33 @@
       document.getElementById('offerModal').classList.remove('active');
     }
 
-    function submitCustomOffer() {
-      const amount = document.getElementById('offerAmountInput').value;
-      if (!amount) return;
+    async function submitCustomOffer() {
+      const amountInput = document.getElementById('offerAmountInput');
+      const amount = amountInput.value.trim();
+      if (!amount || !currentPartnerId) return;
 
-      const conv = mockConversations.find(c => c.id === currentConvId);
-      if (!conv) return;
-
-      const formattedAmount = `TZS ${parseInt(amount).toLocaleString()}`;
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      conv.messages.push({
-        type: 'offer',
-        sender: 'sent',
-        amount: formattedAmount,
-        originalPrice: conv.product.price,
-        time: timeStr
+      const res = await apiCall('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiver_id: currentPartnerId,
+          product_id: currentProductId,
+          message: `Natoa offa ya TZS ${parseInt(amount).toLocaleString()}`,
+          message_type: 'offer',
+          offer_amount: parseFloat(amount)
+        })
       });
 
-      conv.lastMessage = `Umetuma Offa: ${formattedAmount}`;
-      conv.lastTime = timeStr;
-
-      closeOfferModal();
-      document.getElementById('offerAmountInput').value = '';
-
-      renderMessages(conv);
-      renderConversationsList();
-
-      simulateSellerReply(conv);
+      if (res) {
+        closeOfferModal();
+        amountInput.value = '';
+        await loadActiveConversation(currentPartnerId, currentProductId);
+        await fetchAndRenderConversations(true);
+      }
     }
 
-    function respondOffer(action) {
-      alert(`Umechagua: ${action} offa hii.`);
+    function respondOffer(action, msgId) {
+      sendQuickReply(`Nime${action.toLowerCase()} offa yako ya bei.`);
     }
 
     function requestMorePics() {
@@ -1531,7 +1607,30 @@
     }
 
     function triggerFileUpload() {
-      alert("Chagua picha au faili kutoka kwenye kifaa chako.");
+      document.getElementById('chatFileInput').click();
+    }
+
+    async function handleFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file || !currentPartnerId) return;
+
+      const formData = new FormData();
+      formData.append('receiver_id', currentPartnerId);
+      if (currentProductId) formData.append('product_id', currentProductId);
+      formData.append('message', 'Picha/Faili Attachment');
+      formData.append('message_type', 'image');
+      formData.append('chat_file', file);
+
+      const res = await apiCall('/api/messages', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (res) {
+        e.target.value = '';
+        await loadActiveConversation(currentPartnerId, currentProductId);
+        await fetchAndRenderConversations(true);
+      }
     }
 
     function toggleMobileView(showActiveChat) {
