@@ -557,78 +557,6 @@
       font-size: 11px;
     }
 
-    /* ================= MODAL ================= */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(9,25,45,.65);
-      z-index: 2000;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .modal.show { display: grid; place-items: center; }
-
-    .modal-content {
-      width: min(620px, 100%);
-      background: white;
-      border-radius: 18px;
-      padding: 25px;
-      position: relative;
-      box-shadow: 0 25px 70px rgba(0,0,0,.25);
-    }
-
-    .close-modal {
-      position: absolute;
-      top: 13px;
-      right: 15px;
-      width: 34px;
-      height: 34px;
-      border: 0;
-      background: #f0f3f7;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 20px;
-    }
-
-    .modal h2 { color: var(--dark); margin-bottom: 5px; }
-    .modal > .modal-content > p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .form-group { display: grid; gap: 6px; }
-    .form-group.full { grid-column: 1 / -1; }
-
-    .form-group label { font-size: 12px; font-weight: 800; color: var(--dark); }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 11px;
-      outline: 0;
-    }
-
-    .form-group textarea { resize: vertical; min-height: 90px; }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus { border-color: var(--primary); }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 18px;
-    }
-
     /* ================= RESPONSIVE ================= */
     @media (max-width: 1050px) {
       .nav-links { gap: 0; }
@@ -746,6 +674,16 @@
       .category-grid { grid-template-columns: repeat(2, 1fr); }
       .footer-grid { grid-template-columns: 1fr; }
     }
+
+    .detail-btn { border:0; cursor:pointer; font:inherit; }
+    .listing-card { min-width:0; }
+    .modal { align-items:center; }
+    .modal-content { max-height:calc(100vh - 40px); overflow:auto; }
+    @media (max-width:560px) {
+      .modal { padding:10px; }
+      .modal-content { padding:18px; border-radius:14px; }
+      .modal-content h2 { font-size:21px; }
+    }
   </style>
 </head>
 
@@ -820,261 +758,63 @@
           <div class="category-card selected" data-category="all">
             <div class="category-icon">🛍️</div>
             <strong>Zote</strong>
-            <small>(104)</small>
+            <small data-category-count="all">(...)</small>
           </div>
           <div class="category-card" data-category="Simu">
             <div class="category-icon">📱</div>
             <strong>Simu</strong>
-            <small>(48)</small>
+            <small data-category-count="Simu">(...)</small>
           </div>
           <div class="category-card" data-category="Vitanda">
             <div class="category-icon">🛏️</div>
             <strong>Vitanda</strong>
-            <small>(12)</small>
+            <small data-category-count="Vitanda">(...)</small>
           </div>
           <div class="category-card" data-category="Pikipiki">
             <div class="category-icon">🏍️</div>
             <strong>Pikipiki</strong>
-            <small>(28)</small>
+            <small data-category-count="Pikipiki">(...)</small>
           </div>
           <div class="category-card" data-category="Magari">
             <div class="category-icon">🚗</div>
             <strong>Magari</strong>
-            <small>(18)</small>
+            <small data-category-count="Magari">(...)</small>
           </div>
           <div class="category-card" data-category="Kompyuta">
             <div class="category-icon">💻</div>
             <strong>Kompyuta</strong>
-            <small>(10)</small>
+            <small data-category-count="Kompyuta">(...)</small>
           </div>
           <div class="category-card" data-category="Nyumbani">
             <div class="category-icon">🏠</div>
             <strong>Nyumbani</strong>
-            <small>(15)</small>
+            <small data-category-count="Nyumbani">(...)</small>
           </div>
           <div class="category-card" data-category="Zingine">
             <div class="category-icon">•••</div>
             <strong>Zingine</strong>
-            <small>(36)</small>
+            <small data-category-count="Zingine">(...)</small>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ================= LISTINGS ================= -->
+    <!-- ================= LIVE LISTINGS ================= -->
     <section id="matangazo">
       <div class="container">
         <div class="section-heading">
           <div>
             <h2>Bidhaa za hivi punde</h2>
-            <p>Tazama bidhaa zilizotumwa hivi karibuni.</p>
+            <p id="homeListingSubtitle">Bidhaa halisi zilizowekwa kwenye soko.</p>
           </div>
-          <a class="view-all" href="#matangazo">Tazama Zote <i class="fas fa-arrow-right"></i></a>
+          <a class="view-all" href="market.html">Tazama Zote <i class="fas fa-arrow-right"></i></a>
         </div>
-
         <div class="listing-grid" id="listingGrid">
-
-          <!-- PHONE -->
-          <article class="listing-card" data-category="Simu" data-search="iphone 13 simu juma electronics dar es salaam">
-            <div class="listing-image">
-              <img src="iphone13.jpg" alt="iPhone 13">
-              <span class="used-label">Simu</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">iPhone 13 (128GB)</h3>
-              <div class="price">TZS 1,250,000</div>
-              <div class="meta">
-                <span>👤 Juma Electronics</span>
-                <span>📍 Dar es Salaam, Kinondoni</span>
-              </div>
-              <p class="description">Battery health 88%. Inaonekana vizuri, haina tatizo la kiufundi.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 2 zilizopita</div>
-            </div>
-          </article>
-
-          <!-- BED -->
-          <article class="listing-card" data-category="Vitanda" data-search="kitanda wooden double mwananchi furniture arusha">
-            <div class="listing-image">
-              <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80" alt="Kitanda cha wooden double">
-              <span class="used-label">Vitanda</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">Kitanda cha Wooden (Double)</h3>
-              <div class="price">TZS 350,000</div>
-              <div class="meta">
-                <span>👤 Mwananchi Furniture</span>
-                <span>📍 Arusha, Sekei</span>
-              </div>
-              <p class="description">Kitanda imara cha mbao, size ya double. Kinauzwa pamoja na godoro.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 3 zilizopita</div>
-            </div>
-          </article>
-
-          <!-- MOTORCYCLE -->
-          <article class="listing-card" data-category="Pikipiki" data-search="yamaha ybr 125 pikipiki benson moto moshi">
-            <div class="listing-image">
-              <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80" alt="Yamaha YBR 125">
-              <span class="used-label">Pikipiki</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">Yamaha YBR 125</h3>
-              <div class="price">TZS 1,800,000</div>
-              <div class="meta">
-                <span>👤 Benson Moto</span>
-                <span>📍 Moshi, Kilimanjaro</span>
-              </div>
-              <p class="description">Pikipiki YBR 125, mwaka 2018. Imetunzwa vizuri, inawaka vizuri na ina papers.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 1 iliyopita</div>
-            </div>
-          </article>
-
-          <!-- CAR -->
-          <article class="listing-card" data-category="Magari" data-search="toyota corolla 2012 gari rashid auto dodoma">
-            <div class="listing-image">
-              <img src="https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=800&q=80" alt="Toyota Corolla 2012">
-              <span class="used-label">Magari</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">Toyota Corolla (2012)</h3>
-              <div class="price">TZS 12,500,000</div>
-              <div class="meta">
-                <span>👤 Rashid Auto</span>
-                <span>📍 Dodoma, Dodoma</span>
-              </div>
-              <p class="description">Engine 1.8, mileage 120,000 km. Hali nzuri, hakuna ajali kubwa.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 5 zilizopita</div>
-            </div>
-          </article>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= LISTINGS ================= -->
-    <section id="matangazo">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <h2>🔥 Zilizowika sokoni</h2>
-            <p>Tazama bidhaa zilizopendwa zaidi</p>
+          <div class="no-results" id="listingLoading">
+            <div style="font-size:34px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i></div>
+            <strong>Inapakia matangazo...</strong>
+            <p>Tafadhali subiri kidogo.</p>
           </div>
-          <a class="view-all" href="#matangazo">Tazama Zote <i class="fas fa-arrow-right"></i></a>
-        </div>
-
-        <div class="listing-grid" id="listingGrid">
-
-          <!-- PHONE -->
-          <article class="listing-card" data-category="Simu" data-search="iphone 13 simu juma electronics dar es salaam">
-            <div class="listing-image">
-              <img src="iphone13.jpg" alt="iPhone 13">
-              <span class="used-label">Simu</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">iPhone 13 (128GB)</h3>
-              <div class="price">TZS 1,250,000</div>
-              <div class="meta">
-                <span>👤 Juma Electronics</span>
-                <span>📍 Dar es Salaam, Kinondoni</span>
-              </div>
-              <p class="description">Battery health 88%. Inaonekana vizuri, haina tatizo la kiufundi.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 2 zilizopita</div>
-            </div>
-          </article>
-
-          <!-- BED -->
-          <article class="listing-card" data-category="Vitanda" data-search="kitanda wooden double mwananchi furniture arusha">
-            <div class="listing-image">
-              <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80" alt="Kitanda cha wooden double">
-              <span class="used-label">Vitanda</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">Kitanda cha Wooden (Double)</h3>
-              <div class="price">TZS 350,000</div>
-              <div class="meta">
-                <span>👤 Mwananchi Furniture</span>
-                <span>📍 Arusha, Sekei</span>
-              </div>
-              <p class="description">Kitanda imara cha mbao, size ya double. Kinauzwa pamoja na godoro.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 3 zilizopita</div>
-            </div>
-          </article>
-
-          <!-- MOTORCYCLE -->
-          <article class="listing-card" data-category="Pikipiki" data-search="yamaha ybr 125 pikipiki benson moto moshi">
-            <div class="listing-image">
-              <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80" alt="Yamaha YBR 125">
-              <span class="used-label">Pikipiki</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">Yamaha YBR 125</h3>
-              <div class="price">TZS 1,800,000</div>
-              <div class="meta">
-                <span>👤 Benson Moto</span>
-                <span>📍 Moshi, Kilimanjaro</span>
-              </div>
-              <p class="description">Pikipiki YBR 125, mwaka 2018. Imetunzwa vizuri, inawaka vizuri na ina papers.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 1 iliyopita</div>
-            </div>
-          </article>
-
-          <!-- CAR -->
-          <article class="listing-card" data-category="Magari" data-search="toyota corolla 2012 gari rashid auto dodoma">
-            <div class="listing-image">
-              <img src="https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=800&q=80" alt="Toyota Corolla 2012">
-              <span class="used-label">Magari</span>
-              <button class="heart" aria-label="Hifadhi tangazo">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">Toyota Corolla (2012)</h3>
-              <div class="price">TZS 12,500,000</div>
-              <div class="meta">
-                <span>👤 Rashid Auto</span>
-                <span>📍 Dodoma, Dodoma</span>
-              </div>
-              <p class="description">Engine 1.8, mileage 120,000 km. Hali nzuri, hakuna ajali kubwa.</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank" href="https://wa.me/255710000001?text=Habari%2C%20nimeona%20tangazo%20la%20iPhone%2013%20TumiaTupate."><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: Saa 5 zilizopita</div>
-            </div>
-          </article>
-
         </div>
       </div>
     </section>
@@ -1122,10 +862,21 @@
           <h2>Una kitu cha kuuza?</h2>
           <p>Weka tangazo lako na uwafikie wanunuzi kutoka sehemu mbalimbali Tanzania.</p>
         </div>
-        <button class="btn btn-success" onclick="openModal()">＋ Weka Tangazo</button>
+        <button class="btn btn-success"><a href="mydashboard.html">＋ Weka Tangazo</a></button>
       </div>
     </div>
   </main>
+
+
+  <!-- ================= PRODUCT DETAIL MODAL ================= -->
+  <div class="modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button class="close-modal" type="button" aria-label="Funga" data-close-product>&times;</button>
+      <div id="productModalBody">
+        <div style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i> Inapakia...</div>
+      </div>
+    </div>
+  </div>
 
   <!-- ================= FOOTER ================= -->
   <footer id="footer">
@@ -1200,118 +951,174 @@
   </footer>
 
   <script>
-    // ================= MOBILE MENU =================
-    const menuToggle = document.getElementById("menuToggle");
-    const navLinks = document.getElementById("navLinks");
+    const API = '/api';
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    const listingGrid = document.getElementById('listingGrid');
+    const productModal = document.getElementById('productModal');
+    const listingModal = document.getElementById('listingModal');
+    const favoritesKey = 'waudhao:favorites';
 
-    menuToggle.addEventListener("click", () => {
-      navLinks.classList.toggle("open");
-      menuToggle.textContent = navLinks.classList.contains("open") ? "✕" : "☰";
-    });
+    const money = value => `TZS ${new Intl.NumberFormat('en-US').format(Number(value) || 0)}`;
+    const esc = value => {
+      const d = document.createElement('div'); d.textContent = value ?? ''; return d.innerHTML;
+    };
+    const mediaList = p => Array.isArray(p.media_path) ? p.media_path : [];
+    const imageFor = p => mediaList(p)[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80';
 
-    document.querySelectorAll(".nav-links a").forEach(link => {
-      link.addEventListener("click", () => {
-        navLinks.classList.remove("open");
-        menuToggle.textContent = "☰";
-      });
-    });
+    function relativeTime(date) {
+      if (!date) return 'Muda usiojulikana';
+      const diff = Math.max(0, Date.now() - new Date(date).getTime());
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'sasa hivi';
+      if (mins < 60) return `dakika ${mins} zilizopita`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `saa ${hrs} zilizopita`;
+      const days = Math.floor(hrs / 24);
+      return `siku ${days} zilizopita`;
+    }
+    function getFavorites() { try { return JSON.parse(localStorage.getItem(favoritesKey) || '[]'); } catch { return []; } }
+    function saveFavorites(v) { localStorage.setItem(favoritesKey, JSON.stringify(v)); }
 
-    // ================= CATEGORY FILTER =================
-    const categoryCards = document.querySelectorAll(".category-card");
-    const listingCards = document.querySelectorAll(".listing-card");
+    async function api(url, options={}) {
+      const res = await fetch(url, { credentials:'include', ...options });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { const e = new Error(data.error || `HTTP ${res.status}`); e.status=res.status; throw e; }
+      return data;
+    }
 
-    categoryCards.forEach(card => {
-      card.addEventListener("click", () => {
-        categoryCards.forEach(c => c.classList.remove("selected"));
-        card.classList.add("selected");
+    function listingCard(p) {
+      const liked = getFavorites().includes(Number(p.id));
+      const phone = p.whatsapp || p.call_number || '';
+      const wa = String(phone).replace(/\D/g,'');
+      const detail = encodeURIComponent(String(p.id));
+      return `<article class="listing-card" data-id="${esc(p.id)}" data-category="${esc(p.category)}" data-search="${esc(`${p.title} ${p.category} ${p.location} ${p.username||''} ${p.description||''}`)}">
+        <div class="listing-image">
+          <img src="${esc(imageFor(p))}" alt="${esc(p.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80'">
+          <span class="used-label">${esc(p.category)}</span>
+          <button class="heart ${liked?'liked':''}" aria-label="Hifadhi tangazo" data-favorite="${esc(p.id)}">${liked?'♥':'♡'}</button>
+        </div>
+        <div class="listing-body">
+          <h3 class="listing-title">${esc(p.title)}</h3>
+          <div class="price">${money(p.price)}</div>
+          <div class="meta">
+            <span>👤 ${esc(p.username || 'Muuzaji')}</span>
+            <span>📍 ${esc(p.location)}</span>
+          </div>
+          <p class="description">${esc(p.description)}</p>
+          <div class="contact-buttons">
+            ${wa ? `<a class="whatsapp-btn" target="_blank" rel="noopener" href="https://wa.me/${esc(wa)}?text=${encodeURIComponent('Habari, nimeona tangazo la '+(p.title||'bidhaa')+' kwenye Waudhao.') }"><i class="fab fa-whatsapp"></i> WhatsApp</a>` : '<span></span>'}
+            <button class="detail-btn" type="button" data-product="${detail}"><a href="more.html?id=${p.id}"><i class="fas fa-arrow-right"></i> Tazama</a></button>
+          </div>
+          <div class="posted">◷ Ilipostiwa: ${relativeTime(p.created_at)}</div>
+        </div>
+      </article>`;
+    }
 
-        const category = card.dataset.category;
-
-        listingCards.forEach(item => {
-          item.style.display =
-            category === "all" || item.dataset.category === category
-              ? ""
-              : "none";
-        });
-      });
-    });
-
-    // ================= SEARCH =================
-    function searchListings() {
-      const term = document.getElementById("searchInput").value.trim().toLowerCase();
-
-      categoryCards.forEach(c => c.classList.remove("selected"));
-      categoryCards[0].classList.add("selected");
-
-      let found = 0;
-
-      listingCards.forEach(item => {
-        const searchable = (item.dataset.search + " " + item.innerText).toLowerCase();
-        const match = term === "" || searchable.includes(term);
-
-        item.style.display = match ? "" : "none";
-        if (match) found++;
-      });
-
-      const existing = document.querySelector(".no-results");
-      if (existing) existing.remove();
-
-      if (found === 0) {
-        const message = document.createElement("div");
-        message.className = "no-results";
-        message.innerHTML = `
-          <div style="font-size:38px;margin-bottom:8px;">🔎</div>
-          <strong>Hakuna tangazo lililopatikana</strong>
-          <p style="margin-top:5px;">Jaribu jina jingine la bidhaa.</p>
-        `;
-        document.getElementById("listingGrid").appendChild(message);
+    async function loadHomeProducts(params={}) {
+      listingGrid.innerHTML = `<div class="no-results"><div style="font-size:34px;margin-bottom:8px;"><i class="fas fa-spinner fa-spin"></i></div><strong>Inapakia matangazo...</strong><p>Tafadhali subiri kidogo.</p></div>`;
+      try {
+        const qs = new URLSearchParams({limit:'8', page:'1', ...params});
+        const data = await api(`${API}/products?${qs}`);
+        const products = data.products || [];
+        listingGrid.innerHTML = products.length
+          ? products.map(listingCard).join('')
+          : `<div class="no-results"><div style="font-size:34px;margin-bottom:8px;">🔎</div><strong>Hakuna tangazo lililopatikana</strong><p>Jaribu utafutaji mwingine.</p></div>`;
+        document.getElementById('homeListingSubtitle').textContent = `Inaonyesha ${products.length} kati ya ${data.total || 0} bidhaa zilizopo.`;
+        updateCategoryCounts();
+      } catch (e) {
+        listingGrid.innerHTML = `<div class="no-results"><strong>Imeshindikana kupakia matangazo</strong><p>${esc(e.message)}</p><button class="btn btn-primary" type="button" onclick="loadHomeProducts()">Jaribu tena</button></div>`;
       }
-
-      document.getElementById("matangazo").scrollIntoView({ behavior: "smooth" });
     }
 
-    document.getElementById("searchInput").addEventListener("keydown", e => {
-      if (e.key === "Enter") searchListings();
-    });
+    async function updateCategoryCounts() {
+      const cards = document.querySelectorAll('.category-card');
+      await Promise.all([...cards].map(async card => {
+        const cat = card.dataset.category;
+        try {
+          const qs = new URLSearchParams({limit:'1', page:'1'});
+          if (cat !== 'all') qs.set('category', cat);
+          const data = await api(`${API}/products?${qs}`);
+          const target = card.querySelector(`[data-category-count="${cat}"]`);
+          if (target) target.textContent = `(${data.total || 0})`;
+        } catch {}
+      }));
+    }
 
-    // ================= HEART / FAVORITES =================
-    document.querySelectorAll(".heart").forEach(button => {
-      button.addEventListener("click", () => {
-        button.classList.toggle("liked");
-        button.textContent = button.classList.contains("liked") ? "♥" : "♡";
+    function showProductModal(id) {
+      productModal.classList.add('show'); productModal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+      const body=document.getElementById('productModalBody');
+      body.innerHTML='<div style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i> Inapakia...</div>';
+      api(`${API}/products/${encodeURIComponent(id)}`).then(p => {
+        const imgs=mediaList(p);
+        const phone=(p.call_number||p.whatsapp||'').replace(/\s/g,'');
+        body.innerHTML=`<div style="display:grid;grid-template-columns:1fr;gap:18px;">
+          <div style="display:grid;grid-template-columns:repeat(${Math.min(Math.max(imgs.length,1),3)},1fr);gap:8px;">
+            ${imgs.length ? imgs.map(u=>`<img src="${esc(u)}" alt="${esc(p.title)}" style="width:100%;height:190px;object-fit:cover;border-radius:12px;" onerror="this.style.display='none'">`).join('') : `<div style="height:190px;border-radius:12px;background:#eef3f8;display:grid;place-items:center;"><i class="fas fa-image" style="font-size:38px;color:#9aa8b8"></i></div>`}
+          </div>
+          <div>
+            <span class="used-label" style="display:inline-block;position:static;margin-bottom:8px;">${esc(p.category)}</span>
+            <h2>${esc(p.title)}</h2><div class="price">${money(p.price)}</div>
+            <p style="color:var(--muted);margin:8px 0;">${esc(p.description)}</p>
+            <p><strong>Muuzaji:</strong> ${esc(p.username||'Muuzaji')}</p>
+            <p><strong>Eneo:</strong> ${esc(p.location)}</p>
+            <p><strong>Views:</strong> ${esc(p.views||0)}</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;">
+              ${p.whatsapp ? `<a class="btn btn-success" target="_blank" rel="noopener" href="https://wa.me/${esc(String(p.whatsapp).replace(/\D/g,''))}?text=${encodeURIComponent('Habari, nimeona '+p.title+' kwenye Waudhao.') }"><i class="fab fa-whatsapp"></i> WhatsApp</a>`:''}
+              ${phone ? `<a class="btn btn-primary" href="tel:${esc(phone)}"><i class="fas fa-phone"></i> Piga simu</a>`:''}
+              ${p.user_id ? `<a class="btn btn-outline" href="chat.html?user=${encodeURIComponent(p.user_id)}&product=${encodeURIComponent(p.id)}"><i class="fas fa-comments"></i> Tuma ujumbe</a>`:''}
+            </div>
+          </div>
+        </div>`;
+      }).catch(e => body.innerHTML=`<div class="no-results"><strong>Imeshindikana kupakia bidhaa</strong><p>${esc(e.message)}</p></div>`);
+    }
+
+    async function submitListing(e) {
+      e.preventDefault();
+      const btn=document.getElementById('submitListingBtn'), msg=document.getElementById('listingFormMessage'), files=document.getElementById('postImages').files;
+      if(files.length>6){ msg.style.display='block'; msg.style.background='#fee2e2'; msg.style.color='#991b1b'; msg.textContent='Picha zisizidi 6.'; return; }
+      const fd=new FormData(e.target); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Inatuma...'; msg.style.display='none';
+      try {
+        const data=await api('/products',{method:'POST',body:fd});
+        msg.style.display='block'; msg.style.background='#dcfce7'; msg.style.color='#166534'; msg.textContent='Tangazo limewekwa kikamilifu.';
+        e.target.reset(); await loadHomeProducts(); setTimeout(()=>closeModal(listingModal),900);
+      } catch(err) {
+        if(err.status===401){ location.href='login.html?redirect=homepage.html'; return; }
+        if(err.status===403){ location.href='subscribe.html'; return; }
+        msg.style.display='block'; msg.style.background='#fee2e2'; msg.style.color='#991b1b'; msg.textContent=err.message;
+      } finally { btn.disabled=false; btn.textContent='Weka Tangazo'; }
+    }
+
+    menuToggle?.addEventListener('click',()=>{navLinks.classList.toggle('open');menuToggle.innerHTML=navLinks.classList.contains('open')?'<i class="fas fa-times"></i>':'<i class="fas fa-bars"></i>';});
+    document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
+
+    document.addEventListener('click',e=>{
+      const fav=e.target.closest('[data-favorite]');
+      if(fav){ const id=Number(fav.dataset.favorite), f=getFavorites(); const next=f.includes(id)?f.filter(x=>x!==id):[...f,id]; saveFavorites(next); fav.classList.toggle('liked',next.includes(id)); fav.textContent=next.includes(id)?'♥':'♡'; return; }
+      const detail=e.target.closest('[data-product]');
+      if(detail){ showProductModal(decodeURIComponent(detail.dataset.product)); return; }
+      if(e.target.matches('[data-close-product]')) closeModal(productModal);
+      if(e.target.matches('[data-close-listing]')) closeModal(listingModal);
+      if(e.target===productModal) closeModal(productModal);
+      if(e.target===listingModal) closeModal(listingModal);
+    });
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal(productModal);closeModal(listingModal);}});
+
+    document.querySelectorAll('.category-card').forEach(card=>{
+      card.addEventListener('click',()=>{
+        document.querySelectorAll('.category-card').forEach(c=>c.classList.remove('selected'));
+        card.classList.add('selected');
+        const cat=card.dataset.category;
+        if(cat==='all') loadHomeProducts(); else loadHomeProducts({category:cat});
+        document.getElementById('matangazo').scrollIntoView({behavior:'smooth'});
       });
     });
 
-    // ================= MODAL =================
-    const modal = document.getElementById("listingModal");
-
-    function openModal() {
-      modal.classList.add("show");
-      modal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeModal() {
-      modal.classList.remove("show");
-      modal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-    }
-
-    modal.addEventListener("click", e => {
-      if (e.target === modal) closeModal();
+    document.getElementById('searchInput').addEventListener('keydown',e=>{
+      if(e.key==='Enter'){e.preventDefault(); const term=e.target.value.trim(); location.href=`market.html?search=${encodeURIComponent(term)}`;}
     });
-
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") closeModal();
-    });
-
-    // ================= SAMPLE FORM =================
-    document.getElementById("listingForm").addEventListener("submit", e => {
-      e.preventDefault();
-      alert("Mfano tu: Tangazo lako lingetumwa kwenye server/database hapa.");
-      closeModal();
-      e.target.reset();
-    });
+    window.searchListings=()=>{const term=document.getElementById('searchInput').value.trim(); location.href=`market.html?search=${encodeURIComponent(term)}`;};
+    loadHomeProducts();
   </script>
 
 </body>

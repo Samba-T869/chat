@@ -1078,7 +1078,7 @@
                 <h2 id="activeName">
                   Mtumiaji
                 </h2>
-                <div class="active-status" id="activeStatus">
+                <div class="active-status" id="activeStatus"><span id="typingIndicator" style="margin-left:8px;color:var(--primary);font-weight:700;"></span>
                   <i class="fas fa-circle" style="font-size: 8px;"></i> Yupo Hewani (Online)
                 </div>
               </div>
@@ -1183,6 +1183,9 @@
     let activeProductData = null;
     let currentFilter = 'all';
     let pollInterval = null;
+    let chatSocket = null;
+    let typingTimer = null;
+    const renderedChatMessageIds = new Set();
 
     function esc(s) {
       return String(s ?? '').replace(/[&<>"']/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[x]));
@@ -1254,18 +1257,98 @@
       // 3. Load Conversations
       await fetchAndRenderConversations();
 
-      // Start Auto Polling
+      // Real-time Socket.IO connection; polling below is only a slow fallback.
+      initChatSocket();
+
+      // Start low-frequency fallback polling in case a connection drops.
       startPolling();
+    }
+
+    function initChatSocket() {
+      if (chatSocket) return;
+      chatSocket = io({ withCredentials: true, transports: ['websocket', 'polling'] });
+
+      chatSocket.on('connect', () => {
+        console.log('Real-time chat connected:', chatSocket.id);
+      });
+
+      chatSocket.on('connect_error', (err) => {
+        console.warn('Real-time chat connection error:', err.message);
+      });
+
+      chatSocket.on('new_message', async (message) => {
+        const senderId = Number(message?.sender_id);
+        const receiverId = Number(message?.receiver_id);
+
+        // Update conversation list immediately.
+        await fetchAndRenderConversations(true);
+
+        // If this message belongs to the active conversation, render it immediately.
+        if (currentPartnerId && (senderId === Number(currentPartnerId) || receiverId === Number(currentPartnerId))) {
+          if (senderId === Number(currentPartnerId)) {
+            appendRealtimeChatMessage(message);
+            await apiCall(`/api/messages/conversation/${currentPartnerId}/read`, { method: 'PATCH' }).catch(() => null);
+          }
+        } else if (senderId !== Number(currentUser?.id)) {
+          showRealtimeNotice('Ujumbe mpya umepokelewa.');
+        }
+      });
+
+      chatSocket.on('message_sent', (message) => {
+        appendRealtimeChatMessage(message);
+      });
+
+      chatSocket.on('typing', (data) => {
+        if (currentPartnerId && Number(data?.userId) === Number(currentPartnerId)) {
+          const el = document.getElementById('typingIndicator');
+          if (el) el.textContent = `${data.username || 'Mtumiaji'} anaandika...`;
+        }
+      });
+
+      chatSocket.on('stop typing', (data) => {
+        if (currentPartnerId && Number(data?.userId) === Number(currentPartnerId)) {
+          const el = document.getElementById('typingIndicator');
+          if (el) el.textContent = '';
+        }
+      });
+    }
+
+    function showRealtimeNotice(message) {
+      if (typeof showToast === 'function') showToast(message);
+      else if (typeof toast === 'function') toast(message);
+    }
+
+    function appendRealtimeChatMessage(msg) {
+      if (!msg?.id || renderedChatMessageIds.has(Number(msg.id))) return;
+      renderedChatMessageIds.add(Number(msg.id));
+      const stream = document.getElementById('messageStream');
+      if (!stream || !currentUser) return;
+      const isSentByMe = Number(msg.sender_id) === Number(currentUser.id);
+      const group = document.createElement('div');
+      group.className = `msg-group ${isSentByMe ? 'sent' : 'received'}`;
+      if (!isSentByMe) {
+        group.innerHTML = `<div class="msg-sender-label">${esc(msg.sender_username || 'Mtumiaji')} <i class="fas fa-check-circle verified-badge" style="font-size:11px;"></i></div>`;
+      }
+      let attachmentHtml = '';
+      const attachments = msg.file_paths || (msg.file_path ? [msg.file_path] : []);
+      attachments.forEach(filePath => {
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(filePath)) {
+          attachmentHtml += `<div class="msg-image-attachment"><a href="${esc(filePath)}" target="_blank"><img src="${esc(filePath)}" alt="Picha Attachment"></a></div>`;
+        } else {
+          attachmentHtml += `<div style="margin-bottom:6px;"><a href="${esc(filePath)}" target="_blank" style="color:var(--primary);font-weight:bold;font-size:12px;">📎 Pakua Faili</a></div>`;
+        }
+      });
+      group.innerHTML += `<div class="msg-bubble">${attachmentHtml}${esc(msg.message || '')}<div class="msg-meta"><span>${formatTimeStr(msg.created_at)}</span>${isSentByMe ? '<i class="fas fa-check-double" style="color:#93c5fd;"></i>' : ''}</div></div>`;
+      stream.appendChild(group);
+      stream.scrollTop = stream.scrollHeight;
     }
 
     function startPolling() {
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = setInterval(async () => {
         await fetchAndRenderConversations(true);
-        if (currentPartnerId) {
-          await loadActiveConversation(currentPartnerId, currentProductId, true);
-        }
-      }, 4000);
+        if (currentPartnerId) await loadActiveConversation(currentPartnerId, currentProductId, true);
+      }, 30000);
     }
 
     async function fetchAndRenderConversations(isBackground = false) {
@@ -1386,6 +1469,9 @@
       if (!data) return;
 
       const messages = data.messages || [];
+      messages.forEach(m => renderedChatMessageIds.add(Number(m.id)));
+      const typingEl = document.getElementById('typingIndicator');
+      if (typingEl) typingEl.textContent = '';
 
       // Update Header Info
       const activePartnerName = data.partner?.username || data.partner?.fullname || 'Mtumiaji';
@@ -1454,6 +1540,7 @@
       }
 
       messages.forEach(msg => {
+        if (msg.id) renderedChatMessageIds.add(Number(msg.id));
         const isSentByMe = Number(msg.sender_id) === Number(currentUser.id);
         const group = document.createElement('div');
         group.className = `msg-group ${isSentByMe ? 'sent' : 'received'}`;
@@ -1536,7 +1623,8 @@
 
       textarea.value = '';
 
-      const res = await apiCall('/api/messages', {
+      try{
+        const res = await apiCall('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1545,11 +1633,14 @@
           message: text,
           message_type: 'text'
         })
-      });
+        });
 
-      if (res) {
-        await loadActiveConversation(currentPartnerId, currentProductId);
-        await fetchAndRenderConversations(true);
+        if (res) {
+          await loadActiveConversation(currentPartnerId, currentProductId);
+          await fetchAndRenderConversations(true);
+        }
+      }catch(err){
+        console.error('Error sending message', err);
       }
     }
 
@@ -1561,9 +1652,23 @@
     function handleKeyPress(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
+        if (chatSocket?.connected && currentPartnerId) chatSocket.emit('stop typing', { receiver_id: currentPartnerId });
         handleSendMessage();
       }
     }
+
+    document.getElementById('messageInput').addEventListener('input', () => {
+      if (!chatSocket?.connected || !currentPartnerId) return;
+      chatSocket.emit('typing', { receiver_id: currentPartnerId });
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        chatSocket.emit('stop typing', { receiver_id: currentPartnerId });
+      }, 900);
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (chatSocket?.connected && currentPartnerId) chatSocket.emit('stop typing', { receiver_id: currentPartnerId });
+    });
 
     function openOfferModal() {
       document.getElementById('offerModal').classList.add('active');

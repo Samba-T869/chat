@@ -112,9 +112,7 @@ app.set('trust proxy', 1);
 // ============== SOCKET.IO SETUP ==============
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || ( process.env.NODE_ENV === 'production' 
-            ? 'https://chat-production-4a8c.up.railway.app' 
-            : 'http://localhost:3000' ),
+        origin: process.env.CLIENT_URL || ( process.env.NODE_ENV === 'production' ? 'https://chat-production-4a8c.up.railway.app' : 'http://localhost:3000'),
         methods: ["GET", "POST"],
         credentials: true
     },
@@ -212,8 +210,16 @@ const uploadedUrl = (file) => file?.location ||
     file?.key || null;
 
 // ============== MIDDLEWARE ==============
+const allowedOrigins = new Set(
+    [process.env.CLIENT_URL, 'http://localhost:3000', 'http://127.0.0.1:3000']
+        .filter(Boolean)
+        .map(v => v.replace(/\/$/, ''))
+);
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.has(origin.replace(/\/$/, ''))) return callback(null, true);
+        callback(new Error('CORS origin not allowed'));
+    },
     credentials: true
 }));
 
@@ -265,11 +271,9 @@ const logActivity = async (userId, username, action, details = '', ipAddress = '
 };
 
 const getClientIP = (req) => {
-    return req.headers['x-forwarded-for']?.split(',')[0] || 
-           req.headers['x-real-ip'] || 
-           req.connection?.remoteAddress || 
-           req.socket?.remoteAddress || 
-           'unknown';
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) return forwarded.split(',')[0].trim();
+    return req.headers['x-real-ip'] || req.ip || req.socket?.remoteAddress || 'unknown';
 };
 
 const transporter = nodemailer.createTransport({
@@ -350,7 +354,7 @@ app.post('/api/register', upload.single('profile_pic'), async (req, res) => {
 
         let profilePic = null;
         if (req.file) {
-            profilePic = req.file.filename;
+            profilePic = uploadedUrl(req.file);
         }
 
         const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1181,18 +1185,53 @@ app.get('/api/my/dashboard', requireAuth, async (req, res) => {
 });
 
 app.get('/api/products', async (req, res) => {
-    const { search, category, page=1, limit=20 }=req.query; const lim=Math.min(Math.max(Number(limit)||20,1),100); const pg=Math.max(Number(page)||1,1); const offset=(pg-1)*lim;
+    const { search, category, location, page = 1, limit = 20 } = req.query;
+    const lim = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const pg = Math.max(Number(page) || 1, 1);
+    const offset = (pg - 1) * lim;
+
     try {
-        let where=`WHERE p.status='active'`, params=[], i=1;
-        if(search){where+=` AND (p.title ILIKE $${i} OR p.description ILIKE $${i})`;params.push(`%${search}%`);i++;}
-        if(category&&category!=='all'){where+=` AND p.category=$${i}`;params.push(category);i++;}
-        const count=await pool.query(`SELECT COUNT(*) FROM products p ${where}`,params);
-        const r=await pool.query(`SELECT p.*,u.username,u.profile_pic FROM products p LEFT JOIN users u ON u.id=p.user_id ${where} ORDER BY p.created_at DESC LIMIT $${i} OFFSET $${i+1}`,[...params,lim,offset]);
-        const total=Number(count.rows[0].count); res.json({products:r.rows,total,page:pg,totalPages:Math.ceil(total/lim)});
-    }catch(err){console.error('Products fetch error:',err);res.status(500).json({error:'Database error'});}
+        let where = `WHERE p.status='active'`;
+        const params = [];
+        let i = 1;
+
+        if (search) {
+            where += ` AND (p.title ILIKE $${i} OR p.description ILIKE $${i} OR p.location ILIKE $${i})`;
+            params.push(`%${String(search).trim()}%`);
+            i++;
+        }
+        if (category && category !== 'all') {
+            where += ` AND p.category=$${i}`;
+            params.push(category);
+            i++;
+        }
+        if (location && location !== 'all') {
+            where += ` AND p.location ILIKE $${i}`;
+            params.push(`%${String(location).trim()}%`);
+            i++;
+        }
+
+        const count = await pool.query(`SELECT COUNT(*) FROM products p ${where}`, params);
+        const r = await pool.query(
+            `SELECT p.*, COALESCE(p.media_path, ARRAY[]::text[]) AS media_path,
+                    u.username, u.fullname, u.profile_pic
+             FROM products p
+             LEFT JOIN users u ON u.id=p.user_id
+             ${where}
+             ORDER BY p.created_at DESC
+             LIMIT $${i} OFFSET $${i + 1}`,
+            [...params, lim, offset]
+        );
+
+        const total = Number(count.rows[0].count);
+        res.json({ products: r.rows, total, page: pg, limit: lim, totalPages: Math.ceil(total / lim) });
+    } catch (err) {
+        console.error('Products fetch error:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
 });
 
-app.get('/api/products/:id', async (req,res)=>{try{const r=await pool.query(`SELECT p.*,u.username,u.profile_pic FROM products p LEFT JOIN users u ON u.id=p.user_id WHERE p.id=$1`,[req.params.id]);if(!r.rows.length)return res.status(404).json({error:'Product not found'});await pool.query('UPDATE products SET views=views+1 WHERE id=$1',[req.params.id]);res.json(r.rows[0]);}catch(err){res.status(500).json({error:'Server error'});}});
+app.get('/api/products/:id', async (req,res)=>{try{const r=await pool.query(`SELECT p.*,u.username,u.profile_pic FROM products p LEFT JOIN users u ON u.id=p.user_id WHERE p.id=$1 AND p.status='active'`,[req.params.id]);if(!r.rows.length)return res.status(404).json({error:'Product not found'});await pool.query('UPDATE products SET views=views+1 WHERE id=$1',[req.params.id]);res.json(r.rows[0]);}catch(err){res.status(500).json({error:'Server error'});}});
 
 app.post('/api/products', requireAuth, upload.array('product_image',6), async (req,res)=>{
     const {title,description,price,category,location,whatsapp,call_number}=req.body;
@@ -1225,37 +1264,83 @@ app.delete('/api/products/:id', requireAuth, async(req,res)=>{try{const r=await 
 
 // ============== PRIVATE MESSAGES ==============
 app.patch('/api/messages/:id/read',requireAuth,async(req,res)=>{try{const r=await pool.query('UPDATE messages SET is_read=true WHERE id=$1 AND receiver_id=$2 RETURNING id',[req.params.id,req.session.userId]);res.json({success:true,updated:!!r.rows.length});}catch(err){res.status(500).json({error:'Failed to mark message read'});}});
+app.patch('/api/messages/conversation/:partnerId/read', requireAuth, async (req, res) => {
+    try {
+        const partnerId = Number.parseInt(req.params.partnerId, 10);
+        if (!Number.isInteger(partnerId) || partnerId <= 0) {
+            return res.status(400).json({ error: 'Invalid partner ID' });
+        }
+        const result = await pool.query(
+            'UPDATE messages SET is_read = TRUE WHERE sender_id = $1 AND receiver_id = $2 AND is_read = FALSE',
+            [partnerId, req.session.userId]
+        );
+        io.to(`user:${partnerId}`).emit('messages_read', {
+            reader_id: req.session.userId,
+            partner_id: partnerId
+        });
+        res.json({ success: true, updated: result.rowCount });
+    } catch (err) {
+        console.error('Conversation read error:', err);
+        res.status(500).json({ error: 'Failed to mark conversation as read' });
+    }
+});
 
 // 1. Fetch User Inbox / Conversations
 app.get('/api/messages/inbox', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         const query = `
-            SELECT DISTINCT ON (partner_id)
-                partner_id,
+            WITH conversation_messages AS (
+                SELECT
+                    m.*,
+                    CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END AS partner_id
+                FROM messages m
+                WHERE m.sender_id = $1 OR m.receiver_id = $1
+            ),
+            latest AS (
+                SELECT DISTINCT ON (partner_id)
+                    partner_id,
+                    id,
+                    product_id,
+                    message,
+                    created_at,
+                    is_read,
+                    receiver_id,
+                    message_type,
+                    file_paths
+                FROM conversation_messages
+                ORDER BY partner_id, created_at DESC, id DESC
+            ),
+            unread AS (
+                SELECT sender_id AS partner_id, COUNT(*)::int AS unread_count
+                FROM messages
+                WHERE receiver_id = $1 AND is_read = FALSE
+                GROUP BY sender_id
+            )
+            SELECT
+                l.partner_id,
                 u.username AS partner_username,
+                u.fullname AS partner_fullname,
                 u.profile_pic AS partner_profile_pic,
                 u.is_verified,
-                m.product_id,
+                l.product_id,
                 p.title AS product_title,
-                m.message,
-                m.created_at,
-                m.is_read,
-                m.receiver_id
-            FROM (
-                SELECT 
-                    CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END AS partner_id,
-                    id
-                FROM messages
-                WHERE sender_id = $1 OR receiver_id = $1
-            ) sub
-            JOIN messages m ON sub.id = m.id
-            JOIN users u ON u.id = sub.partner_id
-            LEFT JOIN products p ON p.id = m.product_id
-            ORDER BY partner_id, m.created_at DESC;
+                l.message,
+                l.created_at,
+                l.is_read,
+                l.receiver_id,
+                l.message_type,
+                l.file_paths,
+                COALESCE(unread.unread_count, 0) AS unread_count
+            FROM latest l
+            JOIN users u ON u.id = l.partner_id
+            LEFT JOIN products p ON p.id = l.product_id
+            LEFT JOIN unread ON unread.partner_id = l.partner_id
+            ORDER BY l.created_at DESC, l.id DESC;
         `;
         const result = await pool.query(query, [userId]);
-        res.json({ conversations: result.rows });
+        const unreadTotal = result.rows.reduce((sum, row) => sum + Number(row.unread_count || 0), 0);
+        res.json({ conversations: result.rows, unread_total: unreadTotal });
     } catch (err) {
         console.error('Inbox retrieval error:', err);
         res.status(500).json({ error: 'Failed to fetch conversations' });
@@ -1305,12 +1390,29 @@ app.get('/api/messages/conversation/:partnerId', requireAuth, async (req, res) =
 
 // 3. Post Message (Supports Text, Offers, and File Uploads)
 app.post('/api/messages', requireAuth, upload.array('chat_file', 5), async (req, res) => {
+    console.log('Received data:', req.body);
+    
     try {
-        const senderId = req.session.userId;
-        const { receiver_id, product_id, message, message_type, offer_amount } = req.body;
+        const senderId = Number(req.session.userId);
+        const receiverId = Number.parseInt(req.body.receiver_id, 10);
+        const productId = req.body.product_id ? Number.parseInt(req.body.product_id, 10) : null;
+        const message = String(req.body.message || '').trim();
+        const messageType = String(req.body.message_type || 'text');
+        const offerAmount = req.body.offer_amount ? Number.parseFloat(req.body.offer_amount) : null;
 
-        if (!receiver_id) {
+        if (!Number.isInteger(receiverId) || receiverId <= 0) {
             return res.status(400).json({ error: 'Receiver ID is required' });
+        }
+        if (receiverId === senderId) {
+            return res.status(400).json({ error: 'You cannot send a message to yourself' });
+        }
+        if (!message && !(req.files && req.files.length) && !offerAmount) {
+            return res.status(400).json({ error: 'Message cannot be empty' });
+        }
+
+        const receiverCheck = await pool.query('SELECT id FROM users WHERE id = $1', [receiverId]);
+        if (!receiverCheck.rows.length) {
+            return res.status(404).json({ error: 'Receiver not found' });
         }
 
         let filePaths = [];
@@ -1326,19 +1428,20 @@ app.post('/api/messages', requireAuth, upload.array('chat_file', 5), async (req,
 
         const values = [
             senderId,
-            parseInt(receiver_id, 10),
-            product_id ? parseInt(product_id, 10) : null,
-            message || '',
-            message_type || 'text',
-            offer_amount ? parseFloat(offer_amount) : null,
+            receiverId,
+            productId,
+            message,
+            messageType,
+            Number.isFinite(offerAmount) ? offerAmount : null,
             filePaths.length > 0 ? filePaths : null
         ];
 
         const result = await pool.query(insertQuery, values);
         const newMessage = result.rows[0];
 
-        // Emit real-time notification via Socket.IO
-        io.to(`user:${receiver_id}`).emit('new_message', newMessage);
+        // Send to the receiver AND the sender's other tabs/devices. Clients deduplicate by message id.
+        io.to(`user:${receiverId}`).emit('new_message', newMessage);
+        io.to(`user:${senderId}`).emit('message_sent', newMessage);
 
         res.status(201).json({ success: true, message: newMessage });
     } catch (err) {
@@ -1540,48 +1643,106 @@ app.get('/api/admin/logs', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // ============== ONLINE USERS ==============
-let onlineUsers = new Map();
-
 app.get('/api/online-users', requireAuth, (req, res) => {
-    const users = [];
-    for (const [username, data] of onlineUsers) {
-        users.push({ username, status: 'online' });
-    }
-    res.json(users);
+    res.json(Array.from(onlineUsers.values()).map(u => ({
+        userId: u.userId,
+        username: u.username,
+        status: 'online'
+    })));
 });
+
+
+// Messaging indexes (safe to run repeatedly)
+(async () => {
+    try {
+        await pool.query('CREATE INDEX IF NOT EXISTS idx_messages_sender_receiver ON messages(sender_id, receiver_id)');
+        await pool.query('CREATE INDEX IF NOT EXISTS idx_messages_receiver_read ON messages(receiver_id, is_read)');
+        await pool.query('CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at)');
+        await pool.query('CREATE INDEX IF NOT EXISTS idx_messages_product ON messages(product_id)');
+    } catch (err) {
+        console.warn('Messaging index initialization skipped:', err.message);
+    }
+})();
 
 // ============== SOCKET.IO ==============
-io.use((socket,next)=>{
-    const session=socket.request.session;
-    if(session && session.userId){
-        socket.userId=session.userId;
-        socket.username=session.username;
-        socket.join(`user:${socket.userId}`);
-        next();
+io.use((socket, next) => {
+    const sessionData = socket.request.session;
+    if (!sessionData || !sessionData.userId) {
+        return next(new Error('Unauthorized'));
     }
 
-    return next(new Error('Unauthorized'));
+    socket.userId = Number(sessionData.userId);
+    socket.username = sessionData.username || `User ${socket.userId}`;
+    socket.join(`user:${socket.userId}`);
+    return next();
 });
 
-io.on('connection',socket=>{
-    console.log(`User connected: ${socket.username}`);
-    onlineUsers.set(socket.username,{
-        userId:socket.userId,socketId:socket.id
+const onlineUsers = new Map(); // userId -> { username, sockets:Set<string> }
+
+function emitOnlineUsers() {
+    const users = Array.from(onlineUsers.values()).map(u => ({
+        userId: u.userId,
+        username: u.username,
+        status: 'online'
+    }));
+    io.emit('online users', users);
+}
+
+io.on('connection', socket => {
+    console.log(`User connected: ${socket.username} (#${socket.userId})`);
+
+    let userEntry = onlineUsers.get(socket.userId);
+    if (!userEntry) {
+        userEntry = { userId: socket.userId, username: socket.username, sockets: new Set() };
+        onlineUsers.set(socket.userId, userEntry);
+    }
+    userEntry.sockets.add(socket.id);
+    emitOnlineUsers();
+
+    socket.on('typing', data => {
+        const receiverId = Number(data?.receiver_id);
+        if (Number.isInteger(receiverId) && receiverId > 0) {
+            io.to(`user:${receiverId}`).emit('typing', {
+                userId: socket.userId,
+                username: socket.username
+            });
+        }
     });
 
-    io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({
-        username,status:'online'})));
-
-    socket.on('typing',data=>{
-        if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('typing',{userId:socket.userId,username:socket.username});
+    socket.on('stop typing', data => {
+        const receiverId = Number(data?.receiver_id);
+        if (Number.isInteger(receiverId) && receiverId > 0) {
+            io.to(`user:${receiverId}`).emit('stop typing', {
+                userId: socket.userId
+            });
+        }
     });
 
-    socket.on('stop typing',data=>{
-        if(data?.receiver_id)io.to(`user:${Number(data.receiver_id)}`).emit('stop typing',{userId:socket.userId});
+    socket.on('mark_read', async data => {
+        const senderId = Number(data?.sender_id);
+        if (!Number.isInteger(senderId) || senderId <= 0) return;
+        try {
+            await pool.query(
+                'UPDATE messages SET is_read = TRUE WHERE sender_id = $1 AND receiver_id = $2 AND is_read = FALSE',
+                [senderId, socket.userId]
+            );
+            io.to(`user:${senderId}`).emit('messages_read', {
+                reader_id: socket.userId,
+                partner_id: senderId
+            });
+        } catch (err) {
+            console.error('Socket mark_read error:', err);
+        }
     });
-    socket.on('disconnect',()=>{
-        console.log(`User disconnected: ${socket.username}`);
-        onlineUsers.delete(socket.username);io.emit('online users',Array.from(onlineUsers.keys()).map(username=>({username,status:'online'})));
+
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.username} (#${socket.userId})`);
+        const entry = onlineUsers.get(socket.userId);
+        if (entry) {
+            entry.sockets.delete(socket.id);
+            if (entry.sockets.size === 0) onlineUsers.delete(socket.userId);
+        }
+        emitOnlineUsers();
     });
 });
 

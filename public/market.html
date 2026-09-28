@@ -678,6 +678,9 @@
     @media (max-width: 360px) {
       .footer-grid { grid-template-columns: 1fr; }
     }
+    .detail-btn { border:0; cursor:pointer; font:inherit; background:transparent; color:var(--secondary); padding:9px 5px; border-radius:8px; font-weight:800; }
+    .detail-btn:hover { background:#ecfdf5; }
+    .btn-clear:disabled { opacity:.45; cursor:not-allowed; }
   </style>
 </head>
 
@@ -866,366 +869,117 @@
   </footer>
 
   <script>
-    // ================= MOBILE MENU =================
-    const menuToggle = document.getElementById("menuToggle");
-    const navLinks = document.getElementById("navLinks");
+    const API='/api';
+    const grid=document.getElementById('listingGrid');
+    const resultsCount=document.getElementById('resultsCount');
+    const activeFilters=document.getElementById('activeFilters');
+    const searchInput=document.getElementById('searchInput');
+    const categoryFilter=document.getElementById('categoryFilter');
+    const locationFilter=document.getElementById('locationFilter');
+    const clearBtn=document.getElementById('clearFilters');
+    const favoritesKey='waudhao:favorites';
 
-    menuToggle.addEventListener("click", () => {
-      navLinks.classList.toggle("open");
-      menuToggle.innerHTML = navLinks.classList.contains("open")
-        ? '<i class="fas fa-times"></i>'
-        : '<i class="fas fa-bars"></i>';
-    });
-
-    document.querySelectorAll(".nav-links a").forEach(link => {
-      link.addEventListener("click", () => {
-        navLinks.classList.remove("open");
-        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-      });
-    });
-
-    // ================= DATA =================
-    // All products from homepage + extra samples.
-    // Ordered with latest first (newest postedAt on top).
-    const products = [
-      {
-        id: 1,
-        name: "iPhone 13 (128GB)",
-        category: "Simu",
-        price: 1250000,
-        location: "Dar es Salaam, Kinondoni",
-        region: "Dar es Salaam",
-        seller: "Juma Electronics",
-        description: "Battery health 88%. Inaonekana vizuri, haina tatizo la kiufundi.",
-        image: "iphone13.jpg",
-        posted: "Saa 1 iliyopita",
-        postedAt: 1,
-        whatsapp: "255710000001"
-      },
-      {
-        id: 2,
-        name: "Yamaha YBR 125",
-        category: "Pikipiki",
-        price: 1800000,
-        location: "Moshi, Kilimanjaro",
-        region: "Moshi",
-        seller: "Benson Moto",
-        description: "Pikipiki YBR 125, mwaka 2018. Imetunzwa vizuri, inawaka vizuri na ina papers.",
-        image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80",
-        posted: "Saa 2 zilizopita",
-        postedAt: 2,
-        whatsapp: "255710000001"
-      },
-      {
-        id: 3,
-        name: "Kitanda cha Wooden (Double)",
-        category: "Vitanda",
-        price: 350000,
-        location: "Arusha, Sekei",
-        region: "Arusha",
-        seller: "Mwananchi Furniture",
-        description: "Kitanda imara cha mbao, size ya double. Kinauzwa pamoja na godoro.",
-        image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80",
-        posted: "Saa 4 zilizopita",
-        postedAt: 4,
-        whatsapp: "255710000001"
-      },
-      {
-        id: 4,
-        name: "Toyota Corolla (2012)",
-        category: "Magari",
-        price: 12500000,
-        location: "Dodoma, Dodoma",
-        region: "Dodoma",
-        seller: "Rashid Auto",
-        description: "Engine 1.8, mileage 120,000 km. Hali nzuri, hakuna ajali kubwa.",
-        image: "https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=800&q=80",
-        posted: "Saa 5 zilizopita",
-        postedAt: 5,
-        whatsapp: "255710000001"
-      },
-      {
-        id: 5,
-        name: "MacBook Air M1 (2021)",
-        category: "Kompyuta",
-        price: 2450000,
-        location: "Dar es Salaam, Upanga",
-        region: "Dar es Salaam",
-        seller: "TechHub Tanzania",
-        description: "MacBook Air M1, 8GB RAM, 256GB SSD. Battery cycle 120. Ina charger asili.",
-        image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
-        posted: "Saa 6 zilizopita",
-        postedAt: 6,
-        whatsapp: "255710000002"
-      },
-      {
-        id: 6,
-        name: "Sofa Set ya Vitanda 5",
-        category: "Nyumbani",
-        price: 950000,
-        location: "Mwanza, Kirumba",
-        region: "Mwanza",
-        seller: "Nyumbani Furniture",
-        description: "Sofa set nzuri ya vitanda 5, imetengenezwa kwa ngozi ya kweli. Rangi ya kijivu.",
-        image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
-        posted: "Saa 8 zilizopita",
-        postedAt: 8,
-        whatsapp: "255710000003"
-      },
-      {
-        id: 7,
-        name: "Samsung Galaxy S22 Ultra",
-        category: "Simu",
-        price: 2100000,
-        location: "Dar es Salaam, Mbezi Beach",
-        region: "Dar es Salaam",
-        seller: "Kili Phones",
-        description: "Samsung S22 Ultra 256GB, dual sim, ipo vizuri sana. Ina box na charger.",
-        image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=800&q=80",
-        posted: "Saa 10 zilizopita",
-        postedAt: 10,
-        whatsapp: "255710000004"
-      },
-      {
-        id: 8,
-        name: "Honda Fit (2015)",
-        category: "Magari",
-        price: 15500000,
-        location: "Mbeya, Uyole",
-        region: "Mbeya",
-        seller: "Southern Motors",
-        description: "Honda Fit 2015, engine 1300cc, mileage 80,000 km. Ni ya kijani na ipo vizuri.",
-        image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80",
-        posted: "Saa 12 zilizopita",
-        postedAt: 12,
-        whatsapp: "255710000005"
-      },
-      {
-        id: 9,
-        name: "Godoro la Spring (6ft)",
-        category: "Vitanda",
-        price: 280000,
-        location: "Arusha, Kijenge",
-        region: "Arusha",
-        seller: "SleepWell",
-        description: "Godoro la spring size 6ft, ni jipya kabisa. Lina ukubwa wa kawaida.",
-        image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80",
-        posted: "Siku 1 iliyopita",
-        postedAt: 24,
-        whatsapp: "255710000006"
-      },
-      {
-        id: 10,
-        name: "Pikipiki Boxer 150",
-        category: "Pikipiki",
-        price: 2200000,
-        location: "Tanga, Chumbageni",
-        region: "Tanga",
-        seller: "Coast Bikes",
-        description: "Boxer 150, mwaka 2020. Inatumika kidogo, haina matatizo. Papers zipo.",
-        image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80",
-        posted: "Siku 1 iliyopita",
-        postedAt: 26,
-        whatsapp: "255710000007"
-      },
-      {
-        id: 11,
-        name: "HP EliteBook 840 G6",
-        category: "Kompyuta",
-        price: 1150000,
-        location: "Morogoro, Kihonda",
-        region: "Morogoro",
-        seller: "OfficeTech",
-        description: "HP EliteBook 840 G6, Core i5 8th Gen, 8GB RAM, 256GB SSD. Battery nzuri.",
-        image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&q=80",
-        posted: "Siku 2 zilizopita",
-        postedAt: 48,
-        whatsapp: "255710000008"
-      },
-      {
-        id: 12,
-        name: "Jokofu la LG (300L)",
-        category: "Nyumbani",
-        price: 780000,
-        location: "Mwanza, Nyegezi",
-        region: "Mwanza",
-        seller: "Home Appliances Tz",
-        description: "Jokofu la LG, lita 300, linatumika vizuri. Lina freezer ya juu na friji ya chini.",
-        image: "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=800&q=80",
-        posted: "Siku 2 zilizopita",
-        postedAt: 50,
-        whatsapp: "255710000009"
-      }
-    ];
-
-    // Sort by postedAt ascending (newest = smallest number = top)
-    products.sort((a, b) => a.postedAt - b.postedAt);
-
-    // ================= HELPERS =================
-    function formatPrice(price) {
-      return "TZS " + new Intl.NumberFormat('en-US').format(price);
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // ================= STATE =================
-    let state = {
-      search: "",
-      category: "all",
-      location: "all"
+    const esc=v=>{const d=document.createElement('div');d.textContent=v??'';return d.innerHTML;};
+    const money=v=>`TZS ${new Intl.NumberFormat('en-US').format(Number(v)||0)}`;
+    const favs=()=>{try{return JSON.parse(localStorage.getItem(favoritesKey)||'[]')}catch{return[]}};
+    const setFavs=v=>localStorage.setItem(favoritesKey,JSON.stringify(v));
+    const media=p=>Array.isArray(p.media_path)?p.media_path:[];
+    const img=p=>media(p)[0]||'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80';
+    const time=d=>{
+      if(!d)return 'Muda usiojulikana';
+      const m=Math.floor(Math.max(0,Date.now()-new Date(d).getTime())/60000);
+      if(m<1)return'sasa hivi';
+      if(m<60)return`dakika ${m} zilizopita`;
+      const h=Math.floor(m/60);
+      if(h<24)return`saa ${h} zilizopita`;
+      return`siku ${Math.floor(h/24)} zilizopita`;
     };
 
-    // ================= RENDER =================
-    const grid = document.getElementById("listingGrid");
-    const resultsCount = document.getElementById("resultsCount");
-    const activeFilters = document.getElementById("activeFilters");
-
-    function getFilteredProducts() {
-      return products.filter(p => {
-        // Search filter
-        if (state.search) {
-          const term = state.search.toLowerCase();
-          const haystack = (p.name + " " + p.description + " " + p.category + " " + p.location + " " + p.seller).toLowerCase();
-          if (!haystack.includes(term)) return false;
-        }
-
-        // Category filter
-        if (state.category !== "all" && p.category !== state.category) return false;
-
-        // Location filter (by region)
-        if (state.location !== "all" && p.region !== state.location) return false;
-
-        return true;
-      });
+    async function api(url,options={}) {
+      const r=await fetch(url,{credentials:'include',...options});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok){const e=new Error(data.error||`HTTP ${r.status}`);e.status=r.status;throw e;} return data;
     }
 
-    function renderChips() {
-      let chips = [];
+    let state={search:'',category:'all',location:'all',page:1,totalPages:1};
 
-      if (state.search) {
-        chips.push(`<span class="chip"><i class="fas fa-magnifying-glass"></i> "${escapeHtml(state.search)}" <button onclick="clearSearch()" aria-label="Ondoa utafutaji">×</button></span>`);
-      }
-
-      if (state.category !== "all") {
-        chips.push(`<span class="chip"><i class="fas fa-tag"></i> ${escapeHtml(state.category)} <button onclick="clearCategory()" aria-label="Ondoa kategoria">×</button></span>`);
-      }
-
-      if (state.location !== "all") {
-        chips.push(`<span class="chip"><i class="fas fa-location-dot"></i> ${escapeHtml(state.location)} <button onclick="clearLocation()" aria-label="Ondoa eneo">×</button></span>`);
-      }
-
-      activeFilters.innerHTML = chips.join("");
-    }
-
-    function render() {
-      const filtered = getFilteredProducts();
-      grid.innerHTML = "";
-
-      if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="no-results">
-            <i class="fas fa-box-open"></i>
-            <strong>Hakuna bidhaa zilizopatikana</strong>
-            <p>Jaribu kubadilisha kichujio au neno la utafutaji.</p>
+    function card(p){
+      const liked=favs().includes(Number(p.id));
+      const wa=String(p.whatsapp||'').replace(/\D/g,'');
+      return `<article class="listing-card">
+        <div class="listing-image">
+          <img src="${esc(img(p))}" alt="${esc(p.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80'">
+          <span class="used-label">${esc(p.category)}</span>
+          <button class="heart ${liked?'liked':''}" data-fav="${esc(p.id)}" aria-label="Hifadhi tangazo">${liked?'♥':'♡'}</button>
+        </div>
+        <div class="listing-body">
+          <h3 class="listing-title" title="${esc(p.title)}">${esc(p.title)}</h3>
+          <div class="price">${money(p.price)}</div>
+          <div class="meta"><span><i class="fas fa-user"></i> ${esc(p.username||'Muuzaji')}</span><span><i class="fas fa-location-dot"></i> ${esc(p.location)}</span></div>
+          <p class="description">${esc(p.description)}</p>
+          <div class="contact-buttons">
+            ${wa?`<a class="whatsapp-btn" target="_blank" rel="noopener" href="https://wa.me/${esc(wa)}?text=${encodeURIComponent('Habari, nimeona tangazo la '+p.title+' kwenye Waudhao.') }"><i class="fab fa-whatsapp"></i> WhatsApp</a>`:'<span></span>'}
+            <button class="detail-btn"><a href="more.html?id=${esc(p.id)}"><i class="fas fa-eye"></i> Tazama</a></button>
           </div>
-        `;
-      } else {
-        filtered.forEach(p => {
-          const card = document.createElement("article");
-          card.className = "listing-card";
-          card.innerHTML = `
-            <div class="listing-image">
-              <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy">
-              <span class="used-label">${escapeHtml(p.category)}</span>
-              <button class="heart" aria-label="Hifadhi tangazo" onclick="toggleHeart(this)">♡</button>
-            </div>
-            <div class="listing-body">
-              <h3 class="listing-title">${escapeHtml(p.name)}</h3>
-              <div class="price">${formatPrice(p.price)}</div>
-              <div class="meta">
-                <span><i class="fas fa-user"></i> ${escapeHtml(p.seller)}</span>
-                <span><i class="fas fa-location-dot"></i> ${escapeHtml(p.location)}</span>
-              </div>
-              <p class="description">${escapeHtml(p.description)}</p>
-              <div class="contact-buttons">
-                <a class="whatsapp-btn" target="_blank"
-                   href="https://wa.me/${p.whatsapp}?text=${encodeURIComponent('Habari, nimeona tangazo la ' + p.name + ' kwenye Waudhao.')}">
-                  <i class="fab fa-whatsapp"></i> WhatsApp
-                </a>
-                <a class="detail-btn" href="more.html" title="Tazama zaidi"><i class="fas fa-arrow-right"></i></a>
-              </div>
-              <div class="posted">◷ Ilipostiwa: ${escapeHtml(p.posted)}</div>
-            </div>
-          `;
-          grid.appendChild(card);
-        });
+          <div class="posted">◷ ${time(p.created_at)} • ${esc(p.views||0)} views</div>
+        </div>
+      </article>`;
+    }
+
+    function renderChips(){
+      const chips=[];
+      if(state.search)chips.push(`<span class="chip"><i class="fas fa-magnifying-glass"></i> "${esc(state.search)}" <button data-clear="search">×</button></span>`);
+      if(state.category!=='all')chips.push(`<span class="chip"><i class="fas fa-tag"></i> ${esc(state.category)} <button data-clear="category">×</button></span>`);
+      if(state.location!=='all')chips.push(`<span class="chip"><i class="fas fa-location-dot"></i> ${esc(state.location)} <button data-clear="location">×</button></span>`);
+      activeFilters.innerHTML=chips.join('');
+    }
+
+    async function load(){
+      state.search=searchInput.value.trim();
+      state.category=categoryFilter.value;
+      state.location=locationFilter.value;
+      grid.innerHTML='<div class="no-results"><i class="fas fa-spinner fa-spin"></i><strong>Inapakia bidhaa...</strong><p>Tafadhali subiri.</p></div>';
+      try{
+        const q=new URLSearchParams({page:String(state.page),limit:'20'});
+        if(state.search)q.set('search',state.search);
+        if(state.category!=='all')q.set('category',state.category);
+        // Location is filtered client-side only when server supplies location; fetch a wider page for the selected region.
+        const data=await api(`${API}/products?${q}`);
+        let products=data.products||[];
+        if(state.location!=='all') products=products.filter(p=>String(p.location||'').toLowerCase().includes(state.location.toLowerCase()));
+        state.totalPages=data.totalPages||1;
+        grid.innerHTML=products.length?products.map(card).join(''):`<div class="no-results"><i class="fas fa-box-open"></i><strong>Hakuna bidhaa zilizopatikana</strong><p>Badilisha utafutaji au vichujio.</p></div>`;
+        resultsCount.innerHTML=`Inaonyesha <strong>${products.length}</strong> bidhaa kwenye ukurasa huu`;
+        renderChips();
+        renderPager();
+      }catch(e){
+        grid.innerHTML=`<div class="no-results"><i class="fas fa-triangle-exclamation"></i><strong>Imeshindikana kupakia bidhaa</strong><p>${esc(e.message)}</p><button class="btn-clear" onclick="load()">Jaribu tena</button></div>`;
       }
-
-      resultsCount.innerHTML = `Inaonyesha <strong>${filtered.length}</strong> kati ya <strong>${products.length}</strong> bidhaa`;
-      renderChips();
     }
 
-    // ================= HEART =================
-    function toggleHeart(btn) {
-      btn.classList.toggle("liked");
-      btn.textContent = btn.classList.contains("liked") ? "♥" : "♡";
+    function renderPager(){
+      let p=document.getElementById('marketPager');
+      if(!p){p=document.createElement('div');p.id='marketPager';p.style='display:flex;justify-content:center;gap:8px;margin:0 0 45px;';grid.parentElement.appendChild(p);}
+      p.innerHTML=state.totalPages>1?`<button class="btn-clear" ${state.page<=1?'disabled':''} data-page="${state.page-1}">← Nyuma</button><span style="padding:10px;color:#718096;">Ukurasa ${state.page} / ${state.totalPages}</span><button class="btn-clear" ${state.page>=state.totalPages?'disabled':''} data-page="${state.page+1}">Mbele →</button>`:'';
     }
 
-    // ================= FILTER HANDLERS =================
-    const searchInput = document.getElementById("searchInput");
-    const categoryFilter = document.getElementById("categoryFilter");
-    const locationFilter = document.getElementById("locationFilter");
-    const clearBtn = document.getElementById("clearFilters");
+    document.getElementById('menuToggle')?.addEventListener('click',()=>{document.getElementById('navLinks').classList.toggle('open');});
+    searchInput.addEventListener('input',()=>{state.page=1;load();});
+    categoryFilter.addEventListener('change',()=>{state.page=1;load();});
+    locationFilter.addEventListener('change',()=>{state.page=1;load();});
+    clearBtn.addEventListener('click',()=>{searchInput.value='';categoryFilter.value='all';locationFilter.value='all';state.page=1;load();});
 
-    function updateState() {
-      state.search = searchInput.value.trim();
-      state.category = categoryFilter.value;
-      state.location = locationFilter.value;
-      render();
-    }
-
-    searchInput.addEventListener("input", updateState);
-    categoryFilter.addEventListener("change", updateState);
-    locationFilter.addEventListener("change", updateState);
-
-    // Clear individual filters
-    function clearSearch() {
-      searchInput.value = "";
-      updateState();
-    }
-
-    function clearCategory() {
-      categoryFilter.value = "all";
-      updateState();
-    }
-
-    function clearLocation() {
-      locationFilter.value = "all";
-      updateState();
-    }
-
-    // Clear all filters
-    clearBtn.addEventListener("click", () => {
-      searchInput.value = "";
-      categoryFilter.value = "all";
-      locationFilter.value = "all";
-      updateState();
+    document.addEventListener('click',e=>{
+      const fav=e.target.closest('[data-fav]');
+      if(fav){const id=Number(fav.dataset.fav),f=favs();const n=f.includes(id)?f.filter(x=>x!==id):[...f,id];setFavs(n);fav.classList.toggle('liked',n.includes(id));fav.textContent=n.includes(id)?'♥':'♡';}
+      const c=e.target.closest('[data-clear]');if(c){if(c.dataset.clear==='search')searchInput.value='';if(c.dataset.clear==='category')categoryFilter.value='all';if(c.dataset.clear==='location')locationFilter.value='all';state.page=1;load();}
+      const pg=e.target.closest('[data-page]');if(pg&&!pg.disabled){state.page=Number(pg.dataset.page);load();window.scrollTo({top:250,behavior:'smooth'});}
     });
 
-    // ================= KEYBOARD SEARCH =================
-    searchInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        updateState();
-      }
-    });
-
-    // ================= INITIAL RENDER =================
-    render();
+    const initial=new URLSearchParams(location.search);
+    if(initial.get('search')) searchInput.value=initial.get('search');
+    if(initial.get('category')) categoryFilter.value=initial.get('category');
+    load();
   </script>
 
 </body>

@@ -36,13 +36,13 @@
   <nav class="nav">
     <button class="active" data-page="posts"><i class="fa-solid fa-box-open"></i> My Posts <span class="count" id="postCount">3</span></button>
     <button data-page="create"><i class="fa-solid fa-circle-plus"></i> Weka Tangazo</button>
-    <button data-page="inbox"><i class="fa-solid fa-inbox"></i> My Inbox <span class="count" id="inboxCount">2</span></button>
+    <button data-page="inbox"><i class="fa-solid fa-inbox"></i> My Inbox <span class="count" id="inboxCount">0</span></button>
     <button data-page="profile"><i class="fa-solid fa-user"></i> My Profile</button>
   </nav>
   <div class="side-bottom"><div class="sub-mini"><strong><i class="fa-solid fa-crown"></i> Subscription Active</strong><span>Inaisha: 30 Novemba 2026</span></div><button class="logout" onclick="toast('Demo: hapa utaondoka kwenye akaunti.')"><i class="fa-solid fa-right-from-bracket"></i> Toka</button></div>
 </aside>
 <main class="main">
-  <header class="top"><div style="display:flex;align-items:center;gap:10px"><button class="mobile-menu" id="mMenu"><i class="fa-solid fa-bars"></i></button><div><h1 id="title">My Posts</h1><p id="subtitle">Simamia matangazo yako yote katika sehemu moja.</p></div></div><div class="top-right"><a href="homepage.html" class="market"><i class="fa-solid fa-store"></i> Tazama Soko</a><div class="avatar" id="topAvatar" style="width:38px;height:38px">JS</div></div></header>
+  <header class="top"><div style="display:flex;align-items:center;gap:10px"><button class="mobile-menu" id="mMenu"><i class="fa-solid fa-bars"></i></button><div><h1 id="title">My Posts</h1><p id="subtitle">Simamia matangazo yako yote katika sehemu moja.</p></div></div><div class="top-right"><a href="market.html" class="market"><i class="fa-solid fa-store"></i> Tazama Soko</a><div class="avatar" id="topAvatar" style="width:38px;height:38px">JS</div></div></header>
   <div class="content">
     <section class="page active" id="posts">
       <div class="grid4"><div class="stat"><div><span>Matangazo yangu</span><strong id="totalPosts">3</strong></div><div class="ico"><i class="fa-solid fa-box"></i></div></div><div class="stat green"><div><span>Yanayoonekana</span><strong id="activePosts">3</strong></div><div class="ico"><i class="fa-solid fa-circle-check"></i></div></div><div class="stat orange"><div><span>Jumla ya views</span><strong id="views">421</strong></div><div class="ico"><i class="fa-solid fa-eye"></i></div></div><div class="stat purple"><div><span>Ujumbe mpya</span><strong id="unread">2</strong></div><div class="ico"><i class="fa-solid fa-envelope"></i></div></div></div>
@@ -71,7 +71,11 @@
       <div class="settings"><div class="sthead"><h2>My Profile</h2><p>Simamia taarifa za akaunti na usalama.</p></div><div class="stsec"><h3>Taarifa za Akaunti</h3><div class="info-grid"><div class="box"><span>Username</span><strong>@juma_salehe</strong></div><div class="box"><span>Email</span><strong>juma.salehe@gmail.com</strong></div><div class="box"><span>Subscription</span><strong style="color:var(--g)">Active</strong></div><div class="box"><span>End of Subscription</span><strong>30 Novemba 2026</strong></div></div></div><div class="stsec"><h3>Badilisha Nenosiri</h3><form id="passwordForm" class="passgrid"><label>Nenosiri la Sasa *<input id="oldPass" type="password" required></label><label>Nenosiri Jipya *<input id="newPass" type="password" minlength="8" required></label><label class="full">Thibitisha Nenosiri Jipya *<input id="confirmPass" type="password" minlength="8" required></label><div class="form-actions" style="grid-column:1/-1;margin:0;padding-top:12px"><button class="btn primary"> <i class="fa-solid fa-lock"></i> Badilisha Nenosiri</button></div></form></div><div class="stsec"><h3>Usalama</h3><div class="box"><i class="fa-solid fa-shield-halved" style="color:var(--g)"></i> <span style="display:inline">Nenosiri na taarifa nyeti zitaendeshwa kupitia backend salama kwenye mfumo halisi.</span></div></div></div></div></section>
   </div>
 </main></div>
-<div class="toast" id="toast"></div><div class="overlay" id="overlay"><div class="confirm"><h3>Futa tangazo?</h3><p>Hatua hii itaondoa tangazo kwenye orodha yako katika prototype hii.</p><div class="confirm-actions"><button class="btn outline" onclick="closeConfirm()">Ghairi</button><button class="btn danger" id="confirmDelete">Futa Tangazo</button></div></div></div>
+<div class="toast" id="toast"></div><div class="overlay" id="overlay"><div class="confirm"><h3>Futa tangazo?</h3><p>Hatua hii itaondoa tangazo kwenye orodha yako katika prototype hii.</p>
+  <div class="confirm-actions"><button class="btn outline" onclick="closeConfirm()">Ghairi</button><button class="btn danger" id="confirmDelete">Futa Tangazo</button></div>
+</div>
+</div>
+
 <script>
 const meta={
   posts:['My Posts','Simamia matangazo yako yote katika sehemu moja.'],
@@ -82,8 +86,10 @@ const meta={
 
 const API='';
 let currentUser=null,
-currentSub=null, posts=[], 
-conversations=[], selected=null, 
+currentSub=null,
+posts=[], 
+conversations=[], 
+selected=null, 
 pendingFiles=[], 
 deleteId=null;
 
@@ -138,8 +144,48 @@ function formatTime(v){if(!v)return '';return new Intl.DateTimeFormat('sw-TZ',{h
 function openPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));$('title').textContent=meta[id][0];$('subtitle').textContent=meta[id][1];$('side').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});if(id==='posts')loadDashboard();if(id==='inbox')loadInbox();if(id==='profile')loadProfile();}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>openPage(b.dataset.page));$('mMenu').onclick=()=>$('side').classList.toggle('open');
 
-async function loadDashboard(){try{const d=await api('/api/my/dashboard');currentUser=d.user;currentSub=d.subscription;renderUser();const p=await api('/api/my/products');posts=p.products||[];renderPosts();renderSubscription();}catch(e){toast(e.message);}}
-function renderUser(){const u=currentUser;if(!u)return;document.querySelectorAll('.uname').forEach(x=>x.textContent=u.fullname||u.username);setAvatar($('sideAvatar'),u);setAvatar($('topAvatar'),u);setAvatar($('bigAvatar'),u);document.querySelector('#profile h2').textContent=u.fullname||u.username;document.querySelector('#profile .handle').textContent='@'+u.username;const rows=document.querySelectorAll('#profile .profile-meta .mr strong');if(rows.length>=5){rows[0].textContent='@'+u.username;rows[1].textContent=u.email||'—';rows[2].textContent=currentSub?'Active':'Inactive';rows[3].textContent=currentSub?formatDate(currentSub.expires_at):'—';rows[4].textContent=formatDate(u.created_at);}const boxes=document.querySelectorAll('#profile .info-grid .box strong');if(boxes.length>=4){boxes[0].textContent='@'+u.username;boxes[1].textContent=u.email||'—';boxes[2].textContent=currentSub?'Active':'Inactive';boxes[3].textContent=currentSub?formatDate(currentSub.expires_at):'—';}}
+async function loadDashboard(){
+  try{
+    const d=await api('/api/my/dashboard');
+    currentUser=d.user;currentSub=d.subscription;
+    renderUser();
+    const p=await api('/api/my/products');
+    posts=p.products||[];
+    renderPosts();
+    renderSubscription();
+  }catch(e){
+    toast(e.message);
+  }
+}
+
+function renderUser(){
+  const u=currentUser;
+  if(!u)return;
+  document.querySelectorAll('.uname').forEach(x=>x.textContent=u.fullname||u.username);
+  setAvatar($('sideAvatar'),u);
+  setAvatar($('topAvatar'),u);
+  setAvatar($('bigAvatar'),u);
+  
+  document.querySelector('#profile h2').textContent=u.fullname||u.username;
+  document.querySelector('#profile .handle').textContent='@'+u.username;
+  const rows=document.querySelectorAll('#profile .profile-meta .mr strong');
+  if(rows.length>=5){
+    rows[0].textContent='@'+u.username;
+    rows[1].textContent=u.email||'—';
+    rows[2].textContent=currentSub?'Active':'Inactive';
+    rows[3].textContent=currentSub?formatDate(currentSub.expires_at):'—';
+    rows[4].textContent=formatDate(u.created_at);
+  }
+  
+  const boxes=document.querySelectorAll('#profile .info-grid .box strong');
+  if(boxes.length>=4){
+    boxes[0].textContent='@'+u.username;
+    boxes[1].textContent=u.email||'—';
+    boxes[2].textContent=currentSub?'Active':'Inactive';
+    boxes[3].textContent=currentSub?formatDate(currentSub.expires_at):'—';
+  }
+}
+
 function renderSubscription(){const active=!!currentSub;document.querySelector('.sub-mini strong').innerHTML=active?'<i class="fa-solid fa-crown"></i> Subscription Active':'<i class="fa-solid fa-circle-xmark"></i> Subscription Inactive';document.querySelector('.sub-mini span').textContent=active?`Inaisha: ${formatDate(currentSub.expires_at)}`:'Huna subscription active';const card=document.querySelector('.sub-card');if(card){card.querySelector('strong').textContent=active?`Active mpaka ${formatDate(currentSub.expires_at)}`:'Subscription inactive';card.querySelector('.bar span').style.width=active?'100%':'0%';}}
 function renderPosts(){const g=$('postsGrid');g.innerHTML='';if(!posts.length){g.innerHTML='<div class="empty"><i class="fa-solid fa-box-open"></i><strong>Huna matangazo bado</strong><p>Bonyeza “Weka Tangazo Jipya” kuanza kuuza.</p></div>';}else posts.forEach(p=>{const a=document.createElement('article');a.className='post';a.innerHTML=`<div class="pimg"><img src="${esc(imgFor(p))}" alt="${esc(p.title)}"><span class="status">${esc(p.status||'active')}</span></div><div class="pbody"><h3>${esc(p.title)}</h3><div class="price">${money(p.price)}</div><div class="meta"><span><i class="fa-solid fa-tag"></i> ${esc(p.category)}</span><span><i class="fa-solid fa-location-dot"></i> ${esc(p.location)}</span><span><i class="fa-solid fa-eye"></i> ${Number(p.views||0)} views</span></div><div class="desc">${esc(p.description)}</div><div class="actions"><button class="btn outline" onclick="editPost(${p.id})"><i class="fa-solid fa-pen"></i> Hariri</button><button class="btn danger" onclick="askDelete(${p.id})"><i class="fa-solid fa-trash"></i> Futa</button></div></div>`;g.appendChild(a);});$('totalPosts').textContent=posts.length;$('activePosts').textContent=posts.filter(p=>p.status==='active').length;$('views').textContent=posts.reduce((n,p)=>n+Number(p.views||0),0);$('postCount').textContent=posts.length;}
 function editPost(id){const p=posts.find(x=>Number(x.id)===Number(id));if(!p)return;$('editId').value=p.id;$('name').value=p.title||'';$('category').value=p.category||'';$('price').value=p.price||'';$('location').value=p.location||'';$('whatsapp').value=p.whatsapp||'';$('call').value=p.call_number||'';$('description').value=p.description||'';pendingFiles=[];$('images').value='';renderPreview((Array.isArray(p.media_path)?p.media_path:[]).map(src=>({src,existing:true})));$('formTitle').textContent='Hariri tangazo';$('submitText').textContent='Hifadhi Mabadiliko';openPage('create');}
@@ -150,9 +196,106 @@ function removePreview(i){pendingFiles.splice(i,1);renderPreview();}
 $('productForm').onsubmit=async e=>{e.preventDefault();const id=$('editId').value;const fd=new FormData();[['title',$('name').value.trim()],['category',$('category').value],['price',$('price').value],['location',$('location').value.trim()],['whatsapp',$('whatsapp').value.trim()],['call_number',$('call').value.trim()],['description',$('description').value.trim()]].forEach(([k,v])=>fd.append(k,v));const existing=id?posts.find(p=>Number(p.id)===Number(id))?.media_path||[]:[];if(id)fd.append('existing_media',JSON.stringify(Array.isArray(existing)?existing:[]));pendingFiles.forEach(f=>fd.append('product_image',f));if(!id&&!pendingFiles.length){toast('Weka angalau picha moja ya bidhaa.');return;}try{const d=await api(id?`/api/products/${id}`:'/api/products',{method:id?'PUT':'POST',body:fd});toast(id?'Tangazo limehaririwa kikamilifu.':'Tangazo limechapishwa kikamilifu.');resetForm();await loadDashboard();openPage('posts');}catch(err){toast(err.message);}};
 function askDelete(id){deleteId=id;$('overlay').classList.add('show');}function closeConfirm(){deleteId=null;$('overlay').classList.remove('show');}$('confirmDelete').onclick=async()=>{if(!deleteId)return;try{await api('/api/products/'+deleteId,{method:'DELETE'});closeConfirm();toast('Tangazo limefutwa.');await loadDashboard();}catch(e){toast(e.message);}};$('overlay').onclick=e=>{if(e.target===e.currentTarget)closeConfirm();};
 
-async function loadInbox(){try{const d=await api('/api/messages/inbox');conversations=d.conversations||[];renderMsgs();if(selected){const c=conversations.find(x=>x.partner_id===selected);if(c)openMsg(c.partner_id,c.product_id);}}catch(e){toast(e.message);}}
-function renderMsgs(){const l=$('msgList');if(!conversations.length){l.innerHTML='<div class="empty" style="border:0"><i class="fa-solid fa-comments"></i><strong>Hakuna ujumbe bado</strong><p>Ujumbe wa wanunuzi utaonekana hapa.</p></div>';}else l.innerHTML=conversations.map(c=>`<button class="msg ${selected===Number(c.partner_id)?'sel':''}" onclick="openMsg(${c.partner_id},${c.product_id||'null'})"><div class="mi">${esc((c.partner_username||'U').slice(0,2).toUpperCase())}</div><div class="mm"><div class="row"><span class="mn">${esc(c.partner_username||'User')} ${!c.is_read&&Number(c.receiver_id)===Number(currentUser?.id)?'<i class="dot"></i>':''}</span><span class="mt">${formatTime(c.created_at)}</span></div><div class="mp">${esc(c.product_title||'General')}</div><div class="mv">${esc(c.message||'Attachment')}</div></div></button>`).join('');const unread=conversations.filter(c=>!c.is_read&&Number(c.receiver_id)===Number(currentUser?.id)).length;$('inboxCount').textContent=unread;$('unread').textContent=unread;}
-async function openMsg(partnerId,productId=null){selected=Number(partnerId);renderMsgs();try{const d=await api('/api/messages/conversation/'+partnerId);const msgs=d.messages||[];const partner=conversations.find(c=>Number(c.partner_id)===Number(partnerId));const name=partner?.partner_username||msgs.find(m=>Number(m.sender_id)===Number(partnerId))?.sender_username||'User';$('chat').innerHTML=`<div class="chat-top"><div class="mi">${esc(name.slice(0,2).toUpperCase())}</div><div><h3>${esc(name)}</h3><p>Anazungumzia: ${esc(partner?.product_title||'Bidhaa')}</p></div></div><div class="chat-body" id="chatBody">${msgs.map(m=>`<div class="bubble ${Number(m.sender_id)===Number(currentUser.id)?'seller':'buyer'}">${esc(m.message||'')} ${m.file_paths?.length?m.file_paths.map(f=>`<a href="${esc(f)}" target="_blank" rel="noopener">📎 Attachment</a>`).join(' '):''}<small>${formatTime(m.created_at)}</small></div>`).join('')}</div><form class="compose" id="compose"><input id="reply" autocomplete="off" placeholder="Andika jibu kwa ${esc(name)}..."><button class="send"><i class="fa-solid fa-paper-plane"></i></button></form>`;const body=$('chatBody');body.scrollTop=body.scrollHeight;$('compose').onsubmit=async e=>{e.preventDefault();const input=$('reply'),text=input.value.trim();if(!text)return;input.disabled=true;try{await api('/api/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({receiver_id:partnerId,product_id:productId||partner?.product_id||null,message:text})});input.value='';await openMsg(partnerId,productId);}catch(err){toast(err.message);}finally{input.disabled=false;}};}catch(e){toast(e.message);}}
+async function loadInbox(){try{const d=await api('/api/messages/inbox');conversations=d.conversations||[];renderMsgs();if(selected){const c=conversations.find(x=>Number(x.partner_id)===selected);if(c)await openMsg(c.partner_id,c.product_id,true);}}catch(e){toast(e.message);}}
+function renderMsgs(){const l=$('msgList');if(!conversations.length){l.innerHTML='<div class="empty" style="border:0"><i class="fa-solid fa-comments"></i><strong>Hakuna ujumbe bado</strong><p>Ujumbe wa wanunuzi utaonekana hapa.</p></div>';}else l.innerHTML=conversations.map(c=>`<button class="msg ${selected===Number(c.partner_id)?'sel':''}" onclick="openMsg(${c.partner_id},${c.product_id||'null'})"><div class="mi">${esc((c.partner_username||'U').slice(0,2).toUpperCase())}</div><div class="mm"><div class="row"><span class="mn">${esc(c.partner_username||'User')} ${Number(c.unread_count||0)>0?'<i class="dot"></i>':''}</span><span class="mt">${formatTime(c.created_at)}</span></div><div class="mp">${esc(c.product_title||'General')}</div><div class="mv">${esc(c.message||'Attachment')}</div></div></button>`).join('');const unread=conversations.reduce((n,c)=>n+Number(c.unread_count||0),0);$('inboxCount').textContent=unread;$('unread').textContent=unread;}
+function renderDashboardMessages(msgs){const body=$('chatBody');if(!body)return;body.innerHTML=msgs.map(m=>messageBubbleHtml(m)).join('');body.scrollTop=body.scrollHeight;}
+function messageBubbleHtml(m){return `<div class="bubble ${Number(m.sender_id)===Number(currentUser.id)?'seller':'buyer'}" data-message-id="${Number(m.id)}">${esc(m.message||'')} ${Array.isArray(m.file_paths)?m.file_paths.map(f=>`<a href="${esc(f)}" target="_blank" rel="noopener">📎 Attachment</a>`).join(' '):''}<small>${formatTime(m.created_at)}</small></div>`;}
+
+async function openMsg(partnerId,productId=null,background=false){
+  selected=Number(partnerId);
+  renderMsgs();
+  
+  try{
+    const d=await api('/api/messages/conversation/'+partnerId);
+    const msgs=d.messages||[];
+    const partner=conversations.find(c=>Number(c.partner_id)===Number(partnerId));
+    const name=d.partner?.username||partner?.partner_username||msgs.find(m=>Number(m.sender_id)===Number(partnerId))?.sender_username||'User';
+    
+    if(background&&$('chatBody')){
+      renderDashboardMessages(msgs);
+      return;
+    }$('chat').innerHTML=`<div class="chat-top"><div class="mi">${esc(name.slice(0,2).toUpperCase())}</div><div><h3>${esc(name)}</h3><p>Anazungumzia: ${esc(partner?.product_title||'Bidhaa')}</p><div id="dashTyping" style="font-size:9px;color:#1769e0;min-height:14px"></div></div></div><div class="chat-body" id="chatBody">${msgs.map(messageBubbleHtml).join('')}</div><form class="compose" id="compose"><input type="file" id="dashChatFile" accept="image/*,video/*,.pdf,.doc,.docx" multiple style="display:none"><button type="button" class="send outline" id="dashAttach" title="Ambatanisha"><i class="fa-solid fa-paperclip"></i></button><input id="reply" autocomplete="off" placeholder="Andika jibu kwa ${esc(name)}..."><button class="send"><i class="fa-solid fa-paper-plane"></i></button></form>`;
+    const body=$('chatBody');
+    body.scrollTop=body.scrollHeight;
+    
+    await api('/api/messages/conversation/'+partnerId+'/read',{method:'PATCH'}).catch(()=>{});
+    const c=conversations.find(x=>Number(x.partner_id)===Number(partnerId));
+    if(c)c.unread_count=0;renderMsgs();
+    $('dashAttach').onclick=()=>$('dashChatFile').click();
+    $('compose').onsubmit=async e=>{e.preventDefault();
+      const input=$('reply'),fileInput=$('dashChatFile'),text=input.value.trim(),files=[...(fileInput.files||[])];
+      if(!text&&!files.length)return;
+      if(files.length>5){toast('Unaweza kutuma hadi faili 5 kwa ujumbe.');
+      return;
+    }
+    
+    input.disabled=true;
+    try{
+      const fd=new FormData();
+      fd.append('receiver_id',partnerId);
+      if(productId||partner?.product_id)fd.append('product_id',productId||partner?.product_id);
+      if(text)fd.append('message',text);
+      files.forEach(f=>fd.append('chat_file',f));
+      fd.append('message_type',files.length?'image':'text');
+      const d=await api('/api/messages',{method:'POST',body:fd});
+      input.value='';fileInput.value='';
+      if(d?.message)appendDashboardMessage(d.message);
+      await loadInbox();}catch(err){toast(err.message);
+      }finally{
+        input.disabled=false;
+        input.focus();}};
+        const reply=$('reply');
+        reply.oninput=()=>{
+          if(!dashboardSocket?.connected)return;
+          dashboardSocket.emit('typing',{
+            receiver_id:partnerId});
+            clearTimeout(dashboardTypingTimer);
+            dashboardTypingTimer=setTimeout(()=>dashboardSocket.emit('stop typing',{receiver_id:partnerId}),900);
+          };
+          reply.onblur=()=>{if(dashboardSocket?.connected)dashboardSocket.emit('stop typing',{receiver_id:partnerId});
+        }
+      ;}catch(e){
+        toast(e.message);
+      }
+    }
+
+function appendDashboardMessage(message){
+  if(!message||!message.id)return;
+  if(renderedMessageIds.has(Number(message.id)))return;
+  renderedMessageIds.add(Number(message.id));
+  const body=$('chatBody');
+  if(!body)return;
+  const empty=body.querySelector('.empty');
+  if(empty)empty.remove();
+  body.insertAdjacentHTML('beforeend',messageBubbleHtml(message));
+  body.scrollTop=body.scrollHeight;
+}
+
+function initDashboardSocket(){
+  if(dashboardSocket)return;
+  dashboardSocket=io({withCredentials:true,transports:['websocket','polling']});
+  dashboardSocket.on('connect',()=>console.log('Dashboard chat socket connected'));
+  dashboardSocket.on('connect_error',err=>console.warn('Dashboard chat socket error:',err.message));
+  dashboardSocket.on('new_message',async message=>{
+    const senderId=Number(message.sender_id);
+    if(selected===senderId){
+      appendDashboardMessage(message);
+      await api('/api/messages/conversation/'+senderId+'/read',{method:'PATCH'}).catch(()=>{});
+    }await loadInbox();
+    if(selected!==senderId)toast('Ujumbe mpya umepokelewa.');
+  });dashboardSocket.on('message_sent',message=>appendDashboardMessage(message));
+  dashboardSocket.on('typing',data=>{if(selected===Number(data?.userId)&&$('dashTyping'))$('dashTyping').textContent=`${esc(data.username||'Mtumiaji')} anaandika...`;
+
+  });
+  
+  dashboardSocket.on('stop typing',data=>{
+    if(selected===Number(data?.userId)&&$('dashTyping'))$('dashTyping').textContent='';
+  });
+  
+  dashboardSocket.on('messages_read',data=>{
+    if(selected===Number(data?.partner_id))loadInbox();
+  });
+}
 
 async function loadProfile(){
   try{
@@ -221,6 +364,7 @@ async function boot(){
     return;
     }await loadDashboard();
     await loadInbox();
+    initDashboardSocket();
   }catch(e){
     toast(e.message);
   }
