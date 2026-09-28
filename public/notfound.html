@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <!-- CSS / Global Stylesheet -->
+    <link rel="stylesheet" href="/style.css">
+    <style>
+    :root {
+      --primary: #1769e0;
+      --primary-dark: #0e4fae;
+      --secondary: #13b76b;
+      --dark: #172b4d;
+      --text: #26364a;
+      --muted: #718096;
+      --bg: #f5f8fc;
+      --white: #ffffff;
+      --border: #e5eaf1;
+      --danger: #ef4444;
+      --shadow: 0 10px 30px rgba(24, 54, 93, .08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin-inline: auto;
+    }
+
+    /* ================= HEADER ================= */
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 23px;
+      box-shadow: 0 7px 16px rgba(23,105,224,.25);
+    }
+
+    .logo-name {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.7px;
+    }
+
+    .logo-name span { color: var(--secondary); }
+
+    .logo small {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: -2px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-links a {
+      padding: 10px 12px;
+      color: #52627a;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 9px;
+      transition: .2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--primary);
+      background: #edf4ff;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .15s, box-shadow .15s, background .15s;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-outline {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--dark);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 6px 15px rgba(23,105,224,.2);
+    }
+
+    .btn-success {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 21px;
+    }
+
+        /* Dedicated styles for the 404 container */
+        .notfound-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 160px); /* Adjust based on your header/footer height */
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .notfound-card {
+            max-width: 550px;
+            width: 100%;
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            background-color: #ffffff;
+        }
+
+        .notfound-code {
+            font-size: 5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 0;
+            color: #0d6efd; /* Theme Primary Color */
+        }
+
+        .notfound-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+            color: #212529;
+        }
+
+        .notfound-text {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 2rem;
+        }
+
+        .notfound-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .notbtn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .notbtn-primary {
+            background-color: #0d6efd;
+            color: #ffffff;
+            border: 1px solid #0d6efd;
+        }
+
+        .notbtn-primary:hover {
+            background-color: #0b5ed7;
+        }
+
+        .notbtn-secondary {
+            background-color: transparent;
+            color: #6c757d;
+            border: 1px solid #6c757d;
+        }
+
+        .notbtn-secondary:hover {
+            background-color: #6c757d;
+            color: #ffffff;
+        }
+
+        /* ================= FOOTER ================= */
+    footer .logo-name { color: white; }
+    footer .logo small { color: #aebbd0; }
+
+    footer{
+    align-items: center;
+    display: flex;
+    justify-content: center;
+      font-size: 14px;
+      margin-bottom: 13px;
+    }
+
+    footer li, footer p {
+      color: #aebbd0;
+      font-size: 12px;
+    }
+
+    footer a:hover { color: white; }
+
+    .socials {
+      display: flex;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .socials a {
+      width: 33px;
+      height: 33px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255,255,255,.09);
+    }
+
+    .footer-bottom {
+      border-top: 2px solid rgba(255,255,255,.1);
+      padding-top: 17px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      color: #8fa1b9;
+      font-size: 19px;
+    }
+
+        /* Mobile responsiveness adjustments */
+        @media (max-width: 576px) {
+            .notfound-code {
+                font-size: 3.5rem;
+            }
+
+            .notfound-title {
+                font-size: 1.35rem;
+            }
+
+            .notfound-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .notfound-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .notbtn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- ================= HEADER ================= -->
+<header>
+  <div class="container navbar">
+    <a href="homepage.html" class="logo" aria-label="Waudhao">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="100%" height="100%">
+          <defs>
+            <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <g transform="translate(25, 20)">
+            <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="81" cy="25" r="5" fill="#db2777" />
+            <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+        </svg>
+    </a>
+
+    <button class="menu-toggle" id="menuToggle" aria-label="Fungua menyu"><i class="fas fa-bars"></i></button>
+
+    <nav class="nav-links" id="navLinks">
+      <a href="homepage.html" class="active"><i class="fas fa-home"></i> Nyumbani</a>
+      <a href="market.html"><i class="fas fa-tag"></i> Sokoni</a>
+      <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+      <!-- Displayed only if user is subscribed -->
+      <a href="mydashboard.html" id="dashboardNavLink" style="display: none;">Dashibodi</a>
+    </nav>
+
+    <div class="nav-actions" id="navActions">
+      <!-- Hidden by default; rendered dynamically via JavaScript based on session state -->
+      <a href="login.html" id="loginBtn" class="btn btn-outline" style="display: none;">👤 Ingia</a>
+      <a href="subscribe.html" id="subscribeBtn" class="btn btn-primary" style="display: none;">Jisajili</a>
+    </div>
+  </div>
+</header>
+
+    <!-- 404 Main Section -->
+    <main class="notfound-wrapper">
+        <div class="notfound-card">
+            <h1 class="notfound-code">404</h1>
+            <h2 class="notfound-title">Ukurasa haujapatikana</h2>
+            <p class="notfound-text">
+                Oops! Ukurasa unaoutafuta haupo au umehamishwa..
+            </p>
+            <div class="notfound-actions">
+                <a href="/homepage.html" class="notbtn notbtn-primary">Nyumbani</a>
+                <button onclick="window.history.back()" class="notbtn notbtn-secondary">Rudi</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <hr>
+        <div class="footer-bottom">
+            <span>&copy; 2026 waudhao. Haki zote zimehifadhiwa. Nunua kwa uaminifu • Uza kwa urahisi</span>
+        </div>
+    </footer>
+
+</body>
+</html>

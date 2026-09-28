@@ -688,44 +688,43 @@
 </head>
 
 <body>
+<!-- ================= HEADER ================= -->
+<header>
+  <div class="container navbar">
+    <a href="homepage.html" class="logo" aria-label="Waudhao">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="100%" height="100%">
+          <defs>
+            <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <g transform="translate(25, 20)">
+            <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="81" cy="25" r="5" fill="#db2777" />
+            <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+        </svg>
+    </a>
 
-  <!-- ================= HEADER ================= -->
-  <header>
-    <div class="container navbar">
-      <a href="#" class="logo" aria-label="Waudhao">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="100%" height="100%">
-            <defs>
-              <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
-              </linearGradient>
-            </defs>
-            <!-- Icon: Isometric "W" Box -->
-            <g transform="translate(25, 20)">
-              <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="81" cy="25" r="5" fill="#db2777" />
-              <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
-            </g>
-            <!-- Text -->
-            <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
-          </svg>
-      </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Fungua menyu"><i class="fas fa-bars"></i></button>
 
-      <button class="menu-toggle" id="menuToggle" aria-label="Fungua menyu"><i class="fas fa-bars"></i></button>
+    <nav class="nav-links" id="navLinks">
+      <a href="homepage.html" class="active"><i class="fas fa-home"></i> Nyumbani</a>
+      <a href="market.html"><i class="fas fa-tag"></i> Sokoni</a>
+      <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+      <!-- Displayed only if user is subscribed -->
+      <a href="mydashboard.html" id="dashboardNavLink" style="display: none;">Dashibodi</a>
+    </nav>
 
-      <nav class="nav-links" id="navLinks">
-        <a href="homepage.html" class="active"><i class="fas fa-home"></i> Nyumbani</a>
-        <a href="market.html"><i class="fas fa-tag"></i> Sokoni</a>
-        <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
-        <a href="mydashboard.html">Dashibodi</a>
-      </nav>
-
-      <div class="nav-actions">
-        <button class="btn btn-outline"><a href="login.html">👤 Ingia</a></button>
-        <button class="btn btn-primary"><a href="subscribe.html">Jisajili</a></button>
-      </div>
+    <div class="nav-actions" id="navActions">
+      <!-- Hidden by default; rendered dynamically via JavaScript based on session state -->
+      <a href="login.html" id="loginBtn" class="btn btn-outline" style="display: none;">👤 Ingia</a>
+      <a href="subscribe.html" id="subscribeBtn" class="btn btn-primary" style="display: none;">Jisajili</a>
     </div>
-  </header>
+  </div>
+</header>
 
   <!-- ================= HERO ================= -->
   <main>
@@ -859,8 +858,8 @@
     <div class="container">
       <div class="cta">
         <div>
-          <h2>Una kitu cha kuuza?</h2>
-          <p>Weka tangazo lako na uwafikie wanunuzi kutoka sehemu mbalimbali Tanzania.</p>
+          <h2>Una bidhaa ya kuuza?</h2>
+          <p>Jisajili, weka tangazo lako na uwafikie wanunuzi kutoka sehemu mbalimbali Tanzania.</p>
         </div>
         <button class="btn btn-success"><a href="mydashboard.html">＋ Weka Tangazo</a></button>
       </div>
@@ -871,7 +870,6 @@
   <!-- ================= PRODUCT DETAIL MODAL ================= -->
   <div class="modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-content">
-      <button class="close-modal" type="button" aria-label="Funga" data-close-product>&times;</button>
       <div id="productModalBody">
         <div style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i> Inapakia...</div>
       </div>
@@ -954,9 +952,6 @@
     const API = '/api';
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
-    const listingGrid = document.getElementById('listingGrid');
-    const productModal = document.getElementById('productModal');
-    const listingModal = document.getElementById('listingModal');
     const favoritesKey = 'waudhao:favorites';
 
     const money = value => `TZS ${new Intl.NumberFormat('en-US').format(Number(value) || 0)}`;
@@ -1008,7 +1003,7 @@
           <p class="description">${esc(p.description)}</p>
           <div class="contact-buttons">
             ${wa ? `<a class="whatsapp-btn" target="_blank" rel="noopener" href="https://wa.me/${esc(wa)}?text=${encodeURIComponent('Habari, nimeona tangazo la '+(p.title||'bidhaa')+' kwenye Waudhao.') }"><i class="fab fa-whatsapp"></i> WhatsApp</a>` : '<span></span>'}
-            <button class="detail-btn" type="button" data-product="${detail}"><a href="more.html?id=${p.id}"><i class="fas fa-arrow-right"></i> Tazama</a></button>
+            <a class="detail-btn" href="more.html?id=${p.id}"><i class="fas fa-arrow-right"></i> Tazama</a>
           </div>
           <div class="posted">◷ Ilipostiwa: ${relativeTime(p.created_at)}</div>
         </div>
@@ -1073,22 +1068,6 @@
       }).catch(e => body.innerHTML=`<div class="no-results"><strong>Imeshindikana kupakia bidhaa</strong><p>${esc(e.message)}</p></div>`);
     }
 
-    async function submitListing(e) {
-      e.preventDefault();
-      const btn=document.getElementById('submitListingBtn'), msg=document.getElementById('listingFormMessage'), files=document.getElementById('postImages').files;
-      if(files.length>6){ msg.style.display='block'; msg.style.background='#fee2e2'; msg.style.color='#991b1b'; msg.textContent='Picha zisizidi 6.'; return; }
-      const fd=new FormData(e.target); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Inatuma...'; msg.style.display='none';
-      try {
-        const data=await api('/products',{method:'POST',body:fd});
-        msg.style.display='block'; msg.style.background='#dcfce7'; msg.style.color='#166534'; msg.textContent='Tangazo limewekwa kikamilifu.';
-        e.target.reset(); await loadHomeProducts(); setTimeout(()=>closeModal(listingModal),900);
-      } catch(err) {
-        if(err.status===401){ location.href='login.html?redirect=homepage.html'; return; }
-        if(err.status===403){ location.href='subscribe.html'; return; }
-        msg.style.display='block'; msg.style.background='#fee2e2'; msg.style.color='#991b1b'; msg.textContent=err.message;
-      } finally { btn.disabled=false; btn.textContent='Weka Tangazo'; }
-    }
-
     menuToggle?.addEventListener('click',()=>{navLinks.classList.toggle('open');menuToggle.innerHTML=navLinks.classList.contains('open')?'<i class="fas fa-times"></i>':'<i class="fas fa-bars"></i>';});
     document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('open')));
 
@@ -1097,13 +1076,9 @@
       if(fav){ const id=Number(fav.dataset.favorite), f=getFavorites(); const next=f.includes(id)?f.filter(x=>x!==id):[...f,id]; saveFavorites(next); fav.classList.toggle('liked',next.includes(id)); fav.textContent=next.includes(id)?'♥':'♡'; return; }
       const detail=e.target.closest('[data-product]');
       if(detail){ showProductModal(decodeURIComponent(detail.dataset.product)); return; }
-      if(e.target.matches('[data-close-product]')) closeModal(productModal);
-      if(e.target.matches('[data-close-listing]')) closeModal(listingModal);
       if(e.target===productModal) closeModal(productModal);
-      if(e.target===listingModal) closeModal(listingModal);
     });
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal(productModal);closeModal(listingModal);}});
-
+    
     document.querySelectorAll('.category-card').forEach(card=>{
       card.addEventListener('click',()=>{
         document.querySelectorAll('.category-card').forEach(c=>c.classList.remove('selected'));
@@ -1117,9 +1092,56 @@
     document.getElementById('searchInput').addEventListener('keydown',e=>{
       if(e.key==='Enter'){e.preventDefault(); const term=e.target.value.trim(); location.href=`market.html?search=${encodeURIComponent(term)}`;}
     });
-    window.searchListings=()=>{const term=document.getElementById('searchInput').value.trim(); location.href=`market.html?search=${encodeURIComponent(term)}`;};
-    loadHomeProducts();
-  </script>
+    window.searchListings=()=>{
+      const term=document.getElementById('searchInput').value.trim(); 
+      location.href=`market.html?search=${encodeURIComponent(term)}`;
+    };
 
+    async function updateHeaderAuthState() {
+      const dashboardLink = document.getElementById('dashboardNavLink');
+      const loginBtn = document.getElementById('loginBtn');
+      const subscribeBtn = document.getElementById('subscribeBtn');
+
+      try {
+        // Check authentication and subscription status
+        const authData = await api(`${API}/check-auth`);
+
+        if (authData && authData.authenticated) {
+          // User is logged in -> Hide Login button
+          if (loginBtn) loginBtn.style.display = 'none';
+
+          // Fetch dashboard data to get subscription status
+          const dashData = await api(`${API}/my/dashboard`).catch(() => ({}));
+          const isSubscribed = Boolean(dashData && dashData.subscription);
+
+          if (isSubscribed) {
+            // Subscribed user -> Show Dashboard link, Hide Subscribe button
+            if (dashboardLink) dashboardLink.style.display = 'inline-block';
+            if (subscribeBtn) subscribeBtn.style.display = 'none';
+          } else {
+            // Unsubscribed user -> Hide Dashboard link, Show Subscribe button
+            if (dashboardLink) dashboardLink.style.display = 'none';
+            if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+          }
+        } else {
+          // User is not logged in -> Show Login and Subscribe buttons, Hide Dashboard link
+          if (dashboardLink) dashboardLink.style.display = 'none';
+          if (loginBtn) loginBtn.style.display = 'inline-block';
+          if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+        }
+      } catch (error) {
+        // Fallback state if auth request fails / logged out
+        if (dashboardLink) dashboardLink.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+      }
+    }
+
+    // Call state updater when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      updateHeaderAuthState();
+      loadHomeProducts();
+    });
+  </script>
 </body>
 </html>

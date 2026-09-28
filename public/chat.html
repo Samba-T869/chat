@@ -1015,9 +1015,10 @@
 
         <nav class="nav-links">
           <a href="homepage.html"><i class="fas fa-home"></i> Nyumbani</a>
-          <a href="homepage.html#matangazo"><i class="fas fa-tag"></i> Sokoni</a>
+          <a href="market.html"><i class="fas fa-tag"></i> Sokoni</a>
           <a href="chat.html" class="active"><i class="fas fa-comments"></i> Chat</a>
-          <a href="subscribe.html"><i class="fas fa-crown"></i> Lipia Kifurushi</a>
+          <a href="mydashboard.html" id="dashboardNavLink" style="display: none;"><i class="fas fa-hand-holding-usd"></i> Dashibodi</a>
+          <a href="subscribe.html" id="subscribeBtn" style="display: inline;">Jisajili</a>
         </nav>
 
         <div class="nav-actions">
@@ -1746,6 +1747,46 @@
         chatCard.classList.remove('view-active-chat');
       }
     }
+
+    async function updateHeaderAuthState() {
+      const dashboardLink = document.getElementById('dashboardNavLink');
+      const subscribeBtn = document.getElementById('subscribeBtn');
+
+      try {
+        // Check authentication and subscription status
+        const authData = await api(`${API}/check-auth`);
+
+        if (authData && authData.authenticated) {
+          // Fetch dashboard data to get subscription status
+          const dashData = await api(`${API}/my/dashboard`).catch(() => ({}));
+          const isSubscribed = Boolean(dashData && dashData.subscription);
+
+          if (isSubscribed) {
+            // Subscribed user -> Show Dashboard link, Hide Subscribe button
+            if (dashboardLink) dashboardLink.style.display = 'inline-block';
+            if (subscribeBtn) subscribeBtn.style.display = 'none';
+          } else {
+            // Unsubscribed user -> Hide Dashboard link, Show Subscribe button
+            if (dashboardLink) dashboardLink.style.display = 'none';
+            if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+          }
+        } else {
+          // User is not logged in -> Show Login and Subscribe buttons, Hide Dashboard link
+          if (dashboardLink) dashboardLink.style.display = 'none';
+          if (loginBtn) loginBtn.style.display = 'inline-block';
+          if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+        }
+      } catch (error) {
+        // Fallback state if auth request fails / logged out
+        if (dashboardLink) dashboardLink.style.display = 'none';
+        if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+      }
+    }
+
+    // Call state updater when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      updateHeaderAuthState();
+    });
   </script>
 </body>
 </html>

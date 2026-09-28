@@ -127,7 +127,7 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432,
     database: process.env.DB_NAME || 'waudhao',
     user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '45Ngalula',
+    password: process.env.DB_PASSWORD,
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     max: 20,
@@ -148,7 +148,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const sessionMiddleware = session({
     store: sessionStore,
-    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     proxy: true,
@@ -225,8 +225,6 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
 
 pool.query('SELECT current_database() AS database_name')
   .then(result => {
@@ -236,7 +234,9 @@ pool.query('SELECT current_database() AS database_name')
     console.error('❌ Could not determine database name:', err.message);
   });
 
-// ============== HELPER FUNCTIONS ==============
+// ============== AUTHORIZATION MIDDLEWARE ==============
+
+// Require logged-in user (Registered)
 const requireAuth = (req, res, next) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -244,6 +244,7 @@ const requireAuth = (req, res, next) => {
     next();
 };
 
+// Require Admin status
 const requireAdmin = async (req, res, next) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -258,6 +259,56 @@ const requireAdmin = async (req, res, next) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+// Require Subscribed User OR Admin
+const requireSubscribedOrAdmin = async (req, res, next) => {
+    if (!req.session || !req.session.userId) {
+        return res.redirect('/login.html');
+    }
+
+    try {
+        // Check admin status
+        const userResult = await pool.query('SELECT is_admin FROM users WHERE id = $1', [req.session.userId]);
+        if (userResult.rows[0]?.is_admin) {
+            return next(); // Admins bypass subscription check
+        }
+
+        // Check active subscription status
+        const subResult = await pool.query(
+            `SELECT id FROM subscriptions 
+             WHERE user_id = $1 AND status = 'completed' AND expires_at > CURRENT_TIMESTAMP`,
+            [req.session.userId]
+        );
+
+        if (subResult.rows.length === 0) {
+            // User is not subscribed, redirect to subscription page
+            return res.redirect('/subscribe.html');
+        }
+
+        next();
+    } catch (err) {
+        console.error('Subscription verification error:', err);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+// ============== PROTECTED HTML ROUTES ==============
+
+// 1. Only Subscribed Users or Admins can access mydashboard.html
+app.get('/mydashboard.html', requireSubscribedOrAdmin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'mydashboard.html'));
+});
+
+// 2. Only Registered (Logged-in) Users can access subscribe.html
+app.get('/subscribe.html', (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.redirect('/login.html');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'subscribe.html'));
+});
+
+// Serve remaining static assets
+app.use(express.static(path.join(__dirname, 'public')));
 
 const logActivity = async (userId, username, action, details = '', ipAddress = '') => {
     try {
@@ -1746,40 +1797,17 @@ io.on('connection', socket => {
     });
 });
 
-// ============== FRONTEND ROUTES ==============
-app.get('/mydashboard.html', requireAuth, async (req, res) => {
-    try {
-        if(req.session.isAdmin){
-            return res.sendFile(path.join(__dirname, 'public', 'mydashboard.html'));
-        }
-
-        const subCheck = await pool.query(
-            'SELECT id FROM subscriptions WHERE user_id = $1 AND status = $2 AND expires_at > NOW()',
-            [req.session.userId, 'completed']
-        );
-        
-        if (subCheck.rows.length === 0) {
-            return res.redirect('/subscribe.html');
-        }
-        
-        res.sendFile(path.join(__dirname, 'public', 'mydashboard.html'));
-    } catch (err) {
-        res.redirect('/homepage.html');
-    }
-});
-
-app.get('*', (req, res) => {
-    if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
-        return res.status(404).json({ error: 'Not found' });
+// Wildcard handler for undefined routes (MUST be placed last)
+app.use((req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({
+            error: 'API endpoint not found'
+        });
     }
 
-    // Check if requested file exists in public directory
-    const filePath = path.join(__dirname, 'public', req.path);
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-        return res.sendFile(filePath);
-    }
-
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.status(404).sendFile(
+        path.join(__dirname, 'public', 'notfound.html')
+    );
 });
 
 // ============== START SERVER ==============

@@ -470,42 +470,40 @@
 
 <body>
 <!-- ================= HEADER ================= -->
-  <header>
-    <div class="container navbar">
-      <a href="#" class="logo" aria-label="Waudhao">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="100%" height="100%">
-            <defs>
-              <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
-              </linearGradient>
-            </defs>
-            <!-- Icon: Isometric "W" Box -->
-            <g transform="translate(25, 20)">
-              <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="81" cy="25" r="5" fill="#db2777" />
-              <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
-            </g>
-            <!-- Text -->
-            <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
-          </svg>
-      </a>
+<header>
+  <div class="container navbar">
+    <a href="homepage.html" class="logo" aria-label="Waudhao">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="100%" height="100%">
+          <defs>
+            <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <g transform="translate(25, 20)">
+            <path d="M 15,25 L 35,55 L 48,35 L 61,55 L 81,25" fill="none" stroke="url(#grad3)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="81" cy="25" r="5" fill="#db2777" />
+            <path d="M 25,75 Q 48,85 71,75" fill="none" stroke="url(#grad3)" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <text x="120" y="70" font-family="'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="40" fill="#111827">waudhao</text>
+        </svg>
+    </a>
 
-      <button class="menu-toggle" id="menuToggle" aria-label="Fungua menyu"><i class="fas fa-bars"></i></button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Fungua menyu"><i class="fas fa-bars"></i></button>
 
-      <nav class="nav-links" id="navLinks">
-        <a href="homepage.html" class="active"><i class="fas fa-home"></i> Nyumbani</a>
-        <a href="market.html"><i class="fas fa-tag"></i> Sokoni</a>
-        <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
-        <a href="mydashboard.html"> Dashibodi</a>
-      </nav>
+    <nav class="nav-links" id="navLinks">
+      <a href="homepage.html"><i class="fas fa-home"></i> Nyumbani</a>
+      <a href="market.html"><i class="fas fa-tag"></i> Sokoni</a>
+      <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+      <a href="subscribe.html" id="subscribeBtn" class="active">Jisajili</a>
+    </nav>
 
-      <div class="nav-actions">
-        <span class="user-badge" id="usernameDisplay">@ Samba</span>
-        <button class="btn btn-outline" id="logoutBtn" title="Ondoka"><i class="fas fa-sign-out-alt"></i></button>
-      </div>
+    <div class="nav-actions" id="navActions">
+      <!-- Hidden by default; rendered dynamically via JavaScript based on session state -->
+      <a href="login.html" id="loginBtn" class="btn btn-outline" style="display: none;">👤 Ingia</a>
     </div>
-  </header>
+  </div>
+</header>
 
   <!-- ================= MAIN CONTENT ================= -->
   <main class="subscribe-wrapper">
@@ -854,6 +852,44 @@
       } catch (error) {
         console.error('Logout error:', error);
       }
+    });
+
+    async function updateHeaderAuthState() {
+      const loginBtn = document.getElementById('loginBtn');
+      const subscribeBtn = document.getElementById('subscribeBtn');
+
+      try {
+        // Check authentication and subscription status
+        const authData = await api(`${API}/check-auth`);
+
+        if (authData && authData.authenticated) {
+          // User is logged in -> Hide Login button
+          if (loginBtn) loginBtn.style.display = 'none';
+
+          // Fetch dashboard data to get subscription status
+          const dashData = await api(`${API}/my/dashboard`).catch(() => ({}));
+          const isSubscribed = Boolean(dashData && dashData.subscription);
+
+          if (isSubscribed) {
+            window.location.href = '/mydashboard.html';
+          } else {
+            if (subscribeBtn) window.location.href = '/mydashboard.html';
+          }
+        } else {
+          // User is not logged in -> Show Login and Subscribe buttons
+          if (loginBtn) loginBtn.style.display = 'inline-block';
+          if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+        }
+      } catch (error) {
+        // Fallback state if auth request fails / logged out
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (subscribeBtn) subscribeBtn.style.display = 'inline-block';
+      }
+    }
+
+    // Call state updater when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      updateHeaderAuthState();
     });
 
     // Initialize Page
